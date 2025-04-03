@@ -6,26 +6,43 @@ import { useMaintenanceMode } from "@/App";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { ThemeSwitcher } from "./ui/theme-switcher";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Simuler un utilisateur connecté pour la démo
-  const { isMaintenanceMode, setMaintenanceMode, isAdmin } = useMaintenanceMode();
+  const { isMaintenanceMode, setMaintenanceMode } = useMaintenanceMode();
+  const { currentUser, isAdmin, isLoading, logout } = useAuth();
   const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Simuler l'authentification
-  const handleAuthAction = () => {
-    setIsLoggedIn(!isLoggedIn);
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+    }
   };
 
   // Fermer le menu mobile lors de la navigation
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
+
+  // Obtenir les initiales pour l'avatar
+  const getInitials = (name: string) => {
+    if (!name) return "??";
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50 shadow-sm">
@@ -48,18 +65,18 @@ export const Header: React.FC = () => {
             <Link to="/" className={`text-foreground hover:text-primary ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}>
               Accueil
             </Link>
-            {isLoggedIn && (
+            {currentUser && (
               <Link to="/profile" className={`text-foreground hover:text-primary ${location.pathname === '/profile' ? 'text-primary font-medium' : ''}`}>
                 Profil
               </Link>
             )}
-            {isLoggedIn && isAdmin && (
+            {currentUser && isAdmin && (
               <Link to="/admin" className={`text-foreground hover:text-primary ${location.pathname === '/admin' ? 'text-primary font-medium' : ''}`}>
                 Admin
               </Link>
             )}
             
-            {isLoggedIn && isAdmin && (
+            {currentUser && isAdmin && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Maintenance:</span>
                 <Switch 
@@ -73,14 +90,18 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-2">
               <ThemeSwitcher />
               
-              {isLoggedIn ? (
+              {!isLoading && (currentUser ? (
                 <>
                   <Link to="/profile">
-                    <Button variant="ghost" size="icon">
-                      <User className="h-5 w-5" />
-                    </Button>
+                    <Avatar className="h-8 w-8">
+                      {currentUser.photoURL ? (
+                        <AvatarImage src={currentUser.photoURL} alt={currentUser.displayName} />
+                      ) : (
+                        <AvatarFallback>{getInitials(currentUser.displayName)}</AvatarFallback>
+                      )}
+                    </Avatar>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={handleAuthAction}>
+                  <Button variant="ghost" size="icon" onClick={handleLogout} title="Déconnexion">
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </>
@@ -88,7 +109,7 @@ export const Header: React.FC = () => {
                 <Link to="/login">
                   <Button variant="outline">Connexion</Button>
                 </Link>
-              )}
+              ))}
             </div>
           </nav>
 
@@ -111,7 +132,7 @@ export const Header: React.FC = () => {
               >
                 Accueil
               </Link>
-              {isLoggedIn && (
+              {currentUser && (
                 <Link
                   to="/profile"
                   className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/profile' ? 'text-primary font-medium bg-muted' : ''}`}
@@ -119,7 +140,7 @@ export const Header: React.FC = () => {
                   Profil
                 </Link>
               )}
-              {isLoggedIn && isAdmin && (
+              {currentUser && isAdmin && (
                 <Link
                   to="/admin"
                   className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/admin' ? 'text-primary font-medium bg-muted' : ''}`}
@@ -128,7 +149,7 @@ export const Header: React.FC = () => {
                 </Link>
               )}
               
-              {isLoggedIn && isAdmin && (
+              {currentUser && isAdmin && (
                 <div className="flex items-center justify-between px-4 py-2">
                   <span className="text-muted-foreground">Mode maintenance</span>
                   <Switch 
@@ -139,11 +160,11 @@ export const Header: React.FC = () => {
                 </div>
               )}
               
-              {isLoggedIn ? (
+              {!isLoading && (currentUser ? (
                 <Button
                   variant="outline"
                   className="justify-start mx-4"
-                  onClick={handleAuthAction}
+                  onClick={handleLogout}
                 >
                   <LogOut className="h-5 w-5 mr-2" />
                   Déconnexion
@@ -155,7 +176,7 @@ export const Header: React.FC = () => {
                 >
                   <Button variant="outline" className="w-full">Connexion</Button>
                 </Link>
-              )}
+              ))}
             </div>
           </nav>
         )}
