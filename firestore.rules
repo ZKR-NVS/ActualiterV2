@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Fonctions utilitaires
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUserAdmin() {
+      let userId = request.auth.uid;
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      return isAuthenticated() && userDoc.data.role == "admin";
+    }
+    
+    function isVerifier() {
+      let userId = request.auth.uid;
+      let userDoc = get(/databases/$(database)/documents/users/$(userId));
+      return isAuthenticated() && (userDoc.data.role == "verifier" || userDoc.data.role == "admin");
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Règles pour la collection Users
+    match /users/{userId} {
+      // Lecture : utilisateurs authentifiés
+      // Écriture : admins ou propriétaire du document
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isUserAdmin();
+      allow delete: if isUserAdmin();
+    }
+    
+    // Règles pour la collection Settings (mode maintenance)
+    match /settings/{document=**} {
+      // Tout le monde peut lire les paramètres
+      allow read: if true;
+      // Seuls les administrateurs peuvent modifier les paramètres
+      allow write: if isUserAdmin();
+    }
+
+    // Autres collections
+    // Ajoutez ici des règles spécifiques aux autres collections
+
+    // Règle par défaut - refuse tous les accès
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

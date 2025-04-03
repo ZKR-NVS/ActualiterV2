@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
+import { getMaintenanceStatus, setMaintenanceStatus, onMaintenanceStatusChange } from "@/lib/services/maintenanceService";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -17,12 +18,12 @@ import NotFound from "./pages/NotFound";
 // Créer un contexte pour le mode maintenance
 interface MaintenanceContextType {
   isMaintenanceMode: boolean;
-  setMaintenanceMode: (value: boolean) => void;
+  setMaintenanceMode: (value: boolean) => Promise<void>;
 }
 
 export const MaintenanceContext = createContext<MaintenanceContextType>({
   isMaintenanceMode: false,
-  setMaintenanceMode: () => {},
+  setMaintenanceMode: async () => {},
 });
 
 // Hook pour utiliser le contexte de maintenance
@@ -85,7 +86,33 @@ const initializeTheme = () => {
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isMaintenanceMode, setMaintenanceMode] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const { currentUser } = useAuth();
+
+  // Initialiser le mode maintenance et s'abonner aux changements
+  useEffect(() => {
+    // Récupérer l'état initial
+    getMaintenanceStatus().then(status => {
+      setIsMaintenanceMode(status);
+    });
+
+    // S'abonner aux changements
+    const unsubscribe = onMaintenanceStatusChange(status => {
+      setIsMaintenanceMode(status);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fonction pour mettre à jour le mode maintenance
+  const setMaintenanceMode = async (value: boolean) => {
+    try {
+      await setMaintenanceStatus(value, currentUser?.uid);
+      // L'état local sera mis à jour automatiquement via l'abonnement onSnapshot
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+    }
+  };
 
   // Initialiser le thème au démarrage de l'application
   useEffect(() => {
