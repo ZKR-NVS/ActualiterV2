@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
-import { User, AuthUser } from "@/lib/types";
+import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
 
 export interface AuthContextType {
   currentUser: User | null;
@@ -10,7 +9,11 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<User>;
-  updateUserProfile: (updates: { displayName?: string; photoURL?: string; role?: "user" | "admin" | "editor" }) => Promise<void>;
+  updateUserProfile: (updates: { 
+    displayName?: string; 
+    photoURL?: string;
+    role?: "user" | "admin" | "editor";
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -111,7 +114,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Update user profile
   const updateUserProfile = async (updates: { 
     displayName?: string; 
-    photoURL?: string; 
+    photoURL?: string;
     role?: "user" | "admin" | "editor";
   }): Promise<void> => {
     if (!currentUser) throw new Error("Aucun utilisateur connecté");

@@ -16,8 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Article as UIArticle } from "@/components/ArticleCard";
-import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle, Article as FirestoreArticle } from "@/lib/services/articleService";
-import { User, getAllUsers, deleteUser, updateUserProfile } from "@/lib/services/authService";
+import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle } from "@/lib/services/articleService";
+import { getAllUsers, deleteUser, updateUserProfile } from "@/lib/services/authService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { GeneralSettingsForm } from "@/components/admin/GeneralSettings";
@@ -25,6 +25,22 @@ import { ContentSettingsForm } from "@/components/admin/ContentSettings";
 import { EmailSettingsForm } from "@/components/admin/EmailSettings";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Navigate } from "react-router-dom";
+
+// Définir l'interface FirestoreArticle ici si nécessaire
+interface FirestoreArticle {
+  id?: string;
+  title: string;
+  summary: string;
+  content: string;
+  source: string;
+  author: string;
+  imageUrl: string;
+  publicationDate: Date | any; // any est utilisé pour Timestamp de Firestore
+  verificationStatus: "true" | "false" | "partial";
+  tags: string[];
+  createdAt?: any; // any est utilisé pour Timestamp de Firestore
+  updatedAt?: any; // any est utilisé pour Timestamp de Firestore
+}
 
 // Interface pour les utilisateurs adaptée à l'affichage dans le tableau admin
 interface AdminUIUser {
