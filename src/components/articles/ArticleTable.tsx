@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -35,11 +34,15 @@ export const ArticleTable: React.FC<ArticleTableProps> = ({
     <>
       {articleToEdit && (
         <ArticleFormDialog 
-          onCreateArticle={handleUpdateArticle}
+          onSubmit={handleUpdateArticle}
           isEditMode={true}
           articleToEdit={articleToEdit}
-          dialogTitle="Modifier l'article"
-          buttonText="Modifier"
+          title="Modifier l'article"
+          submitButtonText="Modifier"
+          open={!!articleToEdit}
+          onOpenChange={(open) => {
+            if (!open) setArticleToEdit(null);
+          }}
         />
       )}
       

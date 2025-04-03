@@ -159,16 +159,10 @@ export const updateEmailSettings = async (settings: EmailSettings): Promise<void
 // Activer/désactiver le mode maintenance
 export const toggleMaintenanceMode = async (enabled: boolean, message?: string): Promise<void> => {
   try {
-    const settingsDoc = await getDoc(doc(db, "settings", "site"));
-    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
-    
-    await setDoc(doc(db, "settings", "site"), {
-      ...currentSettings,
-      general: {
-        ...currentSettings.general,
-        maintenanceMode: enabled,
-        ...(message && { maintenanceMessage: message })
-      }
+    const settingsRef = doc(db, "settings", "site");
+    await updateDoc(settingsRef, {
+      "general.maintenanceMode": enabled,
+      ...(message && { "general.maintenanceMessage": message })
     });
   } catch (error) {
     console.error("Erreur lors de la modification du mode maintenance:", error);

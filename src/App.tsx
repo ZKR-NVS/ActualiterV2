@@ -19,15 +19,11 @@ import NotFound from "./pages/NotFound";
 interface MaintenanceContextType {
   isMaintenanceMode: boolean;
   setMaintenanceMode: (value: boolean) => void;
-  maintenanceMessage: string;
-  setMaintenanceMessage: (value: string) => void;
 }
 
 export const MaintenanceContext = createContext<MaintenanceContextType>({
   isMaintenanceMode: false,
   setMaintenanceMode: () => {},
-  maintenanceMessage: "",
-  setMaintenanceMessage: () => {},
 });
 
 // Hook pour utiliser le contexte de maintenance
@@ -94,7 +90,6 @@ const AppContent = () => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
   const { currentUser } = useAuth();
-  const [maintenanceMessage, setMaintenanceMessage] = useState("");
 
   // Récupérer le mode maintenance depuis Firestore
   useEffect(() => {
@@ -103,7 +98,6 @@ const AppContent = () => {
         setIsSettingsLoading(true);
         const settings = await getSettings();
         setIsMaintenanceMode(settings.general.maintenanceMode);
-        setMaintenanceMessage(settings.general.maintenanceMessage);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres:", error);
       } finally {
@@ -115,12 +109,17 @@ const AppContent = () => {
   }, []);
 
   // Fonction pour mettre à jour le mode maintenance
-  const handleMaintenanceToggle = async (enabled: boolean) => {
+  const handleSetMaintenanceMode = async (value: boolean) => {
     try {
-      await toggleMaintenanceMode(enabled, maintenanceMessage);
-      setIsMaintenanceMode(enabled);
+      // Mettre à jour l'état local immédiatement pour une réponse rapide
+      setIsMaintenanceMode(value);
+      
+      // Mettre à jour dans Firestore
+      await toggleMaintenanceMode(value);
     } catch (error) {
-      console.error("Erreur lors de la modification du mode maintenance:", error);
+      console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+      // En cas d'erreur, revenir à l'état précédent
+      setIsMaintenanceMode(!value);
     }
   };
   
@@ -129,7 +128,7 @@ const AppContent = () => {
   }
 
   return (
-    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleMaintenanceToggle, maintenanceMessage, setMaintenanceMessage }}>
+    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
       <BrowserRouter>
         <MaintenanceWrapper>
           <Routes>

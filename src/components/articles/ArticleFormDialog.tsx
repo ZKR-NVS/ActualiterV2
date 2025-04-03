@@ -26,21 +26,25 @@ const articleFormSchema = z.object({
 type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface ArticleFormDialogProps {
-  onCreateArticle: (article: any) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSubmit: (article: any) => void;
   isEditMode?: boolean;
   articleToEdit?: any;
-  dialogTitle?: string;
-  buttonText?: string;
+  title?: string;
+  submitButtonText?: string;
 }
 
 export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({ 
-  onCreateArticle, 
+  onSubmit,
   isEditMode = false, 
   articleToEdit,
-  dialogTitle = "Créer un nouvel article",
-  buttonText = "Nouvel Article"
+  title = "Créer un nouvel article",
+  submitButtonText = "Nouvel Article",
+  open: controlledOpen,
+  onOpenChange
 }) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(isEditMode && articleToEdit?.image ? articleToEdit.image : null);
   const [imageUrl, setImageUrl] = useState<string>(isEditMode && articleToEdit?.image ? articleToEdit.image : "");
@@ -48,6 +52,10 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [isCropping, setIsCropping] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Utilise soit l'état contrôlé externe, soit l'état interne
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const defaultValues = isEditMode && articleToEdit 
     ? {
@@ -165,7 +173,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
     }
   };
 
-  const onSubmit = async (values: ArticleFormValues) => {
+  const onSubmitForm = async (values: ArticleFormValues) => {
     try {
       setIsSubmitting(true);
       // Ensure verification status is properly typed
@@ -196,7 +204,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
       // Simuler un délai de traitement
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      onCreateArticle(article);
+      onSubmit(article);
       toast.success(isEditMode ? "Article mis à jour avec succès" : "Article créé avec succès");
       setOpen(false);
       form.reset();
@@ -225,15 +233,15 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          {buttonText}
+          {submitButtonText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6 md:col-span-2">
                 <FormField
