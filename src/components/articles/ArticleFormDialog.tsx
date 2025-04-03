@@ -197,7 +197,7 @@ export const ArticleFormDialog = ({
     }
   };
 
-  const onSubmit = async (values: ArticleFormValues) => {
+  const handleFormSubmit = async (values: ArticleFormValues) => {
     try {
       setIsSubmitting(true);
       // Ensure verification status is properly typed
@@ -227,21 +227,21 @@ export const ArticleFormDialog = ({
           title: values.title, 
           author: values.author, 
           content: values.content,
-            verificationStatus: verificationStatus,
-            image: storedImageUrl || articleToEdit.image
+          verificationStatus: verificationStatus,
+          image: storedImageUrl || articleToEdit.image
         } 
       : {
-            id: `article-${Date.now()}`, // Temporary ID for new articles
+          id: `article-${Date.now()}`, // Temporary ID for new articles
           title: values.title,
           author: values.author,
           date: new Date().toLocaleDateString(),
-            verificationStatus: verificationStatus,
+          verificationStatus: verificationStatus,
           content: values.content,
-            excerpt: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),
-            image: storedImageUrl,
-            summary: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),  // For Firestore compatibility
-            publicationDate: new Date()  // For Firestore compatibility
-          };
+          excerpt: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),
+          image: storedImageUrl,
+          summary: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),  // For Firestore compatibility
+          publicationDate: new Date()  // For Firestore compatibility
+      };
       
       // Simuler un délai de traitement
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -272,7 +272,7 @@ export const ArticleFormDialog = ({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6 md:col-span-2">
             <FormField
