@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactCrop, { Crop as CropType, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { uploadImage } from "@/lib/services/imageService";
 
 // Définir le schéma de validation pour le formulaire
 const articleFormSchema = z.object({
@@ -37,7 +38,7 @@ interface ArticleFormDialogProps {
 
 export const ArticleFormDialog = ({
   onSubmit,
-  isEditMode = false,
+  isEditMode = false, 
   articleToEdit = null,
   title = "Créer un nouvel article",
   submitButtonText = "Créer l'article",
@@ -52,6 +53,7 @@ export const ArticleFormDialog = ({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [isCropping, setIsCropping] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 
   const defaultValues = isEditMode && articleToEdit 
     ? {
@@ -136,7 +138,7 @@ export const ArticleFormDialog = ({
     image: HTMLImageElement,
     crop: PixelCrop,
     fileName: string
-  ): Promise<string> => {
+  ): Promise<{blob: Blob, previewUrl: string}> => {
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
@@ -165,8 +167,9 @@ export const ArticleFormDialog = ({
         if (!blob) {
           throw new Error('Canvas is empty');
         }
-        const croppedImageUrl = URL.createObjectURL(blob);
-        resolve(croppedImageUrl);
+        // Créer une URL temporaire pour l'aperçu
+        const previewUrl = URL.createObjectURL(blob);
+        resolve({ blob, previewUrl });
       }, 'image/jpeg', 0.95);
     });
   };
@@ -175,15 +178,19 @@ export const ArticleFormDialog = ({
     if (!imgRef.current || !completedCrop) return;
 
     try {
-      const croppedImageUrl = await getCroppedImg(
+      const { blob, previewUrl } = await getCroppedImg(
         imgRef.current,
         completedCrop,
         'cropped-image.jpg'
       );
-      setImageUrl(croppedImageUrl);
-      setImagePreview(croppedImageUrl);
+      
+      // Stocker le blob pour l'upload ultérieur lors de la soumission
+      setImageBlob(blob);
+      
+      // Utiliser l'URL de prévisualisation pour l'affichage uniquement
+      setImagePreview(previewUrl);
+      
       setIsCropping(false);
-      form.setValue("image", croppedImageUrl);
     } catch (error) {
       toast.error("Erreur lors du recadrage de l'image");
       console.error(error);
@@ -196,24 +203,42 @@ export const ArticleFormDialog = ({
       // Ensure verification status is properly typed
       const verificationStatus = values.verificationStatus as "true" | "false" | "partial";
       
-      const article = isEditMode && articleToEdit 
-        ? { 
-            ...articleToEdit, 
-            title: values.title, 
-            author: values.author, 
-            content: values.content,
+      // Télécharger l'image vers Firebase Storage si disponible
+      let storedImageUrl = imageUrl;
+      if (imageBlob) {
+        try {
+          // Upload l'image vers Firebase Storage
+          storedImageUrl = await uploadImage(imageBlob);
+          
+          // Libérer l'URL de prévisualisation temporaire
+          if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+          }
+        } catch (error) {
+          console.error("Erreur lors du téléchargement de l'image:", error);
+          toast.error("Erreur lors du téléchargement de l'image. L'article sera créé sans image.");
+          storedImageUrl = "";
+        }
+      }
+      
+    const article = isEditMode && articleToEdit 
+      ? { 
+          ...articleToEdit, 
+          title: values.title, 
+          author: values.author, 
+          content: values.content,
             verificationStatus: verificationStatus,
-            image: imageUrl || articleToEdit.image
-          } 
-        : {
+            image: storedImageUrl || articleToEdit.image
+        } 
+      : {
             id: `article-${Date.now()}`, // Temporary ID for new articles
-            title: values.title,
-            author: values.author,
-            date: new Date().toLocaleDateString(),
+          title: values.title,
+          author: values.author,
+          date: new Date().toLocaleDateString(),
             verificationStatus: verificationStatus,
-            content: values.content,
+          content: values.content,
             excerpt: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),
-            image: imageUrl,
+            image: storedImageUrl,
             summary: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),  // For Firestore compatibility
             publicationDate: new Date()  // For Firestore compatibility
           };
@@ -235,12 +260,12 @@ export const ArticleFormDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       {!onOpenChange && (
-        <DialogTrigger asChild>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
             {submitButtonText}
-          </Button>
-        </DialogTrigger>
+        </Button>
+      </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -250,53 +275,53 @@ export const ArticleFormDialog = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6 md:col-span-2">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
                       <FormLabel>Titre de l'article</FormLabel>
-                      <FormControl>
+                  <FormControl>
                         <Input {...field} placeholder="Entrez un titre captivant" className="text-lg" />
-                      </FormControl>
+                  </FormControl>
                       <FormDescription>
                         Un titre clair qui résume le sujet principal
                       </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
               </div>
-              
-              <FormField
-                control={form.control}
-                name="author"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Auteur</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Nom de l'auteur" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
+            
+            <FormField
+              control={form.control}
+              name="author"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Auteur</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Nom de l'auteur" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
                 name="verificationStatus"
-                render={({ field }) => (
-                  <FormItem>
+              render={({ field }) => (
+                <FormItem>
                     <FormLabel>Statut de vérification</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={field.onChange}
                     >
-                      <FormControl>
+                  <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionnez un statut" />
                         </SelectTrigger>
-                      </FormControl>
+                  </FormControl>
                       <SelectContent>
                         <SelectItem value="true" className="flex items-center">
                           <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
@@ -312,10 +337,10 @@ export const ArticleFormDialog = ({
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             </div>
             
             {/* Image upload field */}
@@ -444,7 +469,7 @@ export const ArticleFormDialog = ({
                   <FormLabel>Contenu de l'article</FormLabel>
                   <FormControl>
                     <Textarea 
-                      {...field} 
+                      {...field}
                       placeholder="Rédigez le contenu de votre article ici..."
                       className="min-h-[200px] resize-y"
                     />

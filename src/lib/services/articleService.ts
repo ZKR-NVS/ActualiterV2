@@ -15,6 +15,7 @@ import {
   QuerySnapshot,
   Timestamp
 } from "firebase/firestore";
+import { deleteImage } from "./imageService";
 
 export interface Article {
   id?: string;
@@ -177,6 +178,20 @@ export const updateArticle = async (id: string, article: Partial<Article>): Prom
 // Supprimer un article
 export const deleteArticle = async (id: string): Promise<void> => {
   try {
+    // Récupérer l'article pour obtenir l'URL de l'image
+    const article = await getArticleById(id);
+    
+    if (article && article.imageUrl) {
+      try {
+        // Supprimer l'image associée
+        await deleteImage(article.imageUrl);
+      } catch (error) {
+        console.error(`Erreur lors de la suppression de l'image pour l'article ${id}:`, error);
+        // Continuer même si la suppression de l'image échoue
+      }
+    }
+    
+    // Supprimer l'article
     const articleRef = doc(db, articlesCollection, id);
     await deleteDoc(articleRef);
   } catch (error) {

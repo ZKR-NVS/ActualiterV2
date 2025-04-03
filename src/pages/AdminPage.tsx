@@ -9,6 +9,7 @@ import { ArticleTable } from "@/components/articles/ArticleTable";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
 import { UserTable } from "@/components/admin/UserTable";
 import { UserFormDialog } from "@/components/admin/UserFormDialog";
+import { MediaManager } from "@/components/admin/MediaManager";
 import { SettingsCard } from "@/components/admin/SettingsCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,7 +107,7 @@ const AdminPage = () => {
           variant: "destructive"
         });
       } finally {
-        setIsLoading(false);
+      setIsLoading(false);
       }
     };
 
@@ -124,8 +125,8 @@ const AdminPage = () => {
   const handleDeleteArticle = async (id: string) => {
     try {
       await deleteArticle(id);
-      setArticles(articles.filter(article => article.id !== id));
-      toast.success("Article supprimé avec succès!");
+    setArticles(articles.filter(article => article.id !== id));
+    toast.success("Article supprimé avec succès!");
     } catch (error) {
       console.error("Erreur lors de la suppression de l'article:", error);
       uiToast({
@@ -139,8 +140,8 @@ const AdminPage = () => {
   const handleDeleteUser = async (id: string) => {
     try {
       await deleteUser(id);
-      setUsers(users.filter(user => user.id !== id));
-      toast.success("Utilisateur supprimé avec succès!");
+    setUsers(users.filter(user => user.id !== id));
+    toast.success("Utilisateur supprimé avec succès!");
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
       uiToast({
@@ -171,7 +172,7 @@ const AdminPage = () => {
       
       // Ajouter l'article à l'état local avec l'ID généré
       setArticles([{ ...newUIArticle, id: newArticleId }, ...articles]);
-      toast.success("Article créé avec succès!");
+    toast.success("Article créé avec succès!");
     } catch (error) {
       console.error("Erreur lors de la création de l'article:", error);
       uiToast({
@@ -205,11 +206,11 @@ const AdminPage = () => {
         await updateFirestoreArticle(updatedUIArticle.id, updates);
         
         // Mettre à jour l'état local
-        setArticles(articles.map(article => 
+    setArticles(articles.map(article => 
           article.id === updatedUIArticle.id ? updatedUIArticle : article
-        ));
+    ));
         
-        toast.success("Article mis à jour avec succès!");
+    toast.success("Article mis à jour avec succès!");
       } else {
         throw new Error("Article introuvable");
       }
@@ -293,6 +294,7 @@ const AdminPage = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="articles">Articles</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
+            <TabsTrigger value="media">Médias</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
           
@@ -367,6 +369,10 @@ const AdminPage = () => {
               title="Nouvel Utilisateur"
               submitButtonText="Créer"
             />
+          </TabsContent>
+          
+          <TabsContent value="media">
+            <MediaManager />
           </TabsContent>
           
           <TabsContent value="settings">
