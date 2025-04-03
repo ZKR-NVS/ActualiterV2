@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 210 10% 20%; /* #333 - Gris foncé */
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 10% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 10% 20%;
+
+    --primary: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --primary-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --secondary: 204 70% 53%; /* #3498db - Bleu clair */
+    --secondary-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --muted: 220 13% 95%; /* #f5f6fa - Gris très clair/blanc cassé */
+    --muted-foreground: 210 12% 43%;
+
+    --accent: 4 78% 57%; /* #e74c3c - Rouge/corail */
+    --accent-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%; /* #e1e1e1 - Gris clair */
+    --input: 0 0% 88%; /* #e1e1e1 - Gris clair */
+    --ring: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --sidebar-foreground: 0 0% 100%; /* #ffffff - Blanc */
+    --sidebar-primary: 0 0% 100%; /* #ffffff - Blanc */
+    --sidebar-primary-foreground: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --sidebar-accent: 204 70% 53%; /* #3498db - Bleu clair */
+    --sidebar-accent-foreground: 0 0% 100%; /* #ffffff - Blanc */
+    --sidebar-border: 210 23% 28%;
+    --sidebar-ring: 204 70% 53%; /* #3498db - Bleu clair */
+
+    /* Gradient */
+    --gradient: linear-gradient(to right, hsl(210 33% 25%), hsl(204 70% 53%));
+  }
+
+  .dark {
+    --background: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --card: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --card-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --popover: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --popover-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --primary: 204 70% 53%; /* #3498db - Bleu clair */
+    --primary-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --secondary: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --secondary-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --muted: 210 25% 35%;
+    --muted-foreground: 0 0% 90%;
+
+    --accent: 4 78% 57%; /* #e74c3c - Rouge/corail */
+    --accent-foreground: 0 0% 100%; /* #ffffff - Blanc */
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 23% 28%;
+    --input: 210 23% 28%;
+    --ring: 204 70% 53%; /* #3498db - Bleu clair */
+
+    /* Gradient */
+    --gradient: linear-gradient(to right, hsl(204 70% 53%), hsl(210 33% 25%));
+  }
+
+  /* Alternative themes */
+  .theme-ocean {
+    --primary: 205 60% 27%; /* #1a4b6e - Bleu marine */
+    --secondary: 203 69% 45%; /* #2980b9 - Bleu moyen */
+    --gradient: linear-gradient(to right, hsl(205 60% 27%), hsl(203 69% 45%));
+  }
+
+  .theme-forest {
+    --primary: 145 63% 49%; /* #2ecc71 - Vert vif */
+    --secondary: 145 63% 42%; /* #27ae60 - Vert moyen */
+    --gradient: linear-gradient(to right, hsl(145 63% 49%), hsl(145 63% 42%));
+  }
+
+  .theme-sunset {
+    --primary: 4 78% 57%; /* #e74c3c - Rouge */
+    --secondary: 6 78% 46%; /* #c0392b - Rouge foncé */
+    --gradient: linear-gradient(to right, hsl(4 78% 57%), hsl(6 78% 46%));
+  }
+
+  .theme-lavender {
+    --primary: 282 44% 53%; /* #9b59b6 - Violet */
+    --secondary: 282 59% 47%; /* #8e44ad - Violet foncé */
+    --gradient: linear-gradient(to right, hsl(282 44% 53%), hsl(282 59% 47%));
+  }
+
+  .theme-midnight {
+    --primary: 210 29% 29%; /* #34495e - Bleu très foncé */
+    --secondary: 210 33% 25%; /* #2c3e50 - Bleu foncé/ardoise */
+    --gradient: linear-gradient(to right, hsl(210 29% 29%), hsl(210 33% 25%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .verification-badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .verification-badge-true {
+    @apply bg-true text-true-foreground;
+  }
+  
+  .verification-badge-false {
+    @apply bg-false text-false-foreground;
+  }
+  
+  .verification-badge-partial {
+    @apply bg-partial text-partial-foreground;
+  }
+
+  .gradient-bg {
+    background: var(--gradient);
+  }
+}
