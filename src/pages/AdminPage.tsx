@@ -323,7 +323,7 @@ const AdminPage = () => {
             <ArticleFormDialog
               open={isArticleDialogOpen}
               onOpenChange={setIsArticleDialogOpen}
-              onSubmit={handleCreateArticle}
+              handleSubmit={handleCreateArticle}
               title="Nouvel Article"
               submitButtonText="Créer"
             />
@@ -365,7 +365,7 @@ const AdminPage = () => {
             <UserFormDialog
               open={isUserDialogOpen}
               onOpenChange={setIsUserDialogOpen}
-              onSubmit={handleCreateUser}
+              handleSubmit={handleCreateUser}
               title="Nouvel Utilisateur"
               submitButtonText="Créer"
             />
@@ -382,7 +382,7 @@ const AdminPage = () => {
               <GeneralSettingsForm />
               <ContentSettingsForm />
               <EmailSettingsForm />
-            </div>
+              </div>
           </TabsContent>
         </Tabs>
       </div>

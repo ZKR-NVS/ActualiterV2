@@ -24,7 +24,7 @@ const userFormSchema = z.object({
 type UserFormValues = z.infer<typeof userFormSchema>;
 
 interface UserFormDialogProps {
-  onSubmit: (user: any) => void;
+  handleSubmit: (user: any) => void;
   title?: string;
   submitButtonText?: string;
   open?: boolean;
@@ -32,7 +32,7 @@ interface UserFormDialogProps {
 }
 
 export const UserFormDialog = ({
-  onSubmit,
+  handleSubmit,
   title = "Créer un nouvel utilisateur",
   submitButtonText = "Créer l'utilisateur",
   open,
@@ -67,7 +67,7 @@ export const UserFormDialog = ({
     }
   };
 
-  const onSubmit = async (values: UserFormValues) => {
+  const handleFormSubmit = async (values: UserFormValues) => {
     try {
       setIsSubmitting(true);
       
@@ -80,7 +80,7 @@ export const UserFormDialog = ({
       }
       
       toast.success("Utilisateur créé avec succès");
-      onSubmit({
+      handleSubmit({
         ...user,
         role: values.role
       });
@@ -119,7 +119,7 @@ export const UserFormDialog = ({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="displayName"
