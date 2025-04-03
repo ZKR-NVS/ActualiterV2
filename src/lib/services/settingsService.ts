@@ -126,8 +126,24 @@ export const updateGeneralSettings = async (settings: GeneralSettings): Promise<
     
     console.log("Nouveaux paramètres généraux:", JSON.stringify(updatedSettings.general, null, 2));
     
-    await setDoc(doc(db, "settings", "site"), updatedSettings);
-    console.log("Paramètres mis à jour avec succès");
+    try {
+      await setDoc(doc(db, "settings", "site"), updatedSettings);
+      console.log("Paramètres mis à jour avec succès");
+    } catch (error) {
+      console.error("Erreur Firestore lors de l'écriture:", error);
+      
+      // Tester une approche alternative avec updateDoc
+      try {
+        console.log("Tentative avec updateDoc...");
+        await updateDoc(doc(db, "settings", "site"), {
+          "general": settings
+        });
+        console.log("Mise à jour réussie avec updateDoc");
+      } catch (updateError) {
+        console.error("Erreur avec updateDoc:", updateError);
+        throw updateError;
+      }
+    }
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres généraux:", error);
     throw error;
