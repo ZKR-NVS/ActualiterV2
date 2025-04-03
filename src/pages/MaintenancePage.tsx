@@ -10,9 +10,19 @@ const MaintenancePage = () => {
   // Séquence secrète: tbadmin
   const SECRET_SEQUENCE = ["t", "b", "a", "d", "m", "i", "n"];
   
-  // Écouter les touches du clavier pour la séquence secrète
+  // Écouter les touches du clavier pour la séquence secrète et bloquer F12
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Bloquer F12 et autres touches de développeur
+      if (e.key === "F12" || 
+          (e.ctrlKey && e.shiftKey && e.key === "I") || 
+          (e.ctrlKey && e.shiftKey && e.key === "J") || 
+          (e.ctrlKey && e.shiftKey && e.key === "C") || 
+          (e.ctrlKey && e.key === "U")) {
+        e.preventDefault();
+        return false;
+      }
+      
       // Ignorer les événements de modification et les touches spéciales
       if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) {
         return;
@@ -40,13 +50,41 @@ const MaintenancePage = () => {
         setKeySequence([]);
       }
     };
+
+    // Désactiver le clic droit
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
     
-    // Ajouter l'écouteur d'événements
+    // Ajouter les écouteurs d'événements
     window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("contextmenu", handleContextMenu);
     
-    // Nettoyer l'écouteur d'événements
+    // Bloquer console.log, console.debug, etc.
+    const blockConsole = () => {
+      try {
+        Object.defineProperty(window, 'console', {
+          value: { 
+            ...console,
+            log: () => {},
+            warn: () => {},
+            error: () => {},
+            info: () => {},
+            debug: () => {}
+          },
+          writable: false,
+          configurable: false
+        });
+      } catch (e) {}
+    };
+    
+    blockConsole();
+    
+    // Nettoyer les écouteurs d'événements
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, [keySequence, navigate]);
   
@@ -60,6 +98,28 @@ const MaintenancePage = () => {
       return () => clearTimeout(timeout);
     }
   }, [keySequence]);
+  
+  // Empêcher l'ouverture des outils de développement à la volée
+  useEffect(() => {
+    const checkDevTools = () => {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+      
+      if (widthThreshold || heightThreshold) {
+        // Redirection ou autre action en cas de détection des outils de développement
+        document.body.innerHTML = "Accès non autorisé";
+      }
+    };
+    
+    const interval = setInterval(checkDevTools, 1000);
+    window.addEventListener('resize', checkDevTools);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', checkDevTools);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
