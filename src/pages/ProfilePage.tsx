@@ -4,7 +4,6 @@ import { ProfileSidebar } from "@/components/profile/ProfileSidebar";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { SecurityForm } from "@/components/profile/SecurityForm";
 import { PreferencesForm } from "@/components/profile/PreferencesForm";
-import { VerificationForm } from "@/components/profile/VerificationForm";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Navigate } from "react-router-dom";
@@ -61,9 +60,6 @@ const ProfilePage = () => {
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="security">Security</TabsTrigger>
                 <TabsTrigger value="preferences">Preferences</TabsTrigger>
-                {user.role === "admin" && (
-                  <TabsTrigger value="verification">Verification</TabsTrigger>
-                )}
               </TabsList>
               
               <TabsContent value="profile">
@@ -77,12 +73,6 @@ const ProfilePage = () => {
               <TabsContent value="preferences">
                 <PreferencesForm />
               </TabsContent>
-              
-              {user.role === "admin" && (
-                <TabsContent value="verification">
-                  <VerificationForm />
-                </TabsContent>
-              )}
             </Tabs>
           </div>
         </div>

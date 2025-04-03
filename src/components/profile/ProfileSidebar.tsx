@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
 interface ProfileSidebarProps {
   user: {
@@ -20,31 +19,10 @@ interface ProfileSidebarProps {
 
 export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ user }) => {
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(
-    document.documentElement.classList.contains("dark")
-  );
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   
   const { logout } = useAuth();
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    // Synchroniser l'état du mode sombre avec le thème réel
-    const isDark = document.documentElement.classList.contains("dark");
-    setDarkMode(isDark);
-  }, []);
-  
-  const handleDarkModeToggle = (checked: boolean) => {
-    setDarkMode(checked);
-    
-    if (checked) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  };
   
   const handleLogout = async () => {
     try {
@@ -81,14 +59,6 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ user }) => {
                 id="emailNotifications" 
                 checked={emailNotifications}
                 onCheckedChange={setEmailNotifications}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="darkMode">Dark Mode</Label>
-              <Switch 
-                id="darkMode" 
-                checked={darkMode}
-                onCheckedChange={handleDarkModeToggle}
               />
             </div>
             <div className="flex items-center justify-between">
