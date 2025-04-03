@@ -52,12 +52,13 @@ export const GeneralSettingsForm = () => {
 
   const handleSave = async () => {
     try {
+      console.log("Tentative de sauvegarde des paramètres généraux:", settings);
       await updateGeneralSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres généraux enregistrés avec succès");
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres généraux:", error);
-      toast.error("Erreur lors de l'enregistrement des paramètres généraux");
+      toast.error("Erreur lors de l'enregistrement des paramètres généraux: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 

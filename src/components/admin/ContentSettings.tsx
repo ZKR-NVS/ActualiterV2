@@ -11,12 +11,12 @@ export const ContentSettingsForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [settings, setSettings] = useState<ContentSettings>({
-    defaultVerificationStatus: "partial",
+    defaultVerificationStatus: "pending",
     requireImageForArticles: true,
-    maxArticleLength: 10000,
+    maxArticleLength: 5000,
     minArticleLength: 100,
-    allowedTags: ["politique", "économie", "santé", "environnement", "technologie", "société"],
-    defaultTags: ["vérification"],
+    allowedTags: ["actualité", "politique", "économie", "société", "technologie", "sport", "culture"],
+    defaultTags: ["actualité"],
     featuredArticlesCount: 5
   });
 
@@ -52,12 +52,13 @@ export const ContentSettingsForm = () => {
 
   const handleSave = async () => {
     try {
+      console.log("Tentative de sauvegarde des paramètres de contenu:", settings);
       await updateContentSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres de contenu enregistrés avec succès");
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres de contenu:", error);
-      toast.error("Erreur lors de l'enregistrement des paramètres de contenu");
+      toast.error("Erreur lors de l'enregistrement des paramètres de contenu: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -157,7 +158,7 @@ export const ContentSettingsForm = () => {
               id="allowedTags"
               value={settings.allowedTags.join(", ")}
               onChange={(e) => handleTagsChange(e.target.value, "allowedTags")}
-              placeholder="politique, économie, santé, environnement"
+              placeholder="actualité, politique, économie, société, technologie, sport, culture"
             />
             <p className="text-xs text-gray-500">Séparez les tags par des virgules</p>
           </div>
@@ -168,7 +169,7 @@ export const ContentSettingsForm = () => {
               id="defaultTags"
               value={settings.defaultTags.join(", ")}
               onChange={(e) => handleTagsChange(e.target.value, "defaultTags")}
-              placeholder="vérification"
+              placeholder="actualité"
             />
             <p className="text-xs text-gray-500">Séparez les tags par des virgules</p>
           </div>

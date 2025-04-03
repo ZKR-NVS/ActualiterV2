@@ -111,13 +111,21 @@ export const getSettings = async (): Promise<SiteSettings> => {
 // Mettre à jour les paramètres généraux
 export const updateGeneralSettings = async (settings: GeneralSettings): Promise<void> => {
   try {
+    console.log("Mise à jour des paramètres généraux:", settings);
     const settingsDoc = await getDoc(doc(db, "settings", "site"));
     const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    await setDoc(doc(db, "settings", "site"), {
+    console.log("Paramètres actuels:", currentSettings);
+    
+    const updatedSettings = {
       ...currentSettings,
       general: settings
-    });
+    };
+    
+    console.log("Nouveaux paramètres:", updatedSettings);
+    
+    await setDoc(doc(db, "settings", "site"), updatedSettings);
+    console.log("Paramètres mis à jour avec succès");
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres généraux:", error);
     throw error;
@@ -127,13 +135,21 @@ export const updateGeneralSettings = async (settings: GeneralSettings): Promise<
 // Mettre à jour les paramètres de contenu
 export const updateContentSettings = async (settings: ContentSettings): Promise<void> => {
   try {
+    console.log("Mise à jour des paramètres de contenu:", settings);
     const settingsDoc = await getDoc(doc(db, "settings", "site"));
     const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    await setDoc(doc(db, "settings", "site"), {
+    console.log("Paramètres actuels:", currentSettings);
+    
+    const updatedSettings = {
       ...currentSettings,
       content: settings
-    });
+    };
+    
+    console.log("Nouveaux paramètres:", updatedSettings);
+    
+    await setDoc(doc(db, "settings", "site"), updatedSettings);
+    console.log("Paramètres de contenu mis à jour avec succès");
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres de contenu:", error);
     throw error;
@@ -143,13 +159,21 @@ export const updateContentSettings = async (settings: ContentSettings): Promise<
 // Mettre à jour les paramètres email
 export const updateEmailSettings = async (settings: EmailSettings): Promise<void> => {
   try {
+    console.log("Mise à jour des paramètres email:", settings);
     const settingsDoc = await getDoc(doc(db, "settings", "site"));
     const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    await setDoc(doc(db, "settings", "site"), {
+    console.log("Paramètres actuels:", currentSettings);
+    
+    const updatedSettings = {
       ...currentSettings,
       email: settings
-    });
+    };
+    
+    console.log("Nouveaux paramètres:", updatedSettings);
+    
+    await setDoc(doc(db, "settings", "site"), updatedSettings);
+    console.log("Paramètres email mis à jour avec succès");
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres email:", error);
     throw error;
@@ -159,13 +183,20 @@ export const updateEmailSettings = async (settings: EmailSettings): Promise<void
 // Activer/désactiver le mode maintenance
 export const toggleMaintenanceMode = async (enabled: boolean, message?: string): Promise<void> => {
   try {
-    const settingsRef = doc(db, "settings", "site");
-    await updateDoc(settingsRef, {
-      "general.maintenanceMode": enabled,
-      ...(message && { "general.maintenanceMessage": message })
+    const settingsDoc = await getDoc(doc(db, "settings", "site"));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
+    
+    // Mettre à jour le mode maintenance
+    await setDoc(doc(db, "settings", "site"), {
+      ...currentSettings,
+      general: {
+        ...currentSettings.general,
+        maintenanceMode: enabled,
+        ...(message ? { maintenanceMessage: message } : {})
+      }
     });
   } catch (error) {
-    console.error("Erreur lors de la modification du mode maintenance:", error);
+    console.error("Erreur lors de la mise à jour du mode maintenance:", error);
     throw error;
   }
 }; 

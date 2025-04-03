@@ -67,12 +67,13 @@ export const EmailSettingsForm = () => {
 
   const handleSave = async () => {
     try {
+      console.log("Tentative de sauvegarde des paramètres email:", settings);
       await updateEmailSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres email enregistrés avec succès");
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres email:", error);
-      toast.error("Erreur lors de l'enregistrement des paramètres email");
+      toast.error("Erreur lors de l'enregistrement des paramètres email: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
