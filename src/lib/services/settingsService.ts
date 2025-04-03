@@ -168,4 +168,28 @@ export const toggleMaintenanceMode = async (enabled: boolean, message?: string):
     console.error("Erreur lors de la modification du mode maintenance:", error);
     throw error;
   }
+};
+
+// Alias pour getSettings pour maintenir la compatibilité
+export const getGlobalSettings = async (): Promise<{ maintenanceMode: boolean }> => {
+  try {
+    const settings = await getSettings();
+    return { 
+      maintenanceMode: settings.general.maintenanceMode 
+    };
+  } catch (error) {
+    console.error("Erreur lors de la récupération des paramètres globaux:", error);
+    throw error;
+  }
+};
+
+// Alias pour toggleMaintenanceMode pour maintenir la compatibilité
+export const updateMaintenanceMode = async (enabled: boolean, userId?: string): Promise<void> => {
+  try {
+    await toggleMaintenanceMode(enabled);
+    console.log(`Mode maintenance ${enabled ? 'activé' : 'désactivé'} par l'utilisateur ${userId || 'inconnu'}`);
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+    throw error;
+  }
 }; 
