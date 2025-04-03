@@ -55,9 +55,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   // Vérifier si l'utilisateur a le rôle d'administrateur
+  // Assurons-nous que l'utilisateur existe et a spécifiquement le rôle "admin"
   const isAdmin = currentUser?.role === "admin";
   
   // Vérifier si l'utilisateur a le rôle de vérificateur
+  // Un admin est également considéré comme vérificateur (accès plus large)
   const isVerifier = currentUser?.role === "verifier" || isAdmin;
 
   // Fonction de connexion

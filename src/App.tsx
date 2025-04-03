@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
+import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -85,20 +86,58 @@ const initializeTheme = () => {
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isMaintenanceMode, setMaintenanceMode] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+  const { currentUser } = useAuth();
 
   // Initialiser le thème au démarrage de l'application
   useEffect(() => {
     initializeTheme();
   }, []);
+
+  // Récupérer le mode maintenance depuis Firestore
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setIsSettingsLoading(true);
+        const settings = await getGlobalSettings();
+        setIsMaintenanceMode(settings.maintenanceMode);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des paramètres:", error);
+      } finally {
+        setIsSettingsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  // Fonction pour mettre à jour le mode maintenance
+  const handleSetMaintenanceMode = async (value: boolean) => {
+    try {
+      // Mettre à jour l'état local immédiatement pour une réponse rapide
+      setIsMaintenanceMode(value);
+      
+      // Mettre à jour dans Firestore
+      await updateMaintenanceMode(value, currentUser?.uid);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+      // En cas d'erreur, revenir à l'état précédent
+      setIsMaintenanceMode(!value);
+    }
+  };
   
+  if (isSettingsLoading) {
+    return <div className="flex items-center justify-center h-screen">Chargement des paramètres...</div>;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode }}>
+          <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
             <BrowserRouter>
               <MaintenanceWrapper>
                 <Routes>
