@@ -111,18 +111,20 @@ export const getSettings = async (): Promise<SiteSettings> => {
 // Mettre à jour les paramètres généraux
 export const updateGeneralSettings = async (settings: GeneralSettings): Promise<void> => {
   try {
-    console.log("Mise à jour des paramètres généraux:", settings);
+    console.log("Mise à jour des paramètres généraux avec siteName=", settings.siteName);
+    console.log("Paramètres généraux détaillés:", JSON.stringify(settings, null, 2));
+    
     const settingsDoc = await getDoc(doc(db, "settings", "site"));
     const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    console.log("Paramètres actuels:", currentSettings);
+    console.log("Paramètres actuels généraux:", JSON.stringify(currentSettings.general, null, 2));
     
     const updatedSettings = {
       ...currentSettings,
       general: settings
     };
     
-    console.log("Nouveaux paramètres:", updatedSettings);
+    console.log("Nouveaux paramètres généraux:", JSON.stringify(updatedSettings.general, null, 2));
     
     await setDoc(doc(db, "settings", "site"), updatedSettings);
     console.log("Paramètres mis à jour avec succès");

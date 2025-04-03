@@ -30,6 +30,7 @@ export const GeneralSettingsForm = () => {
       try {
         setIsLoading(true);
         const siteSettings = await getSettings();
+        console.log("Paramètres récupérés:", siteSettings.general);
         setSettings(siteSettings.general);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres généraux:", error);
@@ -43,8 +44,10 @@ export const GeneralSettingsForm = () => {
   }, []);
 
   const handleChange = (key: keyof GeneralSettings, value: any) => {
+    console.log(`Modification de ${key} à ${value}`);
     setSettings(prev => {
       const newSettings = { ...prev, [key]: value };
+      console.log("Nouvelles valeurs:", newSettings);
       setIsDirty(true);
       return newSettings;
     });
