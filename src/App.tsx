@@ -85,15 +85,11 @@ const initializeTheme = () => {
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// Composant pour le contenu de l'application qui utilisera useAuth
+const AppContent = () => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
   const { currentUser } = useAuth();
-
-  // Initialiser le thème au démarrage de l'application
-  useEffect(() => {
-    initializeTheme();
-  }, []);
 
   // Récupérer le mode maintenance depuis Firestore
   useEffect(() => {
@@ -132,38 +128,49 @@ const App = () => {
   }
 
   return (
+    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
+      <BrowserRouter>
+        <MaintenanceWrapper>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <AdminPage />
+                </AdminRoute>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MaintenanceWrapper>
+      </BrowserRouter>
+    </MaintenanceContext.Provider>
+  );
+};
+
+const App = () => {
+  // Initialiser le thème au démarrage de l'application
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
+  return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
-            <BrowserRouter>
-              <MaintenanceWrapper>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route 
-                    path="/profile" 
-                    element={
-                      <ProtectedRoute>
-                        <ProfilePage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <AdminRoute>
-                        <AdminPage />
-                      </AdminRoute>
-                    } 
-                  />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </MaintenanceWrapper>
-            </BrowserRouter>
-          </MaintenanceContext.Provider>
+          <AppContent />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
