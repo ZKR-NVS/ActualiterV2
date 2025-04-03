@@ -365,7 +365,7 @@ const AdminPage = () => {
             <UserFormDialog
               open={isUserDialogOpen}
               onOpenChange={setIsUserDialogOpen}
-              onSubmit={handleCreateUser}
+              onUserSubmit={handleCreateUser}
               title="Nouvel Utilisateur"
               submitButtonText="Créer"
             />

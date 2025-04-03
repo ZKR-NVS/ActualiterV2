@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { 
-  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from "@/components/ui";
+} from "@/components/ui/dropdown-menu";
 import { getUserNotifications, markAllNotificationsAsRead, markNotificationAsRead, Notification } from "@/lib/services/notificationService";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { format } from "date-fns";
