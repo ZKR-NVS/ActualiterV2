@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Article as UIArticle } from "@/components/ArticleCard";
 import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle } from "@/lib/services/articleService";
-import { getAllUsers, deleteUser, updateUserProfile, User } from "@/lib/services/authService";
+import { getAllUsers, deleteUser, updateUserProfile, User as FirestoreUser } from "@/lib/services/authService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { GeneralSettingsForm } from "@/components/admin/GeneralSettings";
@@ -53,7 +53,7 @@ interface AdminUIUser {
 }
 
 // Convertir les utilisateurs Firestore en format d'affichage UI
-const transformUsersForUI = (firestoreUsers: User[]): AdminUIUser[] => {
+const transformUsersForUI = (firestoreUsers: FirestoreUser[]): AdminUIUser[] => {
   return firestoreUsers.map(user => ({
     id: user.uid,
     name: user.displayName,
@@ -240,7 +240,7 @@ const AdminPage = () => {
     }
   };
 
-  const handleCreateUser = (newUser: User) => {
+  const handleCreateUser = (newUser: FirestoreUser) => {
     try {
       // Créer un nouvel utilisateur UI à partir des données Firebase
       const newUIUser: AdminUIUser = {
