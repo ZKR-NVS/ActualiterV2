@@ -164,23 +164,6 @@ export const GeneralSettingsForm = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="theme">Thème</Label>
-            <Select 
-              value={settings.theme}
-              onValueChange={(value) => handleChange("theme", value)}
-            >
-              <SelectTrigger id="theme">
-                <SelectValue placeholder="Sélectionnez un thème" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Clair</SelectItem>
-                <SelectItem value="dark">Sombre</SelectItem>
-                <SelectItem value="system">Système</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
             <Label htmlFor="maintenanceMessage">Message de maintenance</Label>
             <Textarea 
               id="maintenanceMessage" 
