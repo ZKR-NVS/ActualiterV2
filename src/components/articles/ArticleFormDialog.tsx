@@ -4,7 +4,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Image as ImageIcon } from "lucide-react";
+import { PlusCircle, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -12,8 +12,8 @@ interface ArticleFormValues {
   title: string;
   content: string;
   author: string;
-  imageUrl: string;
   verificationStatus: "true" | "false" | "partial";
+  imageUrl: string;
 }
 
 interface ArticleFormDialogProps {
@@ -32,35 +32,70 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
   buttonText = "Nouvel Article"
 }) => {
   const [open, setOpen] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(isEditMode && articleToEdit ? articleToEdit.image : null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const defaultValues = isEditMode && articleToEdit 
     ? {
         title: articleToEdit.title,
-        content: articleToEdit.content || "",
+        content: articleToEdit.content || articleToEdit.excerpt?.replace('...', '') || '',
         author: articleToEdit.author,
-        imageUrl: articleToEdit.image || "",
-        verificationStatus: articleToEdit.verificationStatus
+        verificationStatus: articleToEdit.verificationStatus,
+        imageUrl: articleToEdit.image || articleToEdit.imageUrl || ''
       }
     : {
         title: "",
         content: "",
         author: "",
-        imageUrl: "",
-        verificationStatus: "partial"
+        verificationStatus: "partial",
+        imageUrl: ""
       };
 
   const form = useForm<ArticleFormValues>({
     defaultValues
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setImagePreview(url);
-    form.setValue("imageUrl", url);
+  // Si nous sommes en mode édition et qu'il y a une image, définir l'aperçu
+  useState(() => {
+    if (isEditMode && articleToEdit && (articleToEdit.image || articleToEdit.imageUrl)) {
+      setImagePreview(articleToEdit.image || articleToEdit.imageUrl);
+    }
+  });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Vérifier le type et la taille du fichier
+    if (!file.type.includes('image/')) {
+      toast.error("Veuillez sélectionner une image");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast.error("L'image est trop volumineuse (max 5MB)");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    // Simuler un téléchargement (dans une vraie application, vous utiliseriez Firebase Storage)
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageUrl = event.target?.result as string;
+      setImagePreview(imageUrl);
+      form.setValue("imageUrl", imageUrl);
+      setUploadingImage(false);
+    };
+    reader.onerror = () => {
+      toast.error("Erreur lors du téléchargement de l'image");
+      setUploadingImage(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const onSubmit = (values: ArticleFormValues) => {
+    // Vérifier que tous les champs obligatoires sont remplis
     if (!values.title.trim()) {
       toast.error("Le titre est obligatoire");
       return;
@@ -71,14 +106,23 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
       return;
     }
 
+    if (!values.content.trim()) {
+      toast.error("Le contenu est obligatoire");
+      return;
+    }
+
+    // Créer l'article avec tous les champs nécessaires
     const article = isEditMode && articleToEdit 
       ? { 
           ...articleToEdit, 
           title: values.title, 
           author: values.author, 
           content: values.content,
-          image: values.imageUrl,
-          verificationStatus: values.verificationStatus
+          verificationStatus: values.verificationStatus,
+          image: values.imageUrl || imagePreview,
+          imageUrl: values.imageUrl || imagePreview,
+          excerpt: values.content.substring(0, 120) + '...',
+          summary: values.content.substring(0, 120) + '...',
         } 
       : {
           id: Math.random().toString(36).substring(2, 9),
@@ -87,8 +131,13 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
           date: new Date().toLocaleDateString(),
           verificationStatus: values.verificationStatus,
           content: values.content,
-          image: values.imageUrl,
-          excerpt: values.content.substring(0, 120) + '...'
+          image: values.imageUrl || imagePreview,
+          imageUrl: values.imageUrl || imagePreview,
+          excerpt: values.content.substring(0, 120) + '...',
+          summary: values.content.substring(0, 120) + '...',
+          source: "Rédaction TruthBeacon",
+          publicationDate: new Date(),
+          tags: []
         };
     
     onCreateArticle(article);
@@ -116,7 +165,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Titre*</FormLabel>
+                  <FormLabel>Titre</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Titre de l'article" />
                   </FormControl>
@@ -130,53 +179,10 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
               name="author"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Auteur*</FormLabel>
+                  <FormLabel>Auteur</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Nom de l'auteur" />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL de l'image</FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <Input 
-                        {...field} 
-                        placeholder="https://example.com/image.jpg" 
-                        onChange={handleImageChange}
-                      />
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon"
-                        title="Prévisualiser l'image"
-                        disabled={!field.value}
-                        onClick={() => setImagePreview(field.value)}
-                      >
-                        <ImageIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </FormControl>
-                  {imagePreview && (
-                    <div className="mt-2 relative rounded-md overflow-hidden h-40">
-                      <img 
-                        src={imagePreview} 
-                        alt="Prévisualisation" 
-                        className="w-full h-full object-cover"
-                        onError={() => {
-                          toast.error("L'image ne peut pas être chargée");
-                          setImagePreview(null);
-                        }}
-                      />
-                    </div>
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -205,20 +211,80 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
               name="verificationStatus"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Statut de vérification*</FormLabel>
+                  <FormLabel>Statut de vérification</FormLabel>
                   <FormControl>
                     <select
                       {...field}
-                      className="w-full p-2 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 rounded-md dark:bg-input-bg dark:border-input-border dark:text-foreground"
                     >
                       <option value="true">Vérifié Vrai</option>
                       <option value="false">Vérifié Faux</option>
                       <option value="partial">Partiellement Vrai</option>
                     </select>
                   </FormControl>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Ce statut déterminera dans quelle catégorie l'article sera affiché
-                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image</FormLabel>
+                  <div className="space-y-3">
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                    </FormControl>
+                    
+                    <label 
+                      htmlFor="image-upload" 
+                      className="flex items-center justify-center w-full h-10 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md cursor-pointer hover:bg-primary-hover"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {uploadingImage ? "Téléchargement..." : "Télécharger une image"}
+                    </label>
+                    
+                    {imagePreview && (
+                      <div className="relative w-full rounded-md overflow-hidden">
+                        <img 
+                          src={imagePreview} 
+                          alt="Aperçu" 
+                          className="w-full h-40 object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setImagePreview(null);
+                            form.setValue("imageUrl", "");
+                          }}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <Input 
+                      {...field} 
+                      placeholder="Ou entrez une URL d'image" 
+                      onChange={(e) => {
+                        field.onChange(e);
+                        if (e.target.value) {
+                          setImagePreview(e.target.value);
+                        }
+                      }}
+                    />
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

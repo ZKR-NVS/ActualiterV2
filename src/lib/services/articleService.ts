@@ -42,15 +42,15 @@ const transformArticleData = (doc: DocumentData): Article => {
   return {
     id: doc.id,
     title: data.title,
-    source: data.source || "",
+    source: data.source,
     author: data.author,
     publicationDate: data.publicationDate?.toDate() || new Date(),
-    content: data.content || "",
-    summary: data.summary || (data.content ? data.content.substring(0, 150) + "..." : ""),
-    imageUrl: data.imageUrl || "",
+    content: data.content,
+    summary: data.summary,
+    imageUrl: data.imageUrl,
     verificationStatus: data.verificationStatus,
-    verifiedBy: data.verifiedBy || "",
-    verificationNote: data.verificationNote || "",
+    verifiedBy: data.verifiedBy,
+    verificationNote: data.verificationNote,
     tags: data.tags || [],
     viewCount: data.viewCount || 0,
     createdAt: data.createdAt?.toDate() || new Date(),
@@ -93,14 +93,40 @@ export const getArticleById = async (id: string): Promise<Article | null> => {
 // Récupérer les articles par statut de vérification
 export const getArticlesByStatus = async (status: "true" | "false" | "partial"): Promise<Article[]> => {
   try {
+    console.log(`Recherche d'articles avec le statut: ${status}`);
+    
     const articlesRef = collection(db, articlesCollection);
-    const querySnapshot = await getDocs(
-      query(
-        articlesRef,
-        where("verificationStatus", "==", status),
-        orderBy("publicationDate", "desc")
-      )
+    const statusQuery = query(
+      articlesRef,
+      where("verificationStatus", "==", status),
+      orderBy("publicationDate", "desc")
     );
+    
+    const querySnapshot = await getDocs(statusQuery);
+    
+    console.log(`Nombre d'articles trouvés avec statut ${status}: ${querySnapshot.docs.length}`);
+    
+    // S'il n'y a pas d'articles avec ce statut, essayons de vérifier tous les articles
+    if (querySnapshot.docs.length === 0) {
+      console.log("Aucun article trouvé avec ce statut, vérification de tous les articles");
+      
+      // Récupérer tous les articles
+      const allArticlesQuery = query(
+        articlesRef,
+        orderBy("publicationDate", "desc")
+      );
+      
+      const allArticlesSnapshot = await getDocs(allArticlesQuery);
+      
+      // Filtrer manuellement les articles par statut (parfois le filtre where ne fonctionne pas correctement)
+      const filteredArticles = allArticlesSnapshot.docs
+        .map(transformArticleData)
+        .filter(article => article.verificationStatus === status);
+      
+      console.log(`Après filtrage manuel, ${filteredArticles.length} articles trouvés`);
+      
+      return filteredArticles;
+    }
     
     return querySnapshot.docs.map(transformArticleData);
   } catch (error) {
@@ -129,29 +155,15 @@ export const getPopularArticles = async (count: number = 5): Promise<Article[]> 
 };
 
 // Créer un nouvel article
-export const createArticle = async (article: any): Promise<string> => {
+export const createArticle = async (article: Omit<Article, "id" | "createdAt" | "updatedAt">): Promise<string> => {
   try {
     const now = Timestamp.now();
-    
-    // S'assurer que tous les champs nécessaires sont présents
     const newArticle = {
-      title: article.title,
-      source: article.source || "",
-      author: article.author,
-      publicationDate: now,
-      content: article.content || "",
-      summary: article.summary || article.excerpt || (article.content?.substring(0, 150) + "...") || "",
-      imageUrl: article.imageUrl || article.image || "",
-      verificationStatus: article.verificationStatus,
-      verifiedBy: article.verifiedBy || "",
-      verificationNote: article.verificationNote || "",
-      tags: article.tags || [],
-      viewCount: 0,
+      ...article,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      viewCount: 0
     };
-    
-    console.log("Création d'un nouvel article avec le statut:", newArticle.verificationStatus);
     
     const docRef = await addDoc(collection(db, articlesCollection), newArticle);
     return docRef.id;
@@ -165,19 +177,10 @@ export const createArticle = async (article: any): Promise<string> => {
 export const updateArticle = async (id: string, article: Partial<Article>): Promise<void> => {
   try {
     const articleRef = doc(db, articlesCollection, id);
-    
-    // Si l'article a un champ 'image', le mapper sur 'imageUrl'
-    const updates: any = { ...article, updatedAt: Timestamp.now() };
-    
-    if (updates.image && !updates.imageUrl) {
-      updates.imageUrl = updates.image;
-      delete updates.image;
-    }
-    
-    if (updates.excerpt && !updates.summary) {
-      updates.summary = updates.excerpt;
-      delete updates.excerpt;
-    }
+    const updates = {
+      ...article,
+      updatedAt: Timestamp.now()
+    };
     
     await updateDoc(articleRef, updates);
   } catch (error) {
