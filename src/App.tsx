@@ -4,9 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
-import { AuthProvider } from "@/lib/contexts/AuthContext";
-import { getSettings, toggleMaintenanceMode } from "@/lib/services/settingsService";
-import { useAuth } from "@/lib/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
+import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -33,11 +32,11 @@ export const useMaintenanceMode = () => useContext(MaintenanceContext);
 // Composant wrapper pour vérifier le mode maintenance
 const MaintenanceWrapper = ({ children }: { children: ReactNode }) => {
   const { isMaintenanceMode } = useMaintenanceMode();
-  const { user } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const location = useLocation();
   
   // Rediriger vers la page de maintenance sauf pour les admins ou la page login
-  if (isMaintenanceMode && (!user || user.role !== "admin") && location.pathname !== "/login") {
+  if (isMaintenanceMode && !isAdmin && location.pathname !== "/login") {
     return <MaintenancePage />;
   }
   
@@ -46,14 +45,14 @@ const MaintenanceWrapper = ({ children }: { children: ReactNode }) => {
 
 // Composant pour les routes protégées nécessitant une authentification
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { currentUser, isLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Chargement...</div>;
   }
 
-  if (!user) {
+  if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -62,14 +61,14 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
 // Composant pour les routes accessibles uniquement aux administrateurs
 const AdminRoute = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { isAdmin, isLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Chargement...</div>;
   }
 
-  if (!user || user.role !== "admin") {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -90,15 +89,15 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
 
   // Récupérer le mode maintenance depuis Firestore
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setIsSettingsLoading(true);
-        const settings = await getSettings();
-        setIsMaintenanceMode(settings.general.maintenanceMode);
+        const settings = await getGlobalSettings();
+        setIsMaintenanceMode(settings.maintenanceMode);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres:", error);
       } finally {
@@ -116,7 +115,7 @@ const AppContent = () => {
       setIsMaintenanceMode(value);
       
       // Mettre à jour dans Firestore
-      await toggleMaintenanceMode(value);
+      await updateMaintenanceMode(value, currentUser?.uid);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du mode maintenance:", error);
       // En cas d'erreur, revenir à l'état précédent
@@ -144,7 +143,7 @@ const AppContent = () => {
               } 
             />
             <Route 
-              path="/admin/*" 
+              path="/admin" 
               element={
                 <AdminRoute>
                   <AdminPage />
@@ -160,7 +159,7 @@ const AppContent = () => {
 };
 
 const App = () => {
-  // Initialiser le thème au premier rendu
+  // Initialiser le thème au démarrage de l'application
   useEffect(() => {
     initializeTheme();
   }, []);

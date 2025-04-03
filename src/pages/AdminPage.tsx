@@ -9,15 +9,14 @@ import { ArticleTable } from "@/components/articles/ArticleTable";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
 import { UserTable } from "@/components/admin/UserTable";
 import { UserFormDialog } from "@/components/admin/UserFormDialog";
-import { MediaManager } from "@/components/admin/MediaManager";
 import { SettingsCard } from "@/components/admin/SettingsCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Article as UIArticle } from "@/components/ArticleCard";
-import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle } from "@/lib/services/articleService";
-import { getAllUsers, deleteUser, updateUserProfile, User as FirestoreUser } from "@/lib/services/authService";
+import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle, Article as FirestoreArticle } from "@/lib/services/articleService";
+import { User, getAllUsers, deleteUser, updateUserProfile } from "@/lib/services/authService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { GeneralSettingsForm } from "@/components/admin/GeneralSettings";
@@ -25,22 +24,6 @@ import { ContentSettingsForm } from "@/components/admin/ContentSettings";
 import { EmailSettingsForm } from "@/components/admin/EmailSettings";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Navigate } from "react-router-dom";
-
-// Définir l'interface FirestoreArticle ici si nécessaire
-interface FirestoreArticle {
-  id?: string;
-  title: string;
-  summary: string;
-  content: string;
-  source: string;
-  author: string;
-  imageUrl: string;
-  publicationDate: Date | any; // any est utilisé pour Timestamp de Firestore
-  verificationStatus: "true" | "false" | "partial";
-  tags: string[];
-  createdAt?: any; // any est utilisé pour Timestamp de Firestore
-  updatedAt?: any; // any est utilisé pour Timestamp de Firestore
-}
 
 // Interface pour les utilisateurs adaptée à l'affichage dans le tableau admin
 interface AdminUIUser {
@@ -51,26 +34,6 @@ interface AdminUIUser {
   lastLogin: string;
   status: string;
 }
-
-// Convertir les utilisateurs Firestore en format d'affichage UI
-const transformUsersForUI = (firestoreUsers: FirestoreUser[]): AdminUIUser[] => {
-  return firestoreUsers.map(user => ({
-    id: user.uid,
-    name: user.displayName,
-    email: user.email,
-    role: user.role,
-    lastLogin: user.lastLogin 
-      ? format(
-          user.lastLogin instanceof Date 
-          ? user.lastLogin 
-          : user.lastLogin.toDate(), 
-          "d MMMM yyyy", 
-          { locale: fr }
-        ) 
-      : "Jamais",
-    status: user.lastLogin ? "Actif" : "Inactif"
-  }));
-};
 
 const AdminPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -98,6 +61,26 @@ const AdminPage = () => {
       ),
       author: article.author,
       verificationStatus: article.verificationStatus
+    }));
+  };
+
+  // Convertir les utilisateurs Firestore en format d'affichage UI
+  const transformUsersForUI = (firestoreUsers: User[]): AdminUIUser[] => {
+    return firestoreUsers.map(user => ({
+      id: user.uid,
+      name: user.displayName,
+      email: user.email,
+      role: user.role,
+      lastLogin: user.lastLogin 
+        ? format(
+            user.lastLogin instanceof Date 
+            ? user.lastLogin 
+            : user.lastLogin.toDate(), 
+            "d MMMM yyyy", 
+            { locale: fr }
+          ) 
+        : "Jamais",
+      status: user.lastLogin ? "Actif" : "Inactif"
     }));
   };
 
@@ -240,7 +223,7 @@ const AdminPage = () => {
     }
   };
 
-  const handleCreateUser = (newUser: FirestoreUser) => {
+  const handleCreateUser = (newUser: User) => {
     try {
       // Créer un nouvel utilisateur UI à partir des données Firebase
       const newUIUser: AdminUIUser = {
@@ -310,7 +293,6 @@ const AdminPage = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="articles">Articles</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-            <TabsTrigger value="media">Médias</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
           
@@ -339,7 +321,7 @@ const AdminPage = () => {
             <ArticleFormDialog
               open={isArticleDialogOpen}
               onOpenChange={setIsArticleDialogOpen}
-              handleSubmit={handleCreateArticle}
+              onSubmit={handleCreateArticle}
               title="Nouvel Article"
               submitButtonText="Créer"
             />
@@ -381,14 +363,10 @@ const AdminPage = () => {
             <UserFormDialog
               open={isUserDialogOpen}
               onOpenChange={setIsUserDialogOpen}
-              handleSubmit={handleCreateUser}
+              onSubmit={handleCreateUser}
               title="Nouvel Utilisateur"
               submitButtonText="Créer"
             />
-          </TabsContent>
-          
-          <TabsContent value="media">
-            <MediaManager />
           </TabsContent>
           
           <TabsContent value="settings">

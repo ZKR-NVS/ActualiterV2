@@ -1,34 +1,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { 
-  User, 
-  getCurrentUser, 
-  onAuthStateChange, 
-  signIn, 
-  signOut, 
-  registerUser, 
-  updateUserProfile as updateUserProfileService,
-  getUserProfile
-} from "../services/authService";
-
-// Interface simplifiée pour l'utilisateur dans le contexte d'authentification
-export interface AuthUser {
-  uid: string;
-  email: string;
-  displayName: string;
-  role: "user" | "admin" | "editor";
-}
+import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
 
 export interface AuthContextType {
-  user: AuthUser | null;
+  currentUser: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<AuthUser>;
+  isAdmin: boolean;
+  isEditor: boolean;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<AuthUser>;
-  updateUserProfile: (updates: { 
-    displayName?: string; 
-    photoURL?: string;
-    role?: "user" | "admin" | "editor";
-  }) => Promise<void>;
+  register: (email: string, password: string, displayName: string) => Promise<User>;
+  updateUserProfile: (updates: { displayName?: string; photoURL?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,27 +27,17 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté au chargement
     const initializeAuth = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
-          setUser({
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            role: currentUser.role
-          });
-        } else {
-          setUser(null);
-        }
+        const user = await getCurrentUser();
+        setCurrentUser(user);
       } catch (error) {
         console.error("Erreur lors de l'initialisation de l'authentification:", error);
-        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -75,17 +46,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     initializeAuth();
 
     // Observer les changements d'état d'authentification
-    const unsubscribe = onAuthStateChange((currentUser) => {
-      if (currentUser) {
-        setUser({
-          uid: currentUser.uid,
-          email: currentUser.email,
-          displayName: currentUser.displayName,
-          role: currentUser.role
-        });
-      } else {
-        setUser(null);
-      }
+    const unsubscribe = onAuthStateChange((user) => {
+      setCurrentUser(user);
       setLoading(false);
     });
 
@@ -93,19 +55,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => unsubscribe();
   }, []);
 
+  // Vérifier si l'utilisateur a le rôle d'administrateur
+  // Assurons-nous que l'utilisateur existe et a spécifiquement le rôle "admin"
+  const isAdmin = currentUser?.role === "admin";
+  
+  // Vérifier si l'utilisateur a le rôle d'éditeur
+  // Un admin est également considéré comme éditeur (accès plus large)
+  const isEditor = currentUser?.role === "editor" || isAdmin;
+
   // Login function
-  const login = async (email: string, password: string): Promise<AuthUser> => {
+  const login = async (email: string, password: string): Promise<User> => {
     try {
       setLoading(true);
       const loggedInUser = await signIn(email, password);
-      const authUser: AuthUser = {
-        uid: loggedInUser.uid,
-        email: loggedInUser.email,
-        displayName: loggedInUser.displayName,
-        role: loggedInUser.role
-      };
-      setUser(authUser);
-      return authUser;
+      setCurrentUser(loggedInUser);
+      return loggedInUser;
     } catch (error) {
       console.error("Erreur de connexion:", error);
       throw error;
@@ -119,7 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       await signOut();
-      setUser(null);
+      setCurrentUser(null);
     } catch (error) {
       console.error("Erreur de déconnexion:", error);
       throw error;
@@ -129,18 +93,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   // Register function
-  const register = async (email: string, password: string, displayName: string): Promise<AuthUser> => {
+  const register = async (email: string, password: string, displayName: string): Promise<User> => {
     try {
       setLoading(true);
       const newUser = await registerUser(email, password, displayName);
-      const authUser: AuthUser = {
-        uid: newUser.uid,
-        email: newUser.email,
-        displayName: newUser.displayName,
-        role: newUser.role
-      };
-      setUser(authUser);
-      return authUser;
+      setCurrentUser(newUser);
+      return newUser;
     } catch (error) {
       console.error("Erreur d'inscription:", error);
       throw error;
@@ -152,18 +110,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Update user profile
   const updateUserProfile = async (updates: { 
     displayName?: string; 
-    photoURL?: string;
+    photoURL?: string; 
     role?: "user" | "admin" | "editor";
   }): Promise<void> => {
-    if (!user) throw new Error("Aucun utilisateur connecté");
+    if (!currentUser) throw new Error("Aucun utilisateur connecté");
     
     try {
       setLoading(true);
-      await updateUserProfileService(user.uid, updates);
+      await updateUserProfileService(currentUser.uid, updates);
       
       // Mettre à jour l'utilisateur actuel dans le state
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
+      const updatedUser = { ...currentUser, ...updates };
+      setCurrentUser(updatedUser);
     } catch (error) {
       console.error("Erreur de mise à jour du profil:", error);
       throw error;
@@ -179,8 +137,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthContext.Provider value={{
-      user,
+      currentUser,
       loading,
+      isAdmin,
+      isEditor,
       login,
       logout,
       register,

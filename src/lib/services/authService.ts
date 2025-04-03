@@ -228,27 +228,4 @@ export const updateUserProfile = async (
     console.error("Erreur lors de la mise à jour du profil:", error);
     throw error;
   }
-};
-
-// Récupérer un utilisateur par son UID
-export const getUserProfile = async (uid: string): Promise<User | null> => {
-  try {
-    const userRef = doc(db, usersCollection, uid);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists()) {
-      const userData = userDoc.data() as User;
-      return {
-        ...userData,
-        // Convertir les Timestamps en Date si nécessaire
-        createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : userData.createdAt,
-        lastLogin: userData.lastLogin instanceof Timestamp ? userData.lastLogin.toDate() : userData.lastLogin
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error(`Erreur lors de la récupération du profil utilisateur ${uid}:`, error);
-    return null;
-  }
 }; 

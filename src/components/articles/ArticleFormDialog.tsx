@@ -27,7 +27,7 @@ const articleFormSchema = z.object({
 type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface ArticleFormDialogProps {
-  handleSubmit: (article: any) => void;
+  onSubmit: (article: any) => void;
   isEditMode?: boolean;
   articleToEdit?: any;
   title?: string;
@@ -37,7 +37,7 @@ interface ArticleFormDialogProps {
 }
 
 export const ArticleFormDialog = ({
-  handleSubmit,
+  onSubmit,
   isEditMode = false, 
   articleToEdit = null,
   title = "Créer un nouvel article",
@@ -197,7 +197,7 @@ export const ArticleFormDialog = ({
     }
   };
 
-  const handleFormSubmit = async (values: ArticleFormValues) => {
+  const onSubmit = async (values: ArticleFormValues) => {
     try {
       setIsSubmitting(true);
       // Ensure verification status is properly typed
@@ -246,7 +246,7 @@ export const ArticleFormDialog = ({
       // Simuler un délai de traitement
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      handleSubmit(article);
+      onSubmit(article);
       toast.success(isEditMode ? "Article mis à jour avec succès" : "Article créé avec succès");
       handleOpenChange(false);
     } catch (error) {
@@ -272,7 +272,7 @@ export const ArticleFormDialog = ({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6 md:col-span-2">
             <FormField

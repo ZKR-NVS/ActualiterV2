@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getUserProfile, User as FirestoreUser } from "@/lib/services/authService";
+import { getUserProfile } from "@/lib/services/authService";
 
-// Interface simplifiée pour l'utilisateur dans le contexte d'authentification
-interface AuthUser {
+export interface AuthUser {
   uid: string;
   email: string;
   displayName: string;

@@ -1,125 +1,255 @@
-# TruthBeacon - Plateforme de vérification d'articles
+# TruthBeacon - Plateforme de vérification d'actualités - v0.4
+*Dernière mise à jour : 17 octobre 2023*
 
-TruthBeacon est une application web de vérification de faits qui permet aux utilisateurs de consulter, soumettre et vérifier des informations. Cette plateforme combine une interface utilisateur moderne avec des fonctionnalités robustes de gestion de contenu.
+TruthBeacon est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, TruthBeacon permet de distinguer facilement les informations vérifiées des contenus douteux.
 
-## Fonctionnalités principales
+## État actuel du projet
+- Intégration avec Firebase (Auth, Firestore)
+- Phase de développement frontend
+- Interface utilisateur en cours d'amélioration
+- Fonctionnalités de vérification implémentées
+- Système de thèmes fonctionnel
 
-- **Gestion d'articles** : Création, édition, et suppression d'articles avec statut de vérification
-- **Système d'authentification** : Inscription, connexion, et gestion des permissions utilisateurs
-- **Gestion des médias** : Téléchargement, recadrage et gestion des images
-- **Administration complète** : Interface d'administration pour gérer utilisateurs, articles, médias et paramètres
-- **Thème personnalisable** : Support des modes clair/sombre et personnalisation via les paramètres
+## Fonctionnalités
+### Terminées
+- Interface utilisateur moderne et responsive
+- Système de vérification visuel avec badges (Vérifié Vrai, Vérifié Faux, Partiellement Vrai)
+- Thèmes personnalisables (Défaut, Ocean, Forest, Sunset, Lavender, Midnight)
+- Mode maintenance pour les administrateurs
+- Design adaptatif pour mobile et desktop
+- Navigation entre les pages principales
+- Intégration Firebase (Auth, Firestore, Storage)
+- Routes protégées pour les zones sécurisées
 
-## Captures d'écran
-
-- Page d'accueil avec articles récents
-- Interface d'administration
-- Formulaire d'article avec outil de recadrage d'images
-- Gestionnaire de médias
+### En cours
+- Système d'authentification complet
+- Fonctionnalités administrateur
+- Gestion des profils utilisateurs
+- API de vérification des sources
 
 ## Technologies utilisées
 
-- **Frontend** : React, TypeScript, Tailwind CSS, Shadcn UI
-- **Backend** : Firebase (Auth, Firestore, Storage)
-- **Outils** : Vite, ESLint, React Hook Form, Zod
-- **Bibliothèques UI** : Lucide Icons, React Crop, Sonner
+Ce projet est construit avec :
 
-## Installation
+- Vite
+- TypeScript
+- React
+- React Router
+- Tailwind CSS
+- shadcn/ui
+- Lucide Icons
+- TanStack Query
+- Firebase (Auth, Firestore, Storage)
+- date-fns pour la gestion des dates
+
+## Installation et démarrage
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/votre-utilisateur/truthbeacon.git
-cd truthbeacon
+git clone https://github.com/ZKR-NVS/ActualiterV2.git
+cd ActualiterV2
 
 # Installer les dépendances
 npm install
 
-# Configuration de Firebase
-# Créez un fichier .env à la racine du projet avec vos clés Firebase:
-VITE_FIREBASE_API_KEY=votre_api_key
-VITE_FIREBASE_AUTH_DOMAIN=votre_auth_domain
-VITE_FIREBASE_PROJECT_ID=votre_project_id
-VITE_FIREBASE_STORAGE_BUCKET=votre_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=votre_messaging_sender_id
-VITE_FIREBASE_APP_ID=votre_app_id
-VITE_FIREBASE_MEASUREMENT_ID=votre_measurement_id
-
-# Lancer l'application en mode développement
+# Démarrer le serveur de développement
 npm run dev
 ```
 
 ## Structure du projet
 
 ```
-src/
-├── components/         # Composants React réutilisables
-│   ├── admin/          # Composants spécifiques à l'administration
-│   ├── articles/       # Composants liés aux articles
-│   └── ui/             # Composants UI génériques (Shadcn)
-├── lib/                # Bibliothèques et utilitaires
-│   ├── contexts/       # Contextes React (Auth, Thème)
-│   ├── hooks/          # Hooks personnalisés
-│   ├── services/       # Services (Auth, Articles, Settings, Images)
-│   └── utils/          # Fonctions utilitaires
-├── pages/              # Pages principales de l'application
-│   ├── AdminPage.tsx   # Page d'administration
-│   ├── ArticlePage.tsx # Page de détail d'article
-│   ├── HomePage.tsx    # Page d'accueil
-│   └── ...
-├── App.tsx             # Point d'entrée principal
-└── main.tsx            # Point d'entrée de l'application
+.
+├── .vercel/                            # Configuration Vercel
+│   ├── project.json
+│   └── README.txt
+├── .vscode/                            # Configuration VS Code
+│   └── settings.json
+├── node_modules/                       # Dépendances
+├── public/                             # Ressources statiques
+│   ├── favicon.ico                     # Favicon du site
+│   ├── placeholder.svg                 # Image placeholder
+│   └── robots.txt                      # Paramètres pour les robots
+├── src/                                # Code source
+│   ├── components/                     # Composants réutilisables
+│   │   ├── admin/                      # Composants admin
+│   │   │   ├── MaintenanceCard.tsx
+│   │   │   ├── SettingsCard.tsx
+│   │   │   └── UserTable.tsx
+│   │   ├── articles/                   # Composants articles
+│   │   │   ├── ArticleFormDialog.tsx
+│   │   │   └── ArticleTable.tsx
+│   │   ├── profile/                    # Composants de profil
+│   │   │   ├── PreferencesForm.tsx
+│   │   │   ├── ProfileForm.tsx
+│   │   │   ├── ProfileSidebar.tsx
+│   │   │   ├── SecurityForm.tsx
+│   │   │   └── VerificationForm.tsx
+│   │   ├── ui/                         # Composants d'interface utilisateur (shadcn/ui)
+│   │   │   ├── accordion.tsx
+│   │   │   ├── alert-dialog.tsx
+│   │   │   ├── alert.tsx
+│   │   │   ├── aspect-ratio.tsx
+│   │   │   ├── avatar.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── breadcrumb.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── calendar.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── carousel.tsx
+│   │   │   ├── chart.tsx
+│   │   │   ├── checkbox.tsx
+│   │   │   ├── collapsible.tsx
+│   │   │   ├── command.tsx
+│   │   │   ├── context-menu.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── drawer.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── hover-card.tsx
+│   │   │   ├── input-otp.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── menubar.tsx
+│   │   │   ├── navigation-menu.tsx
+│   │   │   ├── pagination.tsx
+│   │   │   ├── popover.tsx
+│   │   │   ├── progress.tsx
+│   │   │   ├── radio-group.tsx
+│   │   │   ├── resizable.tsx
+│   │   │   ├── scroll-area.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── sheet.tsx
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── slider.tsx
+│   │   │   ├── sonner.tsx
+│   │   │   ├── switch.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── theme-switcher.tsx
+│   │   │   ├── toast.tsx
+│   │   │   ├── toaster.tsx
+│   │   │   ├── toggle-group.tsx
+│   │   │   ├── toggle.tsx
+│   │   │   ├── tooltip.tsx
+│   │   │   └── use-toast.ts
+│   │   ├── ArticleCard.tsx             # Carte d'article
+│   │   ├── ArticleList.tsx             # Liste des articles
+│   │   ├── Footer.tsx                  # Pied de page
+│   │   ├── Header.tsx                  # En-tête avec navigation
+│   │   ├── Layout.tsx                  # Mise en page principale
+│   │   └── VerificationBadge.tsx       # Badge de statut de vérification
+│   ├── data/                           # Données
+│   │   └── mockData.ts                 # Données simulées (fallback)
+│   ├── hooks/                          # Hooks personnalisés
+│   │   ├── use-mobile.tsx              # Détection mobile
+│   │   └── use-toast.ts                # Notifications toast
+│   ├── lib/                            # Bibliothèques/utilitaires
+│   │   ├── contexts/                   # Contextes React
+│   │   │   └── AuthContext.tsx         # Contexte d'authentification
+│   │   ├── services/                   # Services d'accès aux données
+│   │   │   ├── articleService.ts       # Service de gestion des articles
+│   │   │   └── authService.ts          # Service d'authentification
+│   │   ├── firebase.ts                 # Configuration Firebase
+│   │   └── utils.ts                    # Fonctions utilitaires générales
+│   ├── pages/                          # Pages
+│   │   ├── AdminPage.tsx               # Page admin
+│   │   ├── HomePage.tsx                # Page d'accueil
+│   │   ├── Index.tsx                   # Point d'entrée
+│   │   ├── LoginPage.tsx               # Page de connexion
+│   │   ├── MaintenancePage.tsx         # Page de maintenance
+│   │   ├── NotFound.tsx                # Page 404
+│   │   └── ProfilePage.tsx             # Profil utilisateur
+│   ├── App.css                         # Styles de l'application
+│   ├── App.tsx                         # Composant racine
+│   ├── index.css                       # Styles globaux
+│   ├── main.tsx                        # Point d'entrée React
+│   └── vite-env.d.ts                   # Types Vite
+├── .gitignore                          # Fichiers ignorés par Git
+├── bun.lockb                           # Lockfile Bun
+├── components.json                     # Configuration des composants
+├── deploy.bat                          # Script de déploiement
+├── eslint.config.js                    # Configuration ESLint
+├── index.html                          # HTML principal
+├── package-lock.json                   # Lockfile npm
+├── package.json                        # Dépendances et scripts
+├── postcss.config.js                   # Configuration PostCSS
+├── README.md                           # Documentation (ce fichier)
+├── tailwind.config.ts                  # Configuration Tailwind
+├── tsconfig.app.json                   # Configuration TypeScript app
+├── tsconfig.json                       # Configuration TypeScript
+├── tsconfig.node.json                  # Configuration TypeScript node
+├── vercel.json                         # Configuration Vercel
+└── vite.config.ts                      # Configuration Vite
 ```
 
-## Rôles utilisateur
+## Personnalisation des thèmes
 
-- **User** : Peut consulter des articles et soumettre des commentaires
-- **Editor** : Peut créer et éditer des articles, assigner des statuts de vérification
-- **Admin** : Accès complet à toutes les fonctionnalités, y compris la gestion des utilisateurs et paramètres
+L'application inclut plusieurs thèmes prédéfinis que vous pouvez sélectionner via le sélecteur de thème dans l'en-tête. Pour personnaliser davantage les couleurs, modifiez les variables CSS dans `src/index.css`.
 
-## Fonctionnalités détaillées
+## Firebase
 
-### Articles
+L'application utilise Firebase pour plusieurs fonctionnalités :
 
-- Création/édition avec support d'images (upload, recadrage)
-- Statuts de vérification (Vrai, Faux, Partiellement vrai)
-- Système de tags et catégorisation
+- **Firebase Authentication** : Gestion des utilisateurs, inscription et connexion
+- **Firestore** : Base de données NoSQL pour stocker les articles, les profils utilisateurs, etc.
+- **Storage** : Stockage des images et autres médias
 
-### Média
+Les collections Firestore principales sont :
+- `users` : Informations sur les utilisateurs
+- `articles` : Articles avec leur statut de vérification
 
-- Gestionnaire de médias avec support pour différents dossiers
-- Téléchargement multiple de fichiers
-- Prévisualisation et suppression d'images
-- Recadrage et redimensionnement d'images
+## Déploiement sur Vercel
 
-### Administration
+Pour déployer ce projet sur Vercel :
 
-- Tableau de bord administrateur
-- Gestion des utilisateurs (création, modification des rôles, suppression)
-- Gestion des articles (modération, édition, suppression)
-- Paramètres du site personnalisables
+1. Assurez-vous que votre code est poussé vers GitHub
+2. Créez un compte sur [Vercel](https://vercel.com/) si vous n'en avez pas déjà un
+3. Dans votre tableau de bord Vercel, cliquez sur "Add New" puis "Project"
+4. Sélectionnez votre dépôt GitHub
+5. Configuration du projet:
+   - Framework preset: Vite
+   - Build command: `npm run build`
+   - Output directory: `dist`
+6. Ajoutez les variables d'environnement Firebase
+7. Cliquez sur "Deploy"
 
-### Paramètres
+Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les redirections nécessaires pour une application React à page unique.
 
-- **Général** : Nom du site, description, email de contact, etc.
-- **Contenu** : Statut de vérification par défaut, longueur d'article, tags autorisés
-- **Email** : Configuration SMTP, modèles d'emails
+## Prochaines étapes
+- Compléter les fonctionnalités d'authentification et de profil utilisateur
+- Système de commentaires et discussions sur les articles
+- Tableau de bord d'analyse pour les administrateurs
+- Tests unitaires et d'intégration
+- Fonctionnalités de recherche avancée
 
-## Développement futur
+## Journal des modifications
 
-- Système de commentaires pour les articles
-- Prise en charge de contenus multimédias avancés (vidéos, audio)
-- Système de métadonnées amélioré pour les articles
-- Intégration avec des API de fact-checking
-- Tableau de bord d'analyse pour les tendances des articles
+### v0.4 (17/10/2023)
+- Intégration de Firebase (Auth, Firestore, Storage)
+- Création de services pour les articles et l'authentification
+- Création d'un contexte d'authentification
+- Mise en place de routes protégées
+- Conversion des données mockées vers des données réelles Firebase
 
-## Licence
+### v0.3 (Version précédente)
+- Analyse du code existant
+- Mise à jour de la documentation
+- Plan de développement pour les prochaines fonctionnalités
 
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
+### v0.2
+- Implémentation des thèmes personnalisables
+- Création des composants principaux
+- Mise en place du système de vérification visuel
 
-## Contact
+### v0.1 (Version initiale)
+- Structure de base du projet
+- Configuration de l'environnement de développement
+- Mise en place de l'architecture frontend
 
-Pour toute question ou suggestion, veuillez ouvrir une issue sur GitHub ou contacter l'équipe de développement.
+## License
 
----
-
-Développé avec ❤️ par l'équipe TruthBeacon.
+MIT

@@ -47,18 +47,4 @@ export const deleteImage = async (url: string): Promise<void> => {
     console.error("Erreur lors de la suppression de l'image:", error);
     throw new Error("Impossible de supprimer l'image. Veuillez réessayer.");
   }
-};
-
-/**
- * Retourne une URL d'image par défaut en cas d'erreur de chargement
- * @param type Le type d'image par défaut (article, avatar, etc.)
- * @returns L'URL de l'image par défaut
- */
-export const getImagePlaceholder = (type: "article" | "avatar" = "article"): string => {
-  const placeholders = {
-    article: "https://via.placeholder.com/800x450?text=Image+non+disponible",
-    avatar: "https://via.placeholder.com/200x200?text=Avatar"
-  };
-  
-  return placeholders[type];
 }; 
