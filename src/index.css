@@ -45,22 +45,6 @@
 
     /* Gradient */
     --gradient: linear-gradient(to right, hsl(210 33% 25%), hsl(204 70% 53%));
-
-    --primary: #1e3c72;
-    --primary-hover: #2a5298;
-    --secondary: #2a5298;
-    --background: #ffffff;
-    --foreground: #1a1a1a;
-    --card-bg: #ffffff;
-    --card-border: #e5e7eb;
-    --input-bg: #ffffff;
-    --input-border: #d1d5db;
-    --button-text: #ffffff;
-    --navbar-bg: #ffffff;
-    --navbar-border: #e5e7eb;
-    --shadow: rgba(0, 0, 0, 0.1);
-    --text-muted: #6b7280;
-    --article-hover: #f3f4f6;
   }
 
   .dark {
@@ -94,22 +78,6 @@
 
     /* Gradient */
     --gradient: linear-gradient(to right, hsl(204 70% 53%), hsl(210 33% 25%));
-
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --secondary: #4f46e5;
-    --background: #0f172a;
-    --foreground: #f3f4f6;
-    --card-bg: #1e293b;
-    --card-border: #334155;
-    --input-bg: #1e293b;
-    --input-border: #475569;
-    --button-text: #f3f4f6;
-    --navbar-bg: #1e293b;
-    --navbar-border: #334155;
-    --shadow: rgba(0, 0, 0, 0.3);
-    --text-muted: #94a3b8;
-    --article-hover: #334155;
   }
 
   /* Alternative themes */
@@ -150,64 +118,7 @@
   }
 
   body {
-    @apply bg-background text-foreground transition-colors duration-200;
-  }
-
-  /* Améliorations pour les cartes */
-  .card {
-    background-color: var(--card-bg);
-    border-color: var(--card-border);
-    box-shadow: 0 4px 6px var(--shadow);
-  }
-  
-  /* Style pour les en-têtes */
-  h1, h2, h3, h4, h5, h6 {
-    color: var(--foreground);
-  }
-  
-  /* Améliorations pour les boutons */
-  .btn-primary {
-    background-color: var(--primary);
-    color: var(--button-text);
-  }
-  
-  .btn-primary:hover {
-    background-color: var(--primary-hover);
-  }
-  
-  /* Améliorations pour les articles */
-  .article-card {
-    background-color: var(--card-bg);
-    border-color: var(--card-border);
-    transition: all 0.2s ease;
-  }
-  
-  .article-card:hover {
-    background-color: var(--article-hover);
-    transform: translateY(-2px);
-  }
-  
-  /* Style pour les menus déroulants */
-  .dropdown-content {
-    background-color: var(--card-bg);
-    border-color: var(--card-border);
-    box-shadow: 0 4px 6px var(--shadow);
-  }
-  
-  /* Style pour la barre de navigation */
-  .navbar {
-    background-color: var(--navbar-bg);
-    border-color: var(--navbar-border);
-  }
-  
-  /* Style pour les icônes */
-  .icon {
-    color: var(--foreground);
-  }
-  
-  /* Style pour le texte atténué */
-  .text-muted {
-    color: var(--text-muted);
+    @apply bg-background text-foreground;
   }
 }
 

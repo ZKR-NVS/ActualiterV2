@@ -93,40 +93,14 @@ export const getArticleById = async (id: string): Promise<Article | null> => {
 // Récupérer les articles par statut de vérification
 export const getArticlesByStatus = async (status: "true" | "false" | "partial"): Promise<Article[]> => {
   try {
-    console.log(`Recherche d'articles avec le statut: ${status}`);
-    
     const articlesRef = collection(db, articlesCollection);
-    const statusQuery = query(
-      articlesRef,
-      where("verificationStatus", "==", status),
-      orderBy("publicationDate", "desc")
-    );
-    
-    const querySnapshot = await getDocs(statusQuery);
-    
-    console.log(`Nombre d'articles trouvés avec statut ${status}: ${querySnapshot.docs.length}`);
-    
-    // S'il n'y a pas d'articles avec ce statut, essayons de vérifier tous les articles
-    if (querySnapshot.docs.length === 0) {
-      console.log("Aucun article trouvé avec ce statut, vérification de tous les articles");
-      
-      // Récupérer tous les articles
-      const allArticlesQuery = query(
+    const querySnapshot = await getDocs(
+      query(
         articlesRef,
+        where("verificationStatus", "==", status),
         orderBy("publicationDate", "desc")
-      );
-      
-      const allArticlesSnapshot = await getDocs(allArticlesQuery);
-      
-      // Filtrer manuellement les articles par statut (parfois le filtre where ne fonctionne pas correctement)
-      const filteredArticles = allArticlesSnapshot.docs
-        .map(transformArticleData)
-        .filter(article => article.verificationStatus === status);
-      
-      console.log(`Après filtrage manuel, ${filteredArticles.length} articles trouvés`);
-      
-      return filteredArticles;
-    }
+      )
+    );
     
     return querySnapshot.docs.map(transformArticleData);
   } catch (error) {
@@ -162,7 +136,18 @@ export const createArticle = async (article: Omit<Article, "id" | "createdAt" | 
       ...article,
       createdAt: now,
       updatedAt: now,
-      viewCount: 0
+      viewCount: 0,
+      verificationStatus: ["true", "false", "partial"].includes(article.verificationStatus) 
+        ? article.verificationStatus 
+        : "partial",
+      title: article.title || "",
+      content: article.content || "",
+      summary: article.summary || "",
+      author: article.author || "",
+      imageUrl: article.imageUrl || "",
+      tags: article.tags || [],
+      source: article.source || "",
+      publicationDate: article.publicationDate || now
     };
     
     const docRef = await addDoc(collection(db, articlesCollection), newArticle);

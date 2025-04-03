@@ -137,12 +137,12 @@ const AdminPage = () => {
       const firestoreArticle: Omit<FirestoreArticle, "id" | "createdAt" | "updatedAt"> = {
         title: newUIArticle.title,
         summary: newUIArticle.excerpt,
-        content: "", // À remplir selon les besoins
+        content: newUIArticle.content || newUIArticle.excerpt || "", 
         source: "",
         author: newUIArticle.author,
         imageUrl: newUIArticle.image || "",
         publicationDate: new Date(),
-        verificationStatus: newUIArticle.verificationStatus,
+        verificationStatus: newUIArticle.verificationStatus as "true" | "false" | "partial",
         tags: []
       };
       
