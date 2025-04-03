@@ -59,6 +59,18 @@ export const GeneralSettingsForm = () => {
       await updateGeneralSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres généraux enregistrés avec succès");
+      
+      // Recharger les paramètres pour confirmer la mise à jour
+      setTimeout(async () => {
+        try {
+          console.log("Rechargement des paramètres après sauvegarde...");
+          const siteSettings = await getSettings();
+          console.log("Paramètres rechargés - siteName:", siteSettings.general.siteName);
+          setSettings(siteSettings.general);
+        } catch (error) {
+          console.error("Erreur lors du rechargement des paramètres:", error);
+        }
+      }, 1000);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres généraux:", error);
       toast.error("Erreur lors de l'enregistrement des paramètres généraux: " + (error instanceof Error ? error.message : String(error)));

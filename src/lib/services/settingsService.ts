@@ -112,38 +112,44 @@ export const getSettings = async (): Promise<SiteSettings> => {
 export const updateGeneralSettings = async (settings: GeneralSettings): Promise<void> => {
   try {
     console.log("Mise à jour des paramètres généraux avec siteName=", settings.siteName);
-    console.log("Paramètres généraux détaillés:", JSON.stringify(settings, null, 2));
     
-    const settingsDoc = await getDoc(doc(db, "settings", "site"));
-    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
+    // Récupérer le document existant
+    const settingsRef = doc(db, "settings", "site");
+    const settingsDoc = await getDoc(settingsRef);
     
-    console.log("Paramètres actuels généraux:", JSON.stringify(currentSettings.general, null, 2));
+    if (!settingsDoc.exists()) {
+      // Si le document n'existe pas, le créer
+      const initialSettings: SiteSettings = {
+        ...defaultSettings,
+        general: settings,
+      };
+      console.log("Création initiale des paramètres:", initialSettings);
+      await setDoc(settingsRef, initialSettings);
+      console.log("Paramètres créés avec succès");
+      return;
+    }
     
-    const updatedSettings = {
-      ...currentSettings,
-      general: settings
+    // Mettre à jour uniquement general avec updateDoc
+    console.log("Mise à jour directe avec updateDoc...");
+    
+    // Ajout d'un timestamp pour forcer la détection de changement
+    const updatedData = {
+      "general": {
+        ...settings,
+        _lastUpdated: new Date().toISOString()
+      }
     };
     
-    console.log("Nouveaux paramètres généraux:", JSON.stringify(updatedSettings.general, null, 2));
+    await updateDoc(settingsRef, updatedData);
+    console.log("Mise à jour réussie avec updateDoc");
     
-    try {
-      await setDoc(doc(db, "settings", "site"), updatedSettings);
-      console.log("Paramètres mis à jour avec succès");
-    } catch (error) {
-      console.error("Erreur Firestore lors de l'écriture:", error);
-      
-      // Tester une approche alternative avec updateDoc
-      try {
-        console.log("Tentative avec updateDoc...");
-        await updateDoc(doc(db, "settings", "site"), {
-          "general": settings
-        });
-        console.log("Mise à jour réussie avec updateDoc");
-      } catch (updateError) {
-        console.error("Erreur avec updateDoc:", updateError);
-        throw updateError;
-      }
+    // Vérifier la mise à jour
+    const updatedDoc = await getDoc(settingsRef);
+    if (updatedDoc.exists()) {
+      const data = updatedDoc.data() as SiteSettings;
+      console.log("Vérification après mise à jour - siteName:", data.general.siteName);
     }
+    
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres généraux:", error);
     throw error;
@@ -153,21 +159,37 @@ export const updateGeneralSettings = async (settings: GeneralSettings): Promise<
 // Mettre à jour les paramètres de contenu
 export const updateContentSettings = async (settings: ContentSettings): Promise<void> => {
   try {
-    console.log("Mise à jour des paramètres de contenu:", settings);
-    const settingsDoc = await getDoc(doc(db, "settings", "site"));
-    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
+    console.log("Mise à jour des paramètres de contenu");
     
-    console.log("Paramètres actuels:", currentSettings);
+    // Récupérer le document existant
+    const settingsRef = doc(db, "settings", "site");
+    const settingsDoc = await getDoc(settingsRef);
     
-    const updatedSettings = {
-      ...currentSettings,
-      content: settings
+    if (!settingsDoc.exists()) {
+      // Si le document n'existe pas, le créer
+      const initialSettings: SiteSettings = {
+        ...defaultSettings,
+        content: settings,
+      };
+      await setDoc(settingsRef, initialSettings);
+      console.log("Paramètres créés avec succès");
+      return;
+    }
+    
+    // Mettre à jour uniquement content avec updateDoc
+    console.log("Mise à jour directe avec updateDoc...");
+    
+    // Ajout d'un timestamp pour forcer la détection de changement
+    const updatedData = {
+      "content": {
+        ...settings,
+        _lastUpdated: new Date().toISOString()
+      }
     };
     
-    console.log("Nouveaux paramètres:", updatedSettings);
+    await updateDoc(settingsRef, updatedData);
+    console.log("Mise à jour des paramètres de contenu réussie");
     
-    await setDoc(doc(db, "settings", "site"), updatedSettings);
-    console.log("Paramètres de contenu mis à jour avec succès");
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres de contenu:", error);
     throw error;
@@ -177,21 +199,37 @@ export const updateContentSettings = async (settings: ContentSettings): Promise<
 // Mettre à jour les paramètres email
 export const updateEmailSettings = async (settings: EmailSettings): Promise<void> => {
   try {
-    console.log("Mise à jour des paramètres email:", settings);
-    const settingsDoc = await getDoc(doc(db, "settings", "site"));
-    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
+    console.log("Mise à jour des paramètres email");
     
-    console.log("Paramètres actuels:", currentSettings);
+    // Récupérer le document existant
+    const settingsRef = doc(db, "settings", "site");
+    const settingsDoc = await getDoc(settingsRef);
     
-    const updatedSettings = {
-      ...currentSettings,
-      email: settings
+    if (!settingsDoc.exists()) {
+      // Si le document n'existe pas, le créer
+      const initialSettings: SiteSettings = {
+        ...defaultSettings,
+        email: settings,
+      };
+      await setDoc(settingsRef, initialSettings);
+      console.log("Paramètres créés avec succès");
+      return;
+    }
+    
+    // Mettre à jour uniquement email avec updateDoc
+    console.log("Mise à jour directe avec updateDoc...");
+    
+    // Ajout d'un timestamp pour forcer la détection de changement
+    const updatedData = {
+      "email": {
+        ...settings,
+        _lastUpdated: new Date().toISOString()
+      }
     };
     
-    console.log("Nouveaux paramètres:", updatedSettings);
+    await updateDoc(settingsRef, updatedData);
+    console.log("Mise à jour des paramètres email réussie");
     
-    await setDoc(doc(db, "settings", "site"), updatedSettings);
-    console.log("Paramètres email mis à jour avec succès");
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres email:", error);
     throw error;

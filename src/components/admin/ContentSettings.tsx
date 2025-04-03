@@ -56,6 +56,17 @@ export const ContentSettingsForm = () => {
       await updateContentSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres de contenu enregistrés avec succès");
+      
+      // Recharger les paramètres pour confirmer la mise à jour
+      setTimeout(async () => {
+        try {
+          console.log("Rechargement des paramètres après sauvegarde...");
+          const siteSettings = await getSettings();
+          setSettings(siteSettings.content);
+        } catch (error) {
+          console.error("Erreur lors du rechargement des paramètres:", error);
+        }
+      }, 1000);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres de contenu:", error);
       toast.error("Erreur lors de l'enregistrement des paramètres de contenu: " + (error instanceof Error ? error.message : String(error)));
