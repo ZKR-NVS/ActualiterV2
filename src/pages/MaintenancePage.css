@@ -1,0 +1,199 @@
+:root {
+  --primary-color: #1e3c72;
+  --secondary-color: #2a5298;
+  --text-color: #ffffff;
+  --overlay-color: rgba(255, 255, 255, 0.1);
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --border-radius: 1rem;
+  --transition-duration: 0.3s;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #0f1e39;
+    --secondary-color: #1a3366;
+    --text-color: #f0f0f0;
+    --overlay-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.maintenance-page {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--text-color);
+  padding: 1rem;
+  line-height: 1.6;
+  position: relative;
+}
+
+.maintenance-container {
+  background-color: var(--overlay-color);
+  backdrop-filter: blur(5px);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.maintenance-container h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.maintenance-container p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.loader {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  margin: 1rem auto;
+  position: relative;
+}
+
+.loader:after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border-radius: 50%;
+  border: 6px solid var(--text-color);
+  border-color: var(--text-color) transparent var(--text-color) transparent;
+  animation: spin 1.2s linear infinite;
+}
+
+.progress-container {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  height: 8px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background-color: var(--text-color);
+  height: 100%;
+  width: 75%;
+  border-radius: 1rem;
+  animation: progressAnimation 5s infinite;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color);
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  transition: all var(--transition-duration) ease;
+}
+
+.social-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.notification {
+  position: fixed;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--overlay-color);
+  color: var(--text-color);
+  padding: 1rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  opacity: 0;
+}
+
+.notification.show {
+  bottom: 20px;
+  opacity: 1;
+}
+
+.admin-link {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: var(--text-color);
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.admin-link:hover {
+  opacity: 1;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes progressAnimation {
+  0% {
+    width: 5%;
+  }
+  50% {
+    width: 75%;
+  }
+  100% {
+    width: 5%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pour les icônes FontAwesome */
+/* Note: FontAwesome doit être inclus dans le projet pour que ces icônes fonctionnent */
+.fab, .fas {
+  margin-right: 0.3rem;
+} 

@@ -1,16 +1,25 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import "./MaintenancePage.css";
 
 const MaintenancePage = () => {
   const [keySequence, setKeySequence] = useState<string[]>([]);
+  const [showAdminLink, setShowAdminLink] = useState(false);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const navigate = useNavigate();
   
-  // Séquence secrète: tbadmin
+  // Messages alternants
+  const messages = [
+    "Merci de votre patience",
+    "Nous revenons bientôt",
+    "Améliorations en cours",
+    "Mise à jour en cours"
+  ];
+  
+  // Séquence secrète maintenue: tbadmin
   const SECRET_SEQUENCE = ["t", "b", "a", "d", "m", "i", "n"];
   
-  // Écouter les touches du clavier pour la séquence secrète et bloquer F12
+  // Écouter les touches du clavier pour les séquences secrètes et bloquer F12
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Bloquer F12 et autres touches de développeur
@@ -23,7 +32,21 @@ const MaintenancePage = () => {
         return false;
       }
       
-      // Ignorer les événements de modification et les touches spéciales
+      // Vérifier la combinaison Ctrl+Alt+A pour afficher le lien admin
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setShowAdminLink(true);
+        showNotification("Lien administrateur activé");
+        
+        // Cacher le lien après 10 secondes
+        setTimeout(() => {
+          setShowAdminLink(false);
+        }, 10000);
+        
+        return;
+      }
+      
+      // Ignorer les événements de modification pour la séquence secrète
       if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) {
         return;
       }
@@ -99,6 +122,15 @@ const MaintenancePage = () => {
     }
   }, [keySequence]);
   
+  // Rotation des messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   // Empêcher l'ouverture des outils de développement à la volée
   useEffect(() => {
     const checkDevTools = () => {
@@ -120,43 +152,76 @@ const MaintenancePage = () => {
       window.removeEventListener('resize', checkDevTools);
     };
   }, []);
+  
+  // Afficher une notification
+  const showNotification = (message: string) => {
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 5000);
+    }
+  };
+  
+  // Service Worker (note: nécessite une implémentation supplémentaire)
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      // Dans une implémentation complète, vous enregistreriez ici un service worker
+      console.log('Service Worker supporté');
+    }
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="text-center max-w-md">
-        <div className="flex justify-center mb-6">
-          <div className="bg-amber-100 p-4 rounded-full">
-            <AlertTriangle className="h-12 w-12 text-amber-600" />
-          </div>
+    <div className="maintenance-page">
+      <div className="maintenance-container">
+        <h1>
+          <i className="fas fa-tools"></i>
+          Site en maintenance
+        </h1>
+        <div className="loader" role="progressbar" aria-label="Chargement"></div>
+        <p>Nous améliorons actuellement votre expérience sur TruthBeacon.</p>
+        <p>Notre équipe travaille sur des mises à jour importantes pour vous offrir une meilleure qualité d'information.</p>
+        <div className="progress-container">
+          <div className="progress-bar"></div>
         </div>
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Nous serons bientôt de retour !</h1>
-        
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <p className="text-gray-600 mb-4">
-            TruthBeacon est actuellement en maintenance programmée. Nous travaillons à améliorer votre expérience de vérification des faits !
-          </p>
-          
-          <p className="text-gray-600">
-            Veuillez revenir dans quelques instants. Nous nous excusons pour tout inconvénient.
-          </p>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="text-sm text-gray-500">
-            Durée estimée: <span className="font-medium">1 heure</span>
-          </div>
-          
-          <Button variant="outline" className="mx-auto" onClick={() => window.location.reload()}>
-            Réessayer
-          </Button>
+        <p>
+          <strong>Nous travaillons pour vous !</strong> <span id="maintenanceMessage">{messages[currentMessageIndex]}</span>
+        </p>
+        <div className="social-links">
+          <a href="https://twitter.com/truthbeacon" className="social-link" rel="noopener noreferrer" target="_blank">
+            <i className="fab fa-twitter"></i>
+            Twitter
+          </a>
+          <a href="https://facebook.com/truthbeacon" className="social-link" rel="noopener noreferrer" target="_blank">
+            <i className="fab fa-facebook"></i>
+            Facebook
+          </a>
+          <a href="https://instagram.com/truthbeacon" className="social-link" rel="noopener noreferrer" target="_blank">
+            <i className="fab fa-instagram"></i>
+            Instagram
+          </a>
         </div>
       </div>
       
-      <footer className="mt-16 text-center text-gray-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} TruthBeacon. Tous droits réservés.</p>
-        <p className="mt-1">Pour toute demande urgente, veuillez contacter support@truthbeacon.com</p>
-      </footer>
+      <div className="notification" id="notification">
+        Nous vous notifierons dès que le site sera de retour !
+      </div>
+      
+      {/* Lien admin caché par défaut */}
+      {showAdminLink && (
+        <a 
+          href="#" 
+          className="admin-link"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/login");
+          }}
+        >
+          Admin
+        </a>
+      )}
     </div>
   );
 };
