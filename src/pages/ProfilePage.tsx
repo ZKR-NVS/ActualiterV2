@@ -1,3 +1,5 @@
+
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar";
@@ -5,23 +7,15 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { SecurityForm } from "@/components/profile/SecurityForm";
 import { PreferencesForm } from "@/components/profile/PreferencesForm";
 import { VerificationForm } from "@/components/profile/VerificationForm";
-import { useAuth } from "@/lib/contexts/AuthContext";
 
 const ProfilePage = () => {
-  const { currentUser } = useAuth();
-  
-  // S'assurer que nous avons un utilisateur (devrait être garanti par ProtectedRoute)
-  if (!currentUser) {
-    return <div>Chargement...</div>;
-  }
-
-  // Préparation des données pour l'affichage
-  const user = {
-    name: currentUser.displayName || "Utilisateur",
-    email: currentUser.email,
-    avatar: currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName || "User")}&background=0D8ABC&color=fff`,
-    role: currentUser.role
-  };
+  // Mock user data
+  const [user] = useState({
+    name: "Admin User",
+    email: "admin@truthbeacon.com",
+    avatar: "https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff",
+    role: "admin"
+  });
 
   return (
     <Layout>
