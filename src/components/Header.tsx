@@ -8,6 +8,7 @@ import { Badge } from "./ui/badge";
 import { ThemeSwitcher } from "./ui/theme-switcher";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -90,6 +91,10 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-2">
               <ThemeSwitcher />
               
+              {!isLoading && currentUser && (
+                <NotificationDropdown />
+              )}
+              
               {!isLoading && (currentUser ? (
                 <>
                   <Link to="/profile">
@@ -116,6 +121,9 @@ export const Header: React.FC = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <ThemeSwitcher />
+            {!isLoading && currentUser && (
+              <NotificationDropdown />
+            )}
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>

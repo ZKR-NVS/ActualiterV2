@@ -6,13 +6,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
-import { getAllArticles, getArticlesByStatus, Article as FirestoreArticle } from "@/lib/services/articleService";
+import { 
+  getAllArticles, 
+  getArticlesByStatus, 
+  searchArticles,
+  Article as FirestoreArticle 
+} from "@/lib/services/articleService";
 import { Article as UIArticle } from "@/components/ArticleCard";
+import { SearchBar } from "@/components/SearchBar";
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [articles, setArticles] = useState<UIArticle[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   // Convertir les articles Firestore en format d'affichage UI
@@ -41,7 +49,9 @@ const HomePage = () => {
       try {
         let fetchedArticles;
         
-        if (activeTab === "all") {
+        if (isSearchMode) {
+          fetchedArticles = await searchArticles(searchTerm);
+        } else if (activeTab === "all") {
           fetchedArticles = await getAllArticles();
         } else {
           fetchedArticles = await getArticlesByStatus(activeTab as "true" | "false" | "partial");
@@ -64,7 +74,20 @@ const HomePage = () => {
     };
 
     fetchArticles();
-  }, [activeTab, toast]);
+  }, [activeTab, toast, isSearchMode, searchTerm]);
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setIsSearchMode(!!term);
+    if (!term) {
+      setActiveTab("all"); // Revenir à l'affichage de tous les articles si la recherche est vide
+    }
+  };
+
+  const clearSearch = () => {
+    setIsSearchMode(false);
+    setSearchTerm("");
+  };
 
   return (
     <Layout>
@@ -88,26 +111,64 @@ const HomePage = () => {
       </section>
 
       <section className="py-12 container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold mb-4 md:mb-0">Derniers articles vérifiés</h2>
+        <div className="flex flex-col space-y-6 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <h2 className="text-2xl font-bold mb-4 md:mb-0">
+              {isSearchMode 
+                ? `Résultats pour "${searchTerm}"` 
+                : "Derniers articles vérifiés"}
+            </h2>
+            
+            <SearchBar 
+              onSearch={handleSearch} 
+              className="w-full md:w-auto" 
+            />
+          </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-            <TabsList>
-              <TabsTrigger value="all">Tous</TabsTrigger>
-              <TabsTrigger value="true">Vrai</TabsTrigger>
-              <TabsTrigger value="partial">Partiel</TabsTrigger>
-              <TabsTrigger value="false">Faux</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {!isSearchMode && (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList>
+                <TabsTrigger value="all">Tous</TabsTrigger>
+                <TabsTrigger value="true">Vrai</TabsTrigger>
+                <TabsTrigger value="partial">Partiel</TabsTrigger>
+                <TabsTrigger value="false">Faux</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+          
+          {isSearchMode && (
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearSearch}
+                className="text-primary hover:text-primary/80"
+              >
+                Effacer la recherche et voir tous les articles
+              </Button>
+            </div>
+          )}
         </div>
 
         <ArticleList articles={articles} isLoading={isLoading} />
 
-        {!isLoading && articles.length > 6 && (
+        {!isLoading && articles.length > 6 && !isSearchMode && (
           <div className="mt-10 text-center">
             <Button variant="outline" size="lg">
               Charger plus d'articles
             </Button>
+          </div>
+        )}
+        
+        {!isLoading && isSearchMode && articles.length === 0 && (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-medium mb-2">Aucun résultat trouvé</h3>
+            <p className="text-muted-foreground">
+              Aucun article ne correspond à votre recherche. Essayez d'autres termes ou
+              <Button variant="link" onClick={clearSearch} className="px-1">
+                consultez tous les articles
+              </Button>.
+            </p>
           </div>
         )}
       </section>

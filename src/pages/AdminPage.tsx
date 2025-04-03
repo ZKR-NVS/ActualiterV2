@@ -24,6 +24,7 @@ import { ContentSettingsForm } from "@/components/admin/ContentSettings";
 import { EmailSettingsForm } from "@/components/admin/EmailSettings";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Navigate } from "react-router-dom";
+import { CommentModeration } from "@/components/admin/CommentModeration";
 
 // Interface pour les utilisateurs adaptée à l'affichage dans le tableau admin
 interface AdminUIUser {
@@ -293,6 +294,7 @@ const AdminPage = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="articles">Articles</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
+            <TabsTrigger value="comments">Commentaires</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
           
@@ -367,6 +369,11 @@ const AdminPage = () => {
               title="Nouvel Utilisateur"
               submitButtonText="Créer"
             />
+          </TabsContent>
+          
+          <TabsContent value="comments">
+            <h2 className="text-xl font-semibold mb-4">Modération des Commentaires</h2>
+            <CommentModeration />
           </TabsContent>
           
           <TabsContent value="settings">

@@ -216,4 +216,31 @@ export const incrementArticleViewCount = async (id: string): Promise<void> => {
     console.error(`Erreur lors de l'incrémentation du compteur de vues pour l'article ${id}:`, error);
     throw error;
   }
+};
+
+// Rechercher des articles
+export const searchArticles = async (searchTerm: string): Promise<Article[]> => {
+  try {
+    const articlesRef = collection(db, articlesCollection);
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    // Récupérer tous les articles et filtrer côté client
+    // Note: Firestore ne permet pas de recherche de texte complexe sans solutions externes
+    const querySnapshot = await getDocs(articlesRef);
+    
+    const filteredArticles = querySnapshot.docs
+      .map(transformArticleData)
+      .filter(article => 
+        article.title.toLowerCase().includes(searchTermLower) ||
+        article.content.toLowerCase().includes(searchTermLower) ||
+        article.author.toLowerCase().includes(searchTermLower) ||
+        article.summary.toLowerCase().includes(searchTermLower) ||
+        article.tags.some(tag => tag.toLowerCase().includes(searchTermLower))
+      );
+    
+    return filteredArticles;
+  } catch (error) {
+    console.error("Erreur lors de la recherche d'articles:", error);
+    throw error;
+  }
 }; 

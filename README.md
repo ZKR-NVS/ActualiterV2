@@ -1,14 +1,15 @@
-# TruthBeacon - Plateforme de vérification d'actualités - v0.4
-*Dernière mise à jour : 17 octobre 2023*
+# TruthBeacon - Plateforme de vérification d'actualités - v0.5
+*Dernière mise à jour : Juillet 2024*
 
 TruthBeacon est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, TruthBeacon permet de distinguer facilement les informations vérifiées des contenus douteux.
 
 ## État actuel du projet
-- Intégration avec Firebase (Auth, Firestore)
-- Phase de développement frontend
-- Interface utilisateur en cours d'amélioration
+- Intégration complète avec Firebase (Auth, Firestore, Storage)
+- Interface utilisateur moderne et fonctionnelle
 - Fonctionnalités de vérification implémentées
-- Système de thèmes fonctionnel
+- Système de commentaires opérationnel
+- Gestion des utilisateurs complète
+- Interface administrateur avancée
 
 ## Fonctionnalités
 ### Terminées
@@ -20,12 +21,17 @@ TruthBeacon est une application web moderne conçue pour aider les utilisateurs 
 - Navigation entre les pages principales
 - Intégration Firebase (Auth, Firestore, Storage)
 - Routes protégées pour les zones sécurisées
+- Système d'authentification complet
+- Gestion des utilisateurs (création, modification des rôles)
+- Système de commentaires avec modération
+- Upload et gestion d'images pour les articles
+- Paramètres administrateur (général et contenu)
+- Modération des commentaires
 
 ### En cours
-- Système d'authentification complet
-- Fonctionnalités administrateur
-- Gestion des profils utilisateurs
-- API de vérification des sources
+- Tableau de bord d'analyse pour les administrateurs
+- Fonctionnalités de recherche avancée
+- Système de notification
 
 ## Technologies utilisées
 
@@ -73,12 +79,16 @@ npm run dev
 ├── src/                                # Code source
 │   ├── components/                     # Composants réutilisables
 │   │   ├── admin/                      # Composants admin
-│   │   │   ├── MaintenanceCard.tsx
-│   │   │   ├── SettingsCard.tsx
-│   │   │   └── UserTable.tsx
+│   │   │   ├── CommentModeration.tsx   # Modération des commentaires
+│   │   │   ├── ContentSettings.tsx     # Paramètres de contenu
+│   │   │   ├── GeneralSettings.tsx     # Paramètres généraux
+│   │   │   ├── MaintenanceCard.tsx     # Gestion du mode maintenance 
+│   │   │   ├── SettingsCard.tsx        # Carte de paramètres
+│   │   │   └── UserTable.tsx           # Tableau des utilisateurs
 │   │   ├── articles/                   # Composants articles
-│   │   │   ├── ArticleFormDialog.tsx
-│   │   │   └── ArticleTable.tsx
+│   │   │   ├── ArticleFormDialog.tsx   # Formulaire d'article
+│   │   │   ├── ArticleTable.tsx        # Tableau des articles
+│   │   │   └── CommentSection.tsx      # Section de commentaires
 │   │   ├── profile/                    # Composants de profil
 │   │   │   ├── PreferencesForm.tsx
 │   │   │   ├── ProfileForm.tsx
@@ -147,16 +157,22 @@ npm run dev
 │   ├── hooks/                          # Hooks personnalisés
 │   │   ├── use-mobile.tsx              # Détection mobile
 │   │   └── use-toast.ts                # Notifications toast
+│   │   └── useAuth.ts              # Hook d'authentification 
 │   ├── lib/                            # Bibliothèques/utilitaires
 │   │   ├── contexts/                   # Contextes React
 │   │   │   └── AuthContext.tsx         # Contexte d'authentification
 │   │   ├── services/                   # Services d'accès aux données
 │   │   │   ├── articleService.ts       # Service de gestion des articles
-│   │   │   └── authService.ts          # Service d'authentification
+│   │   │   ├── authService.ts          # Service d'authentification
+│   │   │   ├── commentService.ts       # Service de gestion des commentaires
+│   │   │   ├── imageService.ts         # Service de gestion des images
+│   │   │   ├── settingsService.ts      # Service de gestion des paramètres
+│   │   │   └── userService.ts          # Service de gestion des utilisateurs
 │   │   ├── firebase.ts                 # Configuration Firebase
 │   │   └── utils.ts                    # Fonctions utilitaires générales
 │   ├── pages/                          # Pages
 │   │   ├── AdminPage.tsx               # Page admin
+│   │   ├── ArticleDetailsPage.tsx      # Détails d'un article
 │   │   ├── HomePage.tsx                # Page d'accueil
 │   │   ├── Index.tsx                   # Point d'entrée
 │   │   ├── LoginPage.tsx               # Page de connexion
@@ -201,6 +217,8 @@ L'application utilise Firebase pour plusieurs fonctionnalités :
 Les collections Firestore principales sont :
 - `users` : Informations sur les utilisateurs
 - `articles` : Articles avec leur statut de vérification
+- `comments` : Commentaires des utilisateurs
+- `settings` : Paramètres de l'application
 
 ## Déploiement sur Vercel
 
@@ -220,13 +238,20 @@ Pour déployer ce projet sur Vercel :
 Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les redirections nécessaires pour une application React à page unique.
 
 ## Prochaines étapes
-- Compléter les fonctionnalités d'authentification et de profil utilisateur
-- Système de commentaires et discussions sur les articles
 - Tableau de bord d'analyse pour les administrateurs
 - Tests unitaires et d'intégration
 - Fonctionnalités de recherche avancée
+- Système de notifications en temps réel
+- API publique pour l'accès aux données vérifiées
 
 ## Journal des modifications
+
+### v0.5 (Juillet 2024)
+- Système de commentaires avec modération
+- Gestion complète des utilisateurs
+- Upload et stockage d'images dans Firebase Storage
+- Interface administrateur améliorée avec paramètres
+- Gestion des rôles utilisateurs
 
 ### v0.4 (17/10/2023)
 - Intégration de Firebase (Auth, Firestore, Storage)
