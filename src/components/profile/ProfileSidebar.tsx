@@ -4,7 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { VerificationBadge } from "@/components/VerificationBadge";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -111,20 +110,6 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ user }) => {
             Sign Out
           </Button>
         </CardFooter>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Badges de Vérification</CardTitle>
-          <CardDescription>Exemples de badges de vérification des articles</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col gap-3">
-            <VerificationBadge status="true" showTooltip={true} />
-            <VerificationBadge status="false" showTooltip={true} />
-            <VerificationBadge status="partial" showTooltip={true} />
-          </div>
-        </CardContent>
       </Card>
     </div>
   );
