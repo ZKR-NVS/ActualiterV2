@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser } from "../services/authService";
+import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<User>;
+  updateUserProfile: (updates: { displayName?: string; photoURL?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,6 +98,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Fonction de mise à jour du profil
+  const updateUserProfile = async (updates: { displayName?: string; photoURL?: string }): Promise<void> => {
+    if (!currentUser) throw new Error("Utilisateur non connecté");
+    
+    setIsLoading(true);
+    try {
+      await updateUserProfileService(currentUser.uid, updates);
+      
+      // Mettre à jour l'utilisateur local
+      setCurrentUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...updates
+        };
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     currentUser,
     isLoading,
@@ -104,7 +126,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isVerifier,
     login,
     logout,
-    register
+    register,
+    updateUserProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
