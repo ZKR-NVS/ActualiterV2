@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { createContext, useState, useContext, ReactNode, useEffect, useMemo } from "react";
+import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
 import { getSettings, toggleMaintenanceMode } from "@/lib/services/settingsService";
 
@@ -123,18 +123,12 @@ const AppContent = () => {
     }
   };
   
-  // Créer un objet de valeur de contexte stable qui ne change que lorsque isMaintenanceMode change
-  const maintenanceContextValue = useMemo(() => ({
-    isMaintenanceMode,
-    setMaintenanceMode: handleSetMaintenanceMode
-  }), [isMaintenanceMode]);
-  
   if (isSettingsLoading) {
     return <div className="flex items-center justify-center h-screen">Chargement des paramètres...</div>;
   }
 
   return (
-    <MaintenanceContext.Provider value={maintenanceContextValue}>
+    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
       <BrowserRouter>
         <MaintenanceWrapper>
           <Routes>
