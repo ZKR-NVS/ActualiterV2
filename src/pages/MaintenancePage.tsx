@@ -4,48 +4,67 @@ import { AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const MaintenancePage = () => {
-  const [adminClicks, setAdminClicks] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
+  const [keySequence, setKeySequence] = useState<string[]>([]);
   const navigate = useNavigate();
   
-  // Réinitialiser le compteur de clics après un certain délai
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (adminClicks > 0 && Date.now() - lastClickTime > 3000) {
-        setAdminClicks(0);
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timeout);
-  }, [adminClicks, lastClickTime]);
+  // Séquence secrète: tbadmin
+  const SECRET_SEQUENCE = ["t", "b", "a", "d", "m", "i", "n"];
   
-  // Gérer les clics sur le logo/titre pour accès administrateur
-  const handleLogoClick = () => {
-    const currentTime = Date.now();
-    setLastClickTime(currentTime);
-    
-    // Incrémenter le compteur de clics
-    setAdminClicks(prev => {
-      const newCount = prev + 1;
-      
-      // Si 5 clics rapides, rediriger vers la page de connexion
-      if (newCount >= 5) {
-        navigate("/login");
-        return 0;
+  // Écouter les touches du clavier pour la séquence secrète
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignorer les événements de modification et les touches spéciales
+      if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) {
+        return;
       }
       
-      return newCount;
-    });
-  };
+      // Ajouter la touche à la séquence
+      const newSequence = [...keySequence, e.key.toLowerCase()];
+      
+      // Vérifier si la séquence correspond au début de la séquence secrète
+      const isValidPartialSequence = SECRET_SEQUENCE.slice(0, newSequence.length).every(
+        (key, index) => key === newSequence[index]
+      );
+      
+      if (isValidPartialSequence) {
+        setKeySequence(newSequence);
+        
+        // Si la séquence complète est entrée
+        if (newSequence.length === SECRET_SEQUENCE.length) {
+          // Réinitialiser et naviguer
+          setKeySequence([]);
+          navigate("/login");
+        }
+      } else {
+        // Réinitialiser si la séquence est incorrecte
+        setKeySequence([]);
+      }
+    };
+    
+    // Ajouter l'écouteur d'événements
+    window.addEventListener("keydown", handleKeyDown);
+    
+    // Nettoyer l'écouteur d'événements
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [keySequence, navigate]);
+  
+  // Réinitialiser la séquence après 5 secondes d'inactivité
+  useEffect(() => {
+    if (keySequence.length > 0) {
+      const timeout = setTimeout(() => {
+        setKeySequence([]);
+      }, 5000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [keySequence]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="text-center max-w-md">
-        <div 
-          className="flex justify-center mb-6 cursor-pointer" 
-          onClick={handleLogoClick}
-          title="TruthBeacon"
-        >
+        <div className="flex justify-center mb-6">
           <div className="bg-amber-100 p-4 rounded-full">
             <AlertTriangle className="h-12 w-12 text-amber-600" />
           </div>
