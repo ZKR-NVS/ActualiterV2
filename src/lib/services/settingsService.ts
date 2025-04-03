@@ -157,15 +157,27 @@ export const updateEmailSettings = async (settings: EmailSettings): Promise<void
 };
 
 // Activer/désactiver le mode maintenance
-export const toggleMaintenanceMode = async (enabled: boolean, message?: string): Promise<void> => {
+export const toggleMaintenanceMode = async (enabled: boolean): Promise<void> => {
   try {
     const settingsRef = doc(db, "settings", "site");
     await updateDoc(settingsRef, {
-      "general.maintenanceMode": enabled,
-      ...(message && { "general.maintenanceMessage": message })
+      "general.maintenanceMode": enabled
     });
   } catch (error) {
     console.error("Erreur lors de la modification du mode maintenance:", error);
+    throw error;
+  }
+};
+
+// Mettre à jour le message de maintenance
+export const updateMaintenanceMessage = async (message: string): Promise<void> => {
+  try {
+    const settingsRef = doc(db, "settings", "site");
+    await updateDoc(settingsRef, {
+      "general.maintenanceMessage": message
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du message de maintenance:", error);
     throw error;
   }
 }; 
