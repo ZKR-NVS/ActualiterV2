@@ -185,7 +185,7 @@ const MaintenancePage = () => {
         <p>Notre équipe travaille sur des mises à jour importantes pour vous offrir une meilleure qualité d'information.</p>
         <div className="progress-container">
           <div className="progress-bar"></div>
-        </div>
+          </div>
         <p>
           <strong>Nous travaillons pour vous !</strong> <span id="maintenanceMessage">{messages[currentMessageIndex]}</span>
         </p>

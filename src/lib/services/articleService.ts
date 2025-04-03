@@ -42,15 +42,15 @@ const transformArticleData = (doc: DocumentData): Article => {
   return {
     id: doc.id,
     title: data.title,
-    source: data.source,
+    source: data.source || "",
     author: data.author,
     publicationDate: data.publicationDate?.toDate() || new Date(),
-    content: data.content,
-    summary: data.summary,
-    imageUrl: data.imageUrl,
+    content: data.content || "",
+    summary: data.summary || (data.content ? data.content.substring(0, 150) + "..." : ""),
+    imageUrl: data.imageUrl || "",
     verificationStatus: data.verificationStatus,
-    verifiedBy: data.verifiedBy,
-    verificationNote: data.verificationNote,
+    verifiedBy: data.verifiedBy || "",
+    verificationNote: data.verificationNote || "",
     tags: data.tags || [],
     viewCount: data.viewCount || 0,
     createdAt: data.createdAt?.toDate() || new Date(),
@@ -129,15 +129,29 @@ export const getPopularArticles = async (count: number = 5): Promise<Article[]> 
 };
 
 // Créer un nouvel article
-export const createArticle = async (article: Omit<Article, "id" | "createdAt" | "updatedAt">): Promise<string> => {
+export const createArticle = async (article: any): Promise<string> => {
   try {
     const now = Timestamp.now();
+    
+    // S'assurer que tous les champs nécessaires sont présents
     const newArticle = {
-      ...article,
+      title: article.title,
+      source: article.source || "",
+      author: article.author,
+      publicationDate: now,
+      content: article.content || "",
+      summary: article.summary || article.excerpt || (article.content?.substring(0, 150) + "...") || "",
+      imageUrl: article.imageUrl || article.image || "",
+      verificationStatus: article.verificationStatus,
+      verifiedBy: article.verifiedBy || "",
+      verificationNote: article.verificationNote || "",
+      tags: article.tags || [],
+      viewCount: 0,
       createdAt: now,
-      updatedAt: now,
-      viewCount: 0
+      updatedAt: now
     };
+    
+    console.log("Création d'un nouvel article avec le statut:", newArticle.verificationStatus);
     
     const docRef = await addDoc(collection(db, articlesCollection), newArticle);
     return docRef.id;
@@ -151,10 +165,19 @@ export const createArticle = async (article: Omit<Article, "id" | "createdAt" | 
 export const updateArticle = async (id: string, article: Partial<Article>): Promise<void> => {
   try {
     const articleRef = doc(db, articlesCollection, id);
-    const updates = {
-      ...article,
-      updatedAt: Timestamp.now()
-    };
+    
+    // Si l'article a un champ 'image', le mapper sur 'imageUrl'
+    const updates: any = { ...article, updatedAt: Timestamp.now() };
+    
+    if (updates.image && !updates.imageUrl) {
+      updates.imageUrl = updates.image;
+      delete updates.image;
+    }
+    
+    if (updates.excerpt && !updates.summary) {
+      updates.summary = updates.excerpt;
+      delete updates.excerpt;
+    }
     
     await updateDoc(articleRef, updates);
   } catch (error) {
