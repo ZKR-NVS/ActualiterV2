@@ -1,14 +1,29 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
+import { 
+  User, 
+  getCurrentUser, 
+  onAuthStateChange, 
+  signIn, 
+  signOut, 
+  registerUser, 
+  updateUserProfile as updateUserProfileService,
+  getUserProfile
+} from "../services/authService";
+
+// Interface simplifiée pour l'utilisateur dans le contexte d'authentification
+export interface AuthUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: "user" | "admin" | "editor";
+}
 
 export interface AuthContextType {
-  currentUser: User | null;
+  user: AuthUser | null;
   loading: boolean;
-  isAdmin: boolean;
-  isEditor: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<User>;
+  register: (email: string, password: string, displayName: string) => Promise<AuthUser>;
   updateUserProfile: (updates: { 
     displayName?: string; 
     photoURL?: string;
@@ -31,17 +46,27 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté au chargement
     const initializeAuth = async () => {
       try {
-        const user = await getCurrentUser();
-        setCurrentUser(user);
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          setUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            role: currentUser.role
+          });
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         console.error("Erreur lors de l'initialisation de l'authentification:", error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -50,8 +75,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     initializeAuth();
 
     // Observer les changements d'état d'authentification
-    const unsubscribe = onAuthStateChange((user) => {
-      setCurrentUser(user);
+    const unsubscribe = onAuthStateChange((currentUser) => {
+      if (currentUser) {
+        setUser({
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          role: currentUser.role
+        });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -59,21 +93,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => unsubscribe();
   }, []);
 
-  // Vérifier si l'utilisateur a le rôle d'administrateur
-  // Assurons-nous que l'utilisateur existe et a spécifiquement le rôle "admin"
-  const isAdmin = currentUser?.role === "admin";
-  
-  // Vérifier si l'utilisateur a le rôle d'éditeur
-  // Un admin est également considéré comme éditeur (accès plus large)
-  const isEditor = currentUser?.role === "editor" || isAdmin;
-
   // Login function
-  const login = async (email: string, password: string): Promise<User> => {
+  const login = async (email: string, password: string): Promise<AuthUser> => {
     try {
       setLoading(true);
       const loggedInUser = await signIn(email, password);
-      setCurrentUser(loggedInUser);
-      return loggedInUser;
+      const authUser: AuthUser = {
+        uid: loggedInUser.uid,
+        email: loggedInUser.email,
+        displayName: loggedInUser.displayName,
+        role: loggedInUser.role
+      };
+      setUser(authUser);
+      return authUser;
     } catch (error) {
       console.error("Erreur de connexion:", error);
       throw error;
@@ -87,7 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       await signOut();
-      setCurrentUser(null);
+      setUser(null);
     } catch (error) {
       console.error("Erreur de déconnexion:", error);
       throw error;
@@ -97,12 +129,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   // Register function
-  const register = async (email: string, password: string, displayName: string): Promise<User> => {
+  const register = async (email: string, password: string, displayName: string): Promise<AuthUser> => {
     try {
       setLoading(true);
       const newUser = await registerUser(email, password, displayName);
-      setCurrentUser(newUser);
-      return newUser;
+      const authUser: AuthUser = {
+        uid: newUser.uid,
+        email: newUser.email,
+        displayName: newUser.displayName,
+        role: newUser.role
+      };
+      setUser(authUser);
+      return authUser;
     } catch (error) {
       console.error("Erreur d'inscription:", error);
       throw error;
@@ -117,15 +155,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     photoURL?: string;
     role?: "user" | "admin" | "editor";
   }): Promise<void> => {
-    if (!currentUser) throw new Error("Aucun utilisateur connecté");
+    if (!user) throw new Error("Aucun utilisateur connecté");
     
     try {
       setLoading(true);
-      await updateUserProfileService(currentUser.uid, updates);
+      await updateUserProfileService(user.uid, updates);
       
       // Mettre à jour l'utilisateur actuel dans le state
-      const updatedUser = { ...currentUser, ...updates };
-      setCurrentUser(updatedUser);
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
     } catch (error) {
       console.error("Erreur de mise à jour du profil:", error);
       throw error;
@@ -141,10 +179,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthContext.Provider value={{
-      currentUser,
+      user,
       loading,
-      isAdmin,
-      isEditor,
       login,
       logout,
       register,

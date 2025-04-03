@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Article as UIArticle } from "@/components/ArticleCard";
 import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle } from "@/lib/services/articleService";
-import { getAllUsers, deleteUser, updateUserProfile } from "@/lib/services/authService";
+import { getAllUsers, deleteUser, updateUserProfile, User } from "@/lib/services/authService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { GeneralSettingsForm } from "@/components/admin/GeneralSettings";
@@ -52,6 +52,26 @@ interface AdminUIUser {
   status: string;
 }
 
+// Convertir les utilisateurs Firestore en format d'affichage UI
+const transformUsersForUI = (firestoreUsers: User[]): AdminUIUser[] => {
+  return firestoreUsers.map(user => ({
+    id: user.uid,
+    name: user.displayName,
+    email: user.email,
+    role: user.role,
+    lastLogin: user.lastLogin 
+      ? format(
+          user.lastLogin instanceof Date 
+          ? user.lastLogin 
+          : user.lastLogin.toDate(), 
+          "d MMMM yyyy", 
+          { locale: fr }
+        ) 
+      : "Jamais",
+    status: user.lastLogin ? "Actif" : "Inactif"
+  }));
+};
+
 const AdminPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("users");
@@ -78,26 +98,6 @@ const AdminPage = () => {
       ),
       author: article.author,
       verificationStatus: article.verificationStatus
-    }));
-  };
-
-  // Convertir les utilisateurs Firestore en format d'affichage UI
-  const transformUsersForUI = (firestoreUsers: User[]): AdminUIUser[] => {
-    return firestoreUsers.map(user => ({
-      id: user.uid,
-      name: user.displayName,
-      email: user.email,
-      role: user.role,
-      lastLogin: user.lastLogin 
-        ? format(
-            user.lastLogin instanceof Date 
-            ? user.lastLogin 
-            : user.lastLogin.toDate(), 
-            "d MMMM yyyy", 
-            { locale: fr }
-          ) 
-        : "Jamais",
-      status: user.lastLogin ? "Actif" : "Inactif"
     }));
   };
 
