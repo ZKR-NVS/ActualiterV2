@@ -16,7 +16,7 @@ export interface User {
   email: string;
   displayName: string;
   photoURL: string | null;
-  role: "user" | "admin" | "verifier";
+  role: "user" | "admin" | "editor";
   createdAt: Date | Timestamp;
   lastLogin: Date | Timestamp | null;
 }
@@ -210,7 +210,7 @@ export const resetPassword = async (email: string): Promise<void> => {
 // Mettre à jour le profil utilisateur
 export const updateUserProfile = async (
   uid: string, 
-  updates: { displayName?: string; photoURL?: string; role?: "user" | "admin" | "verifier" }
+  updates: { displayName?: string; photoURL?: string; role?: "user" | "admin" | "editor" }
 ): Promise<void> => {
   try {
     // Mettre à jour dans Firestore

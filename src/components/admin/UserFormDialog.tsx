@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,28 +16,29 @@ const userFormSchema = z.object({
   displayName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
   email: z.string().email({ message: "Adresse email invalide" }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }),
-  role: z.enum(["user", "admin", "verifier"], { 
+  role: z.enum(["user", "admin", "editor"], { 
     required_error: "Veuillez sélectionner un rôle" 
   })
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
 
-export interface UserFormDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => void;
-  title: string;
-  submitButtonText: string;
+interface UserFormDialogProps {
+  onSubmit: (user: any) => void;
+  title?: string;
+  submitButtonText?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const UserFormDialog: React.FC<UserFormDialogProps> = ({ 
-  open,
-  onOpenChange,
+export const UserFormDialog = ({
   onSubmit,
   title = "Créer un nouvel utilisateur",
-  submitButtonText = "Nouvel Utilisateur"
+  submitButtonText = "Créer l'utilisateur",
+  open,
+  onOpenChange
 }) => {
+  const [isOpen, setIsOpen] = useState(open || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<UserFormValues>({
@@ -50,7 +51,23 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     }
   });
 
-  const onSubmitForm = async (values: UserFormValues) => {
+  useEffect(() => {
+    if (open !== undefined) {
+      setIsOpen(open);
+    }
+  }, [open]);
+  
+  const handleOpenChange = (newOpen: boolean) => {
+    setIsOpen(newOpen);
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    }
+    if (!newOpen) {
+      form.reset();
+    }
+  };
+
+  const onSubmit = async (values: UserFormValues) => {
     try {
       setIsSubmitting(true);
       
@@ -68,7 +85,7 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
         role: values.role
       });
       
-      form.reset();
+      handleOpenChange(false);
     } catch (error: any) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
       
@@ -88,19 +105,21 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {submitButtonText}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {!onOpenChange && (
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {submitButtonText}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="displayName"
@@ -163,7 +182,7 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="user">Utilisateur</SelectItem>
-                      <SelectItem value="verifier">Vérificateur</SelectItem>
+                      <SelectItem value="editor">Éditeur</SelectItem>
                       <SelectItem value="admin">Administrateur</SelectItem>
                     </SelectContent>
                   </Select>

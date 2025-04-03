@@ -11,12 +11,12 @@ export const ContentSettingsForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [settings, setSettings] = useState<ContentSettings>({
-    defaultVerificationStatus: "pending",
+    defaultVerificationStatus: "partial",
     requireImageForArticles: true,
-    maxArticleLength: 5000,
+    maxArticleLength: 10000,
     minArticleLength: 100,
-    allowedTags: ["actualité", "politique", "économie", "société", "technologie", "sport", "culture"],
-    defaultTags: ["actualité"],
+    allowedTags: ["politique", "économie", "santé", "environnement", "technologie", "société"],
+    defaultTags: ["vérification"],
     featuredArticlesCount: 5
   });
 
@@ -52,24 +52,12 @@ export const ContentSettingsForm = () => {
 
   const handleSave = async () => {
     try {
-      console.log("Tentative de sauvegarde des paramètres de contenu:", settings);
       await updateContentSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres de contenu enregistrés avec succès");
-      
-      // Recharger les paramètres pour confirmer la mise à jour
-      setTimeout(async () => {
-        try {
-          console.log("Rechargement des paramètres après sauvegarde...");
-          const siteSettings = await getSettings();
-          setSettings(siteSettings.content);
-        } catch (error) {
-          console.error("Erreur lors du rechargement des paramètres:", error);
-        }
-      }, 1000);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres de contenu:", error);
-      toast.error("Erreur lors de l'enregistrement des paramètres de contenu: " + (error instanceof Error ? error.message : String(error)));
+      toast.error("Erreur lors de l'enregistrement des paramètres de contenu");
     }
   };
 
@@ -169,7 +157,7 @@ export const ContentSettingsForm = () => {
               id="allowedTags"
               value={settings.allowedTags.join(", ")}
               onChange={(e) => handleTagsChange(e.target.value, "allowedTags")}
-              placeholder="actualité, politique, économie, société, technologie, sport, culture"
+              placeholder="politique, économie, santé, environnement"
             />
             <p className="text-xs text-gray-500">Séparez les tags par des virgules</p>
           </div>
@@ -180,7 +168,7 @@ export const ContentSettingsForm = () => {
               id="defaultTags"
               value={settings.defaultTags.join(", ")}
               onChange={(e) => handleTagsChange(e.target.value, "defaultTags")}
-              placeholder="actualité"
+              placeholder="vérification"
             />
             <p className="text-xs text-gray-500">Séparez les tags par des virgules</p>
           </div>

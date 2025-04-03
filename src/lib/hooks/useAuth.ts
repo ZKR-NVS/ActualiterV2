@@ -1,64 +1,55 @@
 import { useState, useEffect } from "react";
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  User as FirebaseUser 
-} from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { getUserProfile } from "@/lib/services/authService";
 
-interface UserWithRole extends FirebaseUser {
-  role: "user" | "editor" | "admin";
+export interface AuthUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: "user" | "admin" | "editor";
 }
 
 export const useAuth = () => {
-  const [user, setUser] = useState<UserWithRole | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = getAuth();
-    const db = getFirestore();
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // Récupérer les informations supplémentaires de l'utilisateur (rôle, etc.)
-          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+      try {
+        if (firebaseUser) {
+          // L'utilisateur est connecté, récupérer son profil complet
+          const userProfile = await getUserProfile(firebaseUser.uid);
           
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            // Combiner les données Firebase Auth avec les données Firestore
-            const enhancedUser = {
-              ...firebaseUser,
-              role: userData.role || "user",
-            } as UserWithRole;
-            
-            setUser(enhancedUser);
+          if (userProfile) {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              displayName: userProfile.displayName || "",
+              role: userProfile.role || "user"
+            });
           } else {
-            // Si aucun document utilisateur n'existe encore, définir un rôle par défaut
-            const enhancedUser = {
-              ...firebaseUser,
-              role: "user",
-            } as UserWithRole;
-            
-            setUser(enhancedUser);
+            // Si aucun profil n'existe, utiliser les données de base
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              displayName: firebaseUser.displayName || "",
+              role: "user"
+            });
           }
-        } catch (error) {
-          console.error("Erreur lors de la récupération des données utilisateur:", error);
-          // En cas d'erreur, définir l'utilisateur avec des valeurs par défaut
-          const enhancedUser = {
-            ...firebaseUser,
-            role: "user",
-          } as UserWithRole;
-          
-          setUser(enhancedUser);
+        } else {
+          // L'utilisateur n'est pas connecté
+          setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error("Erreur lors de la récupération du profil utilisateur:", error);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
+    // Nettoyer l'abonnement lors du démontage
     return () => unsubscribe();
   }, []);
 

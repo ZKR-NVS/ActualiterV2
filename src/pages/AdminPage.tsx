@@ -36,7 +36,7 @@ interface AdminUIUser {
 }
 
 const AdminPage = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("users");
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [isArticleDialogOpen, setIsArticleDialogOpen] = useState(false);
@@ -85,39 +85,47 @@ const AdminPage = () => {
   };
 
   useEffect(() => {
-    if (!loading && user && user.role === "admin") {
     const fetchData = async () => {
-        setIsLoading(true);
+      if (!user || user.role !== "admin") return;
+      
+      setIsLoading(true);
+      
+      try {
+        // Récupérer les articles depuis Firestore
+        const articlesData = await getAllArticles();
+        setArticles(transformArticlesForUI(articlesData));
         
-        try {
-          // Récupérer les articles depuis Firestore
-          const articlesData = await getAllArticles();
-          setArticles(transformArticlesForUI(articlesData));
-          
-          // Récupérer les utilisateurs depuis Firestore
-          const usersData = await getAllUsers();
-          setUsers(transformUsersForUI(usersData));
-        } catch (error) {
-          console.error("Erreur lors de la récupération des données:", error);
-          uiToast({
-            title: "Erreur",
-            description: "Impossible de charger les données. Veuillez réessayer plus tard.",
-            variant: "destructive"
-          });
-        } finally {
-      setIsLoading(false);
-        }
+        // Récupérer les utilisateurs depuis Firestore
+        const usersData = await getAllUsers();
+        setUsers(transformUsersForUI(usersData));
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données:", error);
+        uiToast({
+          title: "Erreur",
+          description: "Impossible de charger les données. Veuillez réessayer plus tard.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchData();
-    }
-  }, [loading, user, uiToast]);
+  }, [uiToast, user]);
+
+  if (authLoading) {
+    return <div>Chargement...</div>;
+  }
+
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
 
   const handleDeleteArticle = async (id: string) => {
     try {
       await deleteArticle(id);
-    setArticles(articles.filter(article => article.id !== id));
-    toast.success("Article supprimé avec succès!");
+      setArticles(articles.filter(article => article.id !== id));
+      toast.success("Article supprimé avec succès!");
     } catch (error) {
       console.error("Erreur lors de la suppression de l'article:", error);
       uiToast({
@@ -131,8 +139,8 @@ const AdminPage = () => {
   const handleDeleteUser = async (id: string) => {
     try {
       await deleteUser(id);
-    setUsers(users.filter(user => user.id !== id));
-    toast.success("Utilisateur supprimé avec succès!");
+      setUsers(users.filter(user => user.id !== id));
+      toast.success("Utilisateur supprimé avec succès!");
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
       uiToast({
@@ -163,7 +171,7 @@ const AdminPage = () => {
       
       // Ajouter l'article à l'état local avec l'ID généré
       setArticles([{ ...newUIArticle, id: newArticleId }, ...articles]);
-    toast.success("Article créé avec succès!");
+      toast.success("Article créé avec succès!");
     } catch (error) {
       console.error("Erreur lors de la création de l'article:", error);
       uiToast({
@@ -197,11 +205,11 @@ const AdminPage = () => {
         await updateFirestoreArticle(updatedUIArticle.id, updates);
         
         // Mettre à jour l'état local
-    setArticles(articles.map(article => 
+        setArticles(articles.map(article => 
           article.id === updatedUIArticle.id ? updatedUIArticle : article
-    ));
+        ));
         
-    toast.success("Article mis à jour avec succès!");
+        toast.success("Article mis à jour avec succès!");
       } else {
         throw new Error("Article introuvable");
       }
@@ -240,7 +248,7 @@ const AdminPage = () => {
     }
   };
 
-  const handleUpdateUserRole = async (userId: string, newRole: "user" | "admin" | "verifier") => {
+  const handleUpdateUserRole = async (userId: string, newRole: "user" | "admin" | "editor") => {
     try {
       await updateUserProfile(userId, { role: newRole });
       
@@ -261,14 +269,6 @@ const AdminPage = () => {
       });
     }
   };
-
-  if (loading) {
-    return <div>Chargement...</div>;
-  }
-
-  if (!user || user.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
 
   return (
     <Layout>
@@ -351,11 +351,11 @@ const AdminPage = () => {
                   const newRole = user.role === "admin" 
                     ? "user" 
                     : user.role === "user" 
-                      ? "verifier" 
+                      ? "editor" 
                       : "admin";
                   
                   if (window.confirm(`Changer le rôle de ${user.name} en ${newRole}?`)) {
-                    handleUpdateUserRole(user.id, newRole as "user" | "admin" | "verifier");
+                    handleUpdateUserRole(user.id, newRole as "user" | "admin" | "editor");
                   }
                 }} 
               />
@@ -376,7 +376,7 @@ const AdminPage = () => {
               <GeneralSettingsForm />
               <ContentSettingsForm />
               <EmailSettingsForm />
-              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

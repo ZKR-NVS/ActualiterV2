@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -26,25 +26,25 @@ const articleFormSchema = z.object({
 type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface ArticleFormDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   onSubmit: (article: any) => void;
   isEditMode?: boolean;
   articleToEdit?: any;
   title?: string;
   submitButtonText?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({ 
+export const ArticleFormDialog = ({
   onSubmit,
-  isEditMode = false, 
-  articleToEdit,
+  isEditMode = false,
+  articleToEdit = null,
   title = "Créer un nouvel article",
-  submitButtonText = "Nouvel Article",
-  open: controlledOpen,
+  submitButtonText = "Créer l'article",
+  open,
   onOpenChange
 }) => {
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(open || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(isEditMode && articleToEdit?.image ? articleToEdit.image : null);
   const [imageUrl, setImageUrl] = useState<string>(isEditMode && articleToEdit?.image ? articleToEdit.image : "");
@@ -52,10 +52,6 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [isCropping, setIsCropping] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
-
-  // Utilise soit l'état contrôlé externe, soit l'état interne
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setOpen = onOpenChange || setInternalOpen;
 
   const defaultValues = isEditMode && articleToEdit 
     ? {
@@ -77,6 +73,27 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
     resolver: zodResolver(articleFormSchema),
     defaultValues
   });
+
+  useEffect(() => {
+    if (open !== undefined) {
+      setIsOpen(open);
+    }
+  }, [open]);
+  
+  const handleOpenChange = (newOpen: boolean) => {
+    setIsOpen(newOpen);
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    }
+    if (!newOpen) {
+      form.reset();
+      setImagePreview(null);
+      setImageUrl("");
+      setCrop(undefined);
+      setCompletedCrop(undefined);
+      setIsCropping(false);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -173,7 +190,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
     }
   };
 
-  const onSubmitForm = async (values: ArticleFormValues) => {
+  const onSubmit = async (values: ArticleFormValues) => {
     try {
       setIsSubmitting(true);
       // Ensure verification status is properly typed
@@ -206,10 +223,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
       
       onSubmit(article);
       toast.success(isEditMode ? "Article mis à jour avec succès" : "Article créé avec succès");
-      setOpen(false);
-      form.reset();
-      setImagePreview(null);
-      setImageUrl("");
+      handleOpenChange(false);
     } catch (error) {
       toast.error("Une erreur s'est produite. Veuillez réessayer.");
       console.error(error);
@@ -219,29 +233,21 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) {
-        form.reset();
-        setImagePreview(null);
-        setImageUrl("");
-        setCrop(undefined);
-        setCompletedCrop(undefined);
-        setIsCropping(false);
-      }
-    }}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {submitButtonText}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {!onOpenChange && (
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {submitButtonText}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6 md:col-span-2">
                 <FormField

@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
 
-interface AuthContextType {
+export interface AuthContextType {
   currentUser: User | null;
-  isLoading: boolean;
+  loading: boolean;
   isAdmin: boolean;
-  isVerifier: boolean;
+  isEditor: boolean;
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<User>;
@@ -28,7 +28,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté au chargement
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } catch (error) {
         console.error("Erreur lors de l'initialisation de l'authentification:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Observer les changements d'état d'authentification
     const unsubscribe = onAuthStateChange((user) => {
       setCurrentUser(user);
-      setIsLoading(false);
+      setLoading(false);
     });
 
     // Nettoyer l'observateur lors du démontage
@@ -59,76 +59,94 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Assurons-nous que l'utilisateur existe et a spécifiquement le rôle "admin"
   const isAdmin = currentUser?.role === "admin";
   
-  // Vérifier si l'utilisateur a le rôle de vérificateur
-  // Un admin est également considéré comme vérificateur (accès plus large)
-  const isVerifier = currentUser?.role === "verifier" || isAdmin;
+  // Vérifier si l'utilisateur a le rôle d'éditeur
+  // Un admin est également considéré comme éditeur (accès plus large)
+  const isEditor = currentUser?.role === "editor" || isAdmin;
 
-  // Fonction de connexion
+  // Login function
   const login = async (email: string, password: string): Promise<User> => {
-    setIsLoading(true);
     try {
-      const user = await signIn(email, password);
-      setCurrentUser(user);
-      return user;
+      setLoading(true);
+      const loggedInUser = await signIn(email, password);
+      setCurrentUser(loggedInUser);
+      return loggedInUser;
+    } catch (error) {
+      console.error("Erreur de connexion:", error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Fonction de déconnexion
+  // Logout function
   const logout = async (): Promise<void> => {
-    setIsLoading(true);
     try {
+      setLoading(true);
       await signOut();
       setCurrentUser(null);
+    } catch (error) {
+      console.error("Erreur de déconnexion:", error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Fonction d'inscription
+  // Register function
   const register = async (email: string, password: string, displayName: string): Promise<User> => {
-    setIsLoading(true);
     try {
-      const user = await registerUser(email, password, displayName);
-      setCurrentUser(user);
-      return user;
+      setLoading(true);
+      const newUser = await registerUser(email, password, displayName);
+      setCurrentUser(newUser);
+      return newUser;
+    } catch (error) {
+      console.error("Erreur d'inscription:", error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Fonction de mise à jour du profil
-  const updateUserProfile = async (updates: { displayName?: string; photoURL?: string }): Promise<void> => {
-    if (!currentUser) throw new Error("Utilisateur non connecté");
+  // Update user profile
+  const updateUserProfile = async (updates: { 
+    displayName?: string; 
+    photoURL?: string; 
+    role?: "user" | "admin" | "editor";
+  }): Promise<void> => {
+    if (!currentUser) throw new Error("Aucun utilisateur connecté");
     
-    setIsLoading(true);
     try {
+      setLoading(true);
       await updateUserProfileService(currentUser.uid, updates);
       
-      // Mettre à jour l'utilisateur local
-      setCurrentUser(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          ...updates
-        };
-      });
+      // Mettre à jour l'utilisateur actuel dans le state
+      const updatedUser = { ...currentUser, ...updates };
+      setCurrentUser(updatedUser);
+    } catch (error) {
+      console.error("Erreur de mise à jour du profil:", error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const value = {
-    currentUser,
-    isLoading,
-    isAdmin,
-    isVerifier,
-    login,
-    logout,
-    register,
-    updateUserProfile
-  };
+  if (loading) {
+    // Vous pouvez rendre un spinner ou un écran de chargement ici
+    // return <LoadingSpinner />;
+  }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{
+      currentUser,
+      loading,
+      isAdmin,
+      isEditor,
+      login,
+      logout,
+      register,
+      updateUserProfile
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }; 

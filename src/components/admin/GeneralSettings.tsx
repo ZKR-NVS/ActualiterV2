@@ -30,7 +30,6 @@ export const GeneralSettingsForm = () => {
       try {
         setIsLoading(true);
         const siteSettings = await getSettings();
-        console.log("Paramètres récupérés:", siteSettings.general);
         setSettings(siteSettings.general);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres généraux:", error);
@@ -44,10 +43,8 @@ export const GeneralSettingsForm = () => {
   }, []);
 
   const handleChange = (key: keyof GeneralSettings, value: any) => {
-    console.log(`Modification de ${key} à ${value}`);
     setSettings(prev => {
       const newSettings = { ...prev, [key]: value };
-      console.log("Nouvelles valeurs:", newSettings);
       setIsDirty(true);
       return newSettings;
     });
@@ -55,25 +52,12 @@ export const GeneralSettingsForm = () => {
 
   const handleSave = async () => {
     try {
-      console.log("Tentative de sauvegarde des paramètres généraux:", settings);
       await updateGeneralSettings(settings);
       setIsDirty(false);
       toast.success("Paramètres généraux enregistrés avec succès");
-      
-      // Recharger les paramètres pour confirmer la mise à jour
-      setTimeout(async () => {
-        try {
-          console.log("Rechargement des paramètres après sauvegarde...");
-          const siteSettings = await getSettings();
-          console.log("Paramètres rechargés - siteName:", siteSettings.general.siteName);
-          setSettings(siteSettings.general);
-        } catch (error) {
-          console.error("Erreur lors du rechargement des paramètres:", error);
-        }
-      }, 1000);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des paramètres généraux:", error);
-      toast.error("Erreur lors de l'enregistrement des paramètres généraux: " + (error instanceof Error ? error.message : String(error)));
+      toast.error("Erreur lors de l'enregistrement des paramètres généraux");
     }
   };
 
@@ -156,7 +140,8 @@ export const GeneralSettingsForm = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">Utilisateur</SelectItem>
-                <SelectItem value="verifier">Vérificateur</SelectItem>
+                <SelectItem value="editor">Éditeur</SelectItem>
+                <SelectItem value="admin">Administrateur</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -173,6 +158,23 @@ export const GeneralSettingsForm = () => {
               value={settings.maxArticlesPerPage}
               onChange={(e) => handleChange("maxArticlesPerPage", parseInt(e.target.value))}
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="theme">Thème</Label>
+            <Select 
+              value={settings.theme}
+              onValueChange={(value) => handleChange("theme", value)}
+            >
+              <SelectTrigger id="theme">
+                <SelectValue placeholder="Sélectionnez un thème" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">Clair</SelectItem>
+                <SelectItem value="dark">Sombre</SelectItem>
+                <SelectItem value="system">Système</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">

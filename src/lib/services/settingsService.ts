@@ -111,45 +111,13 @@ export const getSettings = async (): Promise<SiteSettings> => {
 // Mettre à jour les paramètres généraux
 export const updateGeneralSettings = async (settings: GeneralSettings): Promise<void> => {
   try {
-    console.log("Mise à jour des paramètres généraux avec siteName=", settings.siteName);
+    const settingsDoc = await getDoc(doc(db, "settings", "site"));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    // Récupérer le document existant
-    const settingsRef = doc(db, "settings", "site");
-    const settingsDoc = await getDoc(settingsRef);
-    
-    if (!settingsDoc.exists()) {
-      // Si le document n'existe pas, le créer
-      const initialSettings: SiteSettings = {
-        ...defaultSettings,
-        general: settings,
-      };
-      console.log("Création initiale des paramètres:", initialSettings);
-      await setDoc(settingsRef, initialSettings);
-      console.log("Paramètres créés avec succès");
-      return;
-    }
-    
-    // Mettre à jour uniquement general avec updateDoc
-    console.log("Mise à jour directe avec updateDoc...");
-    
-    // Ajout d'un timestamp pour forcer la détection de changement
-    const updatedData = {
-      "general": {
-        ...settings,
-        _lastUpdated: new Date().toISOString()
-      }
-    };
-    
-    await updateDoc(settingsRef, updatedData);
-    console.log("Mise à jour réussie avec updateDoc");
-    
-    // Vérifier la mise à jour
-    const updatedDoc = await getDoc(settingsRef);
-    if (updatedDoc.exists()) {
-      const data = updatedDoc.data() as SiteSettings;
-      console.log("Vérification après mise à jour - siteName:", data.general.siteName);
-    }
-    
+    await setDoc(doc(db, "settings", "site"), {
+      ...currentSettings,
+      general: settings
+    });
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres généraux:", error);
     throw error;
@@ -159,37 +127,13 @@ export const updateGeneralSettings = async (settings: GeneralSettings): Promise<
 // Mettre à jour les paramètres de contenu
 export const updateContentSettings = async (settings: ContentSettings): Promise<void> => {
   try {
-    console.log("Mise à jour des paramètres de contenu");
+    const settingsDoc = await getDoc(doc(db, "settings", "site"));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    // Récupérer le document existant
-    const settingsRef = doc(db, "settings", "site");
-    const settingsDoc = await getDoc(settingsRef);
-    
-    if (!settingsDoc.exists()) {
-      // Si le document n'existe pas, le créer
-      const initialSettings: SiteSettings = {
-        ...defaultSettings,
-        content: settings,
-      };
-      await setDoc(settingsRef, initialSettings);
-      console.log("Paramètres créés avec succès");
-      return;
-    }
-    
-    // Mettre à jour uniquement content avec updateDoc
-    console.log("Mise à jour directe avec updateDoc...");
-    
-    // Ajout d'un timestamp pour forcer la détection de changement
-    const updatedData = {
-      "content": {
-        ...settings,
-        _lastUpdated: new Date().toISOString()
-      }
-    };
-    
-    await updateDoc(settingsRef, updatedData);
-    console.log("Mise à jour des paramètres de contenu réussie");
-    
+    await setDoc(doc(db, "settings", "site"), {
+      ...currentSettings,
+      content: settings
+    });
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres de contenu:", error);
     throw error;
@@ -199,37 +143,13 @@ export const updateContentSettings = async (settings: ContentSettings): Promise<
 // Mettre à jour les paramètres email
 export const updateEmailSettings = async (settings: EmailSettings): Promise<void> => {
   try {
-    console.log("Mise à jour des paramètres email");
+    const settingsDoc = await getDoc(doc(db, "settings", "site"));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
     
-    // Récupérer le document existant
-    const settingsRef = doc(db, "settings", "site");
-    const settingsDoc = await getDoc(settingsRef);
-    
-    if (!settingsDoc.exists()) {
-      // Si le document n'existe pas, le créer
-      const initialSettings: SiteSettings = {
-        ...defaultSettings,
-        email: settings,
-      };
-      await setDoc(settingsRef, initialSettings);
-      console.log("Paramètres créés avec succès");
-      return;
-    }
-    
-    // Mettre à jour uniquement email avec updateDoc
-    console.log("Mise à jour directe avec updateDoc...");
-    
-    // Ajout d'un timestamp pour forcer la détection de changement
-    const updatedData = {
-      "email": {
-        ...settings,
-        _lastUpdated: new Date().toISOString()
-      }
-    };
-    
-    await updateDoc(settingsRef, updatedData);
-    console.log("Mise à jour des paramètres email réussie");
-    
+    await setDoc(doc(db, "settings", "site"), {
+      ...currentSettings,
+      email: settings
+    });
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres email:", error);
     throw error;
@@ -239,20 +159,13 @@ export const updateEmailSettings = async (settings: EmailSettings): Promise<void
 // Activer/désactiver le mode maintenance
 export const toggleMaintenanceMode = async (enabled: boolean, message?: string): Promise<void> => {
   try {
-    const settingsDoc = await getDoc(doc(db, "settings", "site"));
-    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
-    
-    // Mettre à jour le mode maintenance
-    await setDoc(doc(db, "settings", "site"), {
-      ...currentSettings,
-      general: {
-        ...currentSettings.general,
-        maintenanceMode: enabled,
-        ...(message ? { maintenanceMessage: message } : {})
-      }
+    const settingsRef = doc(db, "settings", "site");
+    await updateDoc(settingsRef, {
+      "general.maintenanceMode": enabled,
+      ...(message && { "general.maintenanceMessage": message })
     });
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+    console.error("Erreur lors de la modification du mode maintenance:", error);
     throw error;
   }
 }; 

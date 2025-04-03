@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
-import { getSettings, toggleMaintenanceMode } from "@/lib/services/settingsService";
+import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -96,8 +96,8 @@ const AppContent = () => {
     const fetchSettings = async () => {
       try {
         setIsSettingsLoading(true);
-        const settings = await getSettings();
-        setIsMaintenanceMode(settings.general.maintenanceMode);
+        const settings = await getGlobalSettings();
+        setIsMaintenanceMode(settings.maintenanceMode);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres:", error);
       } finally {
@@ -115,7 +115,7 @@ const AppContent = () => {
       setIsMaintenanceMode(value);
       
       // Mettre à jour dans Firestore
-      await toggleMaintenanceMode(value);
+      await updateMaintenanceMode(value, currentUser?.uid);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du mode maintenance:", error);
       // En cas d'erreur, revenir à l'état précédent
