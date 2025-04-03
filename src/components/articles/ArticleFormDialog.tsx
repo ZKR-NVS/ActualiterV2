@@ -140,7 +140,6 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
         if (!blob) {
           throw new Error('Canvas is empty');
         }
-        blob.name = fileName;
         const croppedImageUrl = URL.createObjectURL(blob);
         resolve(croppedImageUrl);
       }, 'image/jpeg', 0.95);
