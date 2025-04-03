@@ -1,73 +1,76 @@
-# Welcome to your Lovable project
+# TruthBeacon - Plateforme de vérification d'actualités
 
-## Project info
+TruthBeacon est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, TruthBeacon permet de distinguer facilement les informations vérifiées des contenus douteux.
 
-**URL**: https://lovable.dev/projects/6c6eabe4-bcd9-4da8-bf1a-e26b4167cd56
+## Fonctionnalités
 
-## How can I edit this code?
+- Interface utilisateur moderne et responsive
+- Système de vérification visuel avec badges (Vérifié Vrai, Vérifié Faux, Partiellement Vrai)
+- Thèmes personnalisables (Défaut, Ocean, Forest, Sunset, Lavender, Midnight)
+- Mode maintenance pour les administrateurs
+- Design adaptatif pour mobile et desktop
 
-There are several ways of editing your application.
+## Technologies utilisées
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/6c6eabe4-bcd9-4da8-bf1a-e26b4167cd56) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
+Ce projet est construit avec :
 
 - Vite
 - TypeScript
 - React
-- shadcn-ui
+- React Router
 - Tailwind CSS
+- shadcn/ui
+- Lucide Icons
+- TanStack Query
 
-## How can I deploy this project?
+## Installation et démarrage
 
-Simply open [Lovable](https://lovable.dev/projects/6c6eabe4-bcd9-4da8-bf1a-e26b4167cd56) and click on Share -> Publish.
+```bash
+# Cloner le dépôt
+git clone https://github.com/ZKR-NVS/ActualiterV2.git
+cd ActualiterV2
 
-## Can I connect a custom domain to my Lovable project?
+# Installer les dépendances
+npm install
 
-Yes it is!
+# Démarrer le serveur de développement
+npm run dev
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Structure du projet
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```
+src/
+├── components/     # Composants réutilisables
+│   ├── ui/         # Composants d'interface utilisateur
+│   └── ...
+├── pages/          # Pages de l'application
+├── hooks/          # Hooks personnalisés
+├── data/           # Données mockées et constantes
+├── App.tsx         # Composant principal
+└── index.css       # Styles globaux et variables CSS
+```
+
+## Personnalisation des thèmes
+
+L'application inclut plusieurs thèmes prédéfinis que vous pouvez sélectionner via le sélecteur de thème dans l'en-tête. Pour personnaliser davantage les couleurs, modifiez les variables CSS dans `src/index.css`.
+
+## Déploiement sur Vercel
+
+Pour déployer ce projet sur Vercel :
+
+1. Assurez-vous que votre code est poussé vers GitHub
+2. Créez un compte sur [Vercel](https://vercel.com/) si vous n'en avez pas déjà un
+3. Dans votre tableau de bord Vercel, cliquez sur "Add New" puis "Project"
+4. Sélectionnez votre dépôt GitHub
+5. Configuration du projet:
+   - Framework preset: Vite
+   - Build command: `npm run build`
+   - Output directory: `dist`
+6. Cliquez sur "Deploy"
+
+Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les redirections nécessaires pour une application React à page unique.
+
+## License
+
+MIT
