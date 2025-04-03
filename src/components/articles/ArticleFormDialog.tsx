@@ -1,20 +1,27 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Image as ImageIcon } from "lucide-react";
+import { PlusCircle, Image as ImageIcon, Upload, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ArticleFormValues {
-  title: string;
-  content: string;
-  author: string;
-  verificationStatus: "true" | "false" | "partial";
-  image?: string;
-}
+// Définir le schéma de validation pour le formulaire
+const articleFormSchema = z.object({
+  title: z.string().min(5, { message: "Le titre doit contenir au moins 5 caractères" }),
+  content: z.string().min(20, { message: "Le contenu doit contenir au moins 20 caractères" }),
+  author: z.string().min(2, { message: "L'auteur doit être spécifié" }),
+  verificationStatus: z.enum(["true", "false", "partial"]),
+  image: z.string().optional()
+});
+
+type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface ArticleFormDialogProps {
   onCreateArticle: (article: any) => void;
@@ -32,6 +39,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
   buttonText = "Nouvel Article"
 }) => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(isEditMode && articleToEdit?.image ? articleToEdit.image : null);
   const [imageUrl, setImageUrl] = useState<string>(isEditMode && articleToEdit?.image ? articleToEdit.image : "");
 
@@ -52,6 +60,7 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
       };
 
   const form = useForm<ArticleFormValues>({
+    resolver: zodResolver(articleFormSchema),
     defaultValues
   });
 
@@ -74,108 +83,193 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
     form.setValue("image", previewUrl);
   };
 
-  const onSubmit = (values: ArticleFormValues) => {
-    // Ensure verification status is properly typed
-    const verificationStatus = values.verificationStatus as "true" | "false" | "partial";
-    
-    const article = isEditMode && articleToEdit 
-      ? { 
-          ...articleToEdit, 
-          title: values.title, 
-          author: values.author, 
-          content: values.content,
-          verificationStatus: verificationStatus,
-          image: imageUrl || articleToEdit.image
-        } 
-      : {
-          id: `article-${Date.now()}`, // Temporary ID for new articles
-          title: values.title,
-          author: values.author,
-          date: new Date().toLocaleDateString(),
-          verificationStatus: verificationStatus,
-          content: values.content,
-          excerpt: values.content.substring(0, 120) + '...',
-          image: imageUrl,
-          summary: values.content.substring(0, 120) + '...',  // For Firestore compatibility
-          publicationDate: new Date()  // For Firestore compatibility
-        };
-    
-    onCreateArticle(article);
-    setOpen(false);
-    form.reset();
-    setImagePreview(null);
-    setImageUrl("");
+  const onSubmit = async (values: ArticleFormValues) => {
+    try {
+      setIsSubmitting(true);
+      // Ensure verification status is properly typed
+      const verificationStatus = values.verificationStatus as "true" | "false" | "partial";
+      
+      const article = isEditMode && articleToEdit 
+        ? { 
+            ...articleToEdit, 
+            title: values.title, 
+            author: values.author, 
+            content: values.content,
+            verificationStatus: verificationStatus,
+            image: imageUrl || articleToEdit.image
+          } 
+        : {
+            id: `article-${Date.now()}`, // Temporary ID for new articles
+            title: values.title,
+            author: values.author,
+            date: new Date().toLocaleDateString(),
+            verificationStatus: verificationStatus,
+            content: values.content,
+            excerpt: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),
+            image: imageUrl,
+            summary: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),  // For Firestore compatibility
+            publicationDate: new Date()  // For Firestore compatibility
+          };
+      
+      // Simuler un délai de traitement
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      onCreateArticle(article);
+      toast.success(isEditMode ? "Article mis à jour avec succès" : "Article créé avec succès");
+      setOpen(false);
+      form.reset();
+      setImagePreview(null);
+      setImageUrl("");
+    } catch (error) {
+      toast.error("Une erreur s'est produite. Veuillez réessayer.");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) {
+        form.reset();
+        setImagePreview(null);
+        setImageUrl("");
+      }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           {buttonText}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Titre</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Titre de l'article" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="author"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Auteur</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Nom de l'auteur" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6 md:col-span-2">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Titre de l'article</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Entrez un titre captivant" className="text-lg" />
+                      </FormControl>
+                      <FormDescription>
+                        Un titre clair qui résume le sujet principal
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="author"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Auteur</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Nom de l'auteur" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="verificationStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Statut de vérification</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez un statut" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="true" className="flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                          Vérifié Vrai
+                        </SelectItem>
+                        <SelectItem value="false" className="flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
+                          Vérifié Faux
+                        </SelectItem>
+                        <SelectItem value="partial" className="flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>
+                          Partiellement Vrai
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             {/* Image upload field */}
-            <FormItem>
-              <FormLabel htmlFor="image-upload">Image de l'article</FormLabel>
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                  >
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    {imagePreview ? "Changer l'image" : "Ajouter une image"}
-                  </Button>
-                  {imagePreview && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="flex-shrink-0"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setImageUrl("");
-                        form.setValue("image", "");
-                      }}
-                    >
-                      Supprimer
-                    </Button>
+            <FormItem className="md:col-span-2">
+              <FormLabel>Image de l'article</FormLabel>
+              <div className={cn(
+                "border-2 border-dashed rounded-lg p-4 transition-colors",
+                imagePreview ? "border-primary/50 bg-primary/5" : "border-gray-300 hover:border-primary/50"
+              )}>
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  {!imagePreview ? (
+                    <>
+                      <div className="rounded-full bg-primary/10 p-2">
+                        <Upload className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">Glissez une image ou</p>
+                        <Button 
+                          type="button" 
+                          variant="link" 
+                          className="mt-0"
+                          onClick={() => document.getElementById('image-upload')?.click()}
+                        >
+                          parcourez vos fichiers
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG ou GIF (max. 5MB)</p>
+                    </>
+                  ) : (
+                    <div className="relative w-full">
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button 
+                          type="button" 
+                          size="icon"
+                          variant="destructive"
+                          className="h-7 w-7 rounded-full"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setImageUrl("");
+                            form.setValue("image", "");
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="relative w-full h-48 rounded-md overflow-hidden">
+                        <img 
+                          src={imagePreview} 
+                          alt="Aperçu" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
                 <input 
@@ -185,15 +279,6 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
                   className="hidden" 
                   onChange={handleImageChange}
                 />
-                {imagePreview && (
-                  <div className="mt-2 relative w-full h-40 rounded-md overflow-hidden border">
-                    <img 
-                      src={imagePreview} 
-                      alt="Aperçu" 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                )}
               </div>
             </FormItem>
             
@@ -202,45 +287,36 @@ export const ArticleFormDialog: React.FC<ArticleFormDialogProps> = ({
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contenu</FormLabel>
+                  <FormLabel>Contenu de l'article</FormLabel>
                   <FormControl>
                     <Textarea 
                       {...field} 
-                      placeholder="Contenu de l'article"
-                      className="min-h-[150px]"
+                      placeholder="Rédigez le contenu de votre article ici..."
+                      className="min-h-[200px] resize-y"
                     />
                   </FormControl>
+                  <FormDescription>
+                    {field.value.length} caractères • Minimum 20 caractères
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="verificationStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Statut de vérification</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="true">Vérifié Vrai</option>
-                      <option value="false">Vérifié Faux</option>
-                      <option value="partial">Partiellement Vrai</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
               <DialogClose asChild>
-                <Button variant="outline">Annuler</Button>
+                <Button variant="outline" type="button">Annuler</Button>
               </DialogClose>
-              <Button type="submit">{isEditMode ? "Mettre à jour" : "Créer l'article"}</Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full sm:w-auto"
+              >
+                {isSubmitting ? 
+                  "Enregistrement..." : 
+                  isEditMode ? "Mettre à jour" : "Créer l'article"
+                }
+              </Button>
             </DialogFooter>
           </form>
         </Form>

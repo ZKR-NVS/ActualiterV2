@@ -8,6 +8,7 @@ import { ArticleFormDialog } from "@/components/articles/ArticleFormDialog";
 import { ArticleTable } from "@/components/articles/ArticleTable";
 import { MaintenanceCard } from "@/components/admin/MaintenanceCard";
 import { UserTable } from "@/components/admin/UserTable";
+import { UserFormDialog } from "@/components/admin/UserFormDialog";
 import { SettingsCard } from "@/components/admin/SettingsCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Article as UIArticle } from "@/components/ArticleCard";
 import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle, Article as FirestoreArticle } from "@/lib/services/articleService";
-import { User, getAllUsers, deleteUser } from "@/lib/services/authService";
+import { User, getAllUsers, deleteUser, updateUserProfile } from "@/lib/services/authService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -203,6 +204,53 @@ const AdminPage = () => {
     }
   };
 
+  const handleCreateUser = (newUser: User) => {
+    try {
+      // Créer un nouvel utilisateur UI à partir des données Firebase
+      const newUIUser: AdminUIUser = {
+        id: newUser.uid,
+        name: newUser.displayName,
+        email: newUser.email,
+        role: newUser.role,
+        lastLogin: "Jamais",
+        status: "Inactif"
+      };
+      
+      // Mettre à jour l'état des utilisateurs
+      setUsers([newUIUser, ...users]);
+      
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'utilisateur à l'interface:", error);
+      uiToast({
+        title: "Erreur",
+        description: "L'utilisateur a été créé mais n'a pas pu être ajouté à l'interface.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateUserRole = async (userId: string, newRole: "user" | "admin" | "verifier") => {
+    try {
+      await updateUserProfile(userId, { role: newRole });
+      
+      // Mettre à jour l'utilisateur dans l'interface
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, role: newRole }
+          : user
+      ));
+      
+      toast.success("Rôle de l'utilisateur mis à jour avec succès!");
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du rôle:", error);
+      uiToast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le rôle de l'utilisateur.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-10">
@@ -253,10 +301,7 @@ const AdminPage = () => {
           <TabsContent value="users">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Gérer les Utilisateurs</h2>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Nouvel Utilisateur
-              </Button>
+              <UserFormDialog onUserCreated={handleCreateUser} />
             </div>
             
             {isLoading ? (
@@ -266,7 +311,22 @@ const AdminPage = () => {
                 ))}
               </div>
             ) : (
-              <UserTable users={users} onDeleteUser={handleDeleteUser} />
+              <UserTable 
+                users={users} 
+                onDeleteUser={handleDeleteUser} 
+                onEditUser={(user) => {
+                  // Pour l'instant, nous ne modifions que le rôle
+                  const newRole = user.role === "admin" 
+                    ? "user" 
+                    : user.role === "user" 
+                      ? "verifier" 
+                      : "admin";
+                  
+                  if (window.confirm(`Changer le rôle de ${user.name} en ${newRole}?`)) {
+                    handleUpdateUserRole(user.id, newRole as "user" | "admin" | "verifier");
+                  }
+                }} 
+              />
             )}
           </TabsContent>
           
