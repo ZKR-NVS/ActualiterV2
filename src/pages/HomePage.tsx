@@ -1,51 +1,87 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { ArticleList } from "@/components/ArticleList";
-import { mockArticles } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Article } from "@/components/ArticleCard";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useToast } from "@/components/ui/use-toast";
+import { getAllArticles, getArticlesByStatus, Article as FirestoreArticle } from "@/lib/services/articleService";
+import { Article as UIArticle } from "@/components/ArticleCard";
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<UIArticle[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
+
+  // Convertir les articles Firestore en format d'affichage UI
+  const transformArticlesForUI = (firestoreArticles: FirestoreArticle[]): UIArticle[] => {
+    return firestoreArticles.map(article => ({
+      id: article.id || "",
+      title: article.title,
+      excerpt: article.summary,
+      image: article.imageUrl,
+      date: format(
+        article.publicationDate instanceof Date 
+        ? article.publicationDate 
+        : article.publicationDate.toDate(), 
+        "d MMMM yyyy", 
+        { locale: fr }
+      ),
+      author: article.author,
+      verificationStatus: article.verificationStatus
+    }));
+  };
 
   useEffect(() => {
-    // Simulate API call
     const fetchArticles = async () => {
       setIsLoading(true);
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setArticles(mockArticles);
-      setIsLoading(false);
+      
+      try {
+        let fetchedArticles;
+        
+        if (activeTab === "all") {
+          fetchedArticles = await getAllArticles();
+        } else {
+          fetchedArticles = await getArticlesByStatus(activeTab as "true" | "false" | "partial");
+        }
+        
+        setArticles(transformArticlesForUI(fetchedArticles));
+      } catch (error) {
+        console.error("Erreur lors de la récupération des articles:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les articles. Veuillez réessayer plus tard.",
+          variant: "destructive"
+        });
+        
+        // En cas d'erreur, utiliser les données mockées (si disponibles) ou un tableau vide
+        setArticles([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchArticles();
-  }, []);
-
-  const filteredArticles = articles.filter(article => {
-    if (activeTab === "all") return true;
-    return article.verificationStatus === activeTab;
-  });
+  }, [activeTab, toast]);
 
   return (
     <Layout>
       <section className="bg-primary py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Separating Fact from Fiction
+            La vérité au-delà des apparences
           </h1>
           <p className="text-lg text-white/90 max-w-2xl mx-auto mb-8">
-            TruthBeacon is dedicated to verifying news claims and helping you identify what's true, what's false, and what's somewhere in between.
+            TruthBeacon se consacre à la vérification des actualités et vous aide à identifier ce qui est vrai, ce qui est faux, et ce qui se situe entre les deux.
           </p>
           <div className="flex justify-center space-x-4">
             <Button size="lg" variant="secondary">
-              How It Works
+              Comment ça marche
             </Button>
             <Button size="lg" variant="outline" className="bg-transparent text-white hover:bg-white/10 hover:text-white">
-              Join Us
+              Rejoignez-nous
             </Button>
           </div>
         </div>
@@ -53,24 +89,24 @@ const HomePage = () => {
 
       <section className="py-12 container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold mb-4 md:mb-0">Latest Verified Articles</h2>
+          <h2 className="text-2xl font-bold mb-4 md:mb-0">Derniers articles vérifiés</h2>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
             <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="true">True</TabsTrigger>
-              <TabsTrigger value="partial">Partial</TabsTrigger>
-              <TabsTrigger value="false">False</TabsTrigger>
+              <TabsTrigger value="all">Tous</TabsTrigger>
+              <TabsTrigger value="true">Vrai</TabsTrigger>
+              <TabsTrigger value="partial">Partiel</TabsTrigger>
+              <TabsTrigger value="false">Faux</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        <ArticleList articles={filteredArticles} isLoading={isLoading} />
+        <ArticleList articles={articles} isLoading={isLoading} />
 
         {!isLoading && articles.length > 6 && (
           <div className="mt-10 text-center">
             <Button variant="outline" size="lg">
-              Load More Articles
+              Charger plus d'articles
             </Button>
           </div>
         )}
@@ -78,31 +114,31 @@ const HomePage = () => {
 
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-6 text-center">How We Verify Facts</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Comment nous vérifions les faits</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <span className="text-primary font-bold text-xl">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Research</h3>
-              <p className="text-gray-600">Our team of researchers gathers information from primary sources, experts, and credible publications.</p>
+              <h3 className="text-xl font-semibold mb-3">Recherche</h3>
+              <p className="text-gray-600">Notre équipe de chercheurs rassemble des informations provenant de sources primaires, d'experts et de publications crédibles.</p>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <span className="text-primary font-bold text-xl">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Analysis</h3>
-              <p className="text-gray-600">We carefully analyze the evidence, checking for consistency, credibility, and scientific validity.</p>
+              <h3 className="text-xl font-semibold mb-3">Analyse</h3>
+              <p className="text-gray-600">Nous analysons soigneusement les preuves, en vérifiant leur cohérence, leur crédibilité et leur validité scientifique.</p>
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <span className="text-primary font-bold text-xl">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Verification</h3>
-              <p className="text-gray-600">Our editorial team reviews the findings and assigns a verification status based on the evidence.</p>
+              <h3 className="text-xl font-semibold mb-3">Vérification</h3>
+              <p className="text-gray-600">Notre équipe éditoriale examine les résultats et attribue un statut de vérification basé sur les preuves recueillies.</p>
             </div>
           </div>
         </div>
