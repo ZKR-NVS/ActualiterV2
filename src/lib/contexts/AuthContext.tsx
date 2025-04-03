@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User, getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
+import { getCurrentUser, onAuthStateChange, signIn, signOut, registerUser, updateUserProfile as updateUserProfileService } from "../services/authService";
+import { User, AuthUser } from "@/lib/types";
 
 export interface AuthContextType {
   currentUser: User | null;
@@ -9,7 +10,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<User>;
-  updateUserProfile: (updates: { displayName?: string; photoURL?: string }) => Promise<void>;
+  updateUserProfile: (updates: { displayName?: string; photoURL?: string; role?: "user" | "admin" | "editor" }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

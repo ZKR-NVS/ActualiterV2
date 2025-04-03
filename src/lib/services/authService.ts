@@ -10,16 +10,7 @@ import {
   onAuthStateChanged
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc, Timestamp, collection, getDocs, query, orderBy, deleteDoc } from "firebase/firestore";
-
-export interface User {
-  uid: string;
-  email: string;
-  displayName: string;
-  photoURL: string | null;
-  role: "user" | "admin" | "editor";
-  createdAt: Date | Timestamp;
-  lastLogin: Date | Timestamp | null;
-}
+import { User } from "@/lib/types";
 
 const usersCollection = "users";
 

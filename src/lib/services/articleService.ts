@@ -15,25 +15,8 @@ import {
   QuerySnapshot,
   Timestamp
 } from "firebase/firestore";
+import { Article } from "@/lib/types";
 import { deleteImage } from "./imageService";
-
-export interface Article {
-  id?: string;
-  title: string;
-  source: string;
-  author: string;
-  publicationDate: Date | Timestamp;
-  content: string;
-  summary: string;
-  imageUrl: string;
-  verificationStatus: "true" | "false" | "partial";
-  verifiedBy?: string;
-  verificationNote?: string;
-  tags: string[];
-  viewCount?: number;
-  createdAt?: Date | Timestamp;
-  updatedAt?: Date | Timestamp;
-}
 
 const articlesCollection = "articles";
 

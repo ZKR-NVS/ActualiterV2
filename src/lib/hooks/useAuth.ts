@@ -1,14 +1,8 @@
 import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getUserProfile } from "@/lib/services/authService";
-
-export interface AuthUser {
-  uid: string;
-  email: string;
-  displayName: string;
-  role: "user" | "admin" | "editor";
-}
+import { getCurrentUser } from "@/lib/services/authService";
+import { AuthUser } from "@/lib/types";
 
 export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -19,7 +13,7 @@ export const useAuth = () => {
       try {
         if (firebaseUser) {
           // L'utilisateur est connecté, récupérer son profil complet
-          const userProfile = await getUserProfile(firebaseUser.uid);
+          const userProfile = await getCurrentUser();
           
           if (userProfile) {
             setUser({
