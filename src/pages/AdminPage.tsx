@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, AlertTriangle } from "lucide-react";
-import { mockArticles, mockUsers } from "@/data/mockData";
 import { toast } from "sonner";
 import { ArticleFormDialog } from "@/components/articles/ArticleFormDialog";
 import { ArticleTable } from "@/components/articles/ArticleTable";
@@ -14,43 +12,195 @@ import { SettingsCard } from "@/components/admin/SettingsCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Article } from "@/components/ArticleCard";
+import { useToast } from "@/components/ui/use-toast";
+import { Article as UIArticle } from "@/components/ArticleCard";
+import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle, createArticle as createFirestoreArticle, Article as FirestoreArticle } from "@/lib/services/articleService";
+import { User, getAllUsers, deleteUser } from "@/lib/services/authService";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+
+// Interface pour les utilisateurs adaptée à l'affichage dans le tableau admin
+interface AdminUIUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  lastLogin: string;
+  status: string;
+}
 
 const AdminPage = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [articles, setArticles] = useState<Article[]>(mockArticles);
-  const [users, setUsers] = useState(mockUsers);
+  const [articles, setArticles] = useState<UIArticle[]>([]);
+  const [users, setUsers] = useState<AdminUIUser[]>([]);
+  const { toast: uiToast } = useToast();
+
+  // Convertir les articles Firestore en format d'affichage UI
+  const transformArticlesForUI = (firestoreArticles: FirestoreArticle[]): UIArticle[] => {
+    return firestoreArticles.map(article => ({
+      id: article.id || "",
+      title: article.title,
+      excerpt: article.summary,
+      image: article.imageUrl,
+      date: format(
+        article.publicationDate instanceof Date 
+        ? article.publicationDate 
+        : article.publicationDate.toDate(), 
+        "d MMMM yyyy", 
+        { locale: fr }
+      ),
+      author: article.author,
+      verificationStatus: article.verificationStatus
+    }));
+  };
+
+  // Convertir les utilisateurs Firestore en format d'affichage UI
+  const transformUsersForUI = (firestoreUsers: User[]): AdminUIUser[] => {
+    return firestoreUsers.map(user => ({
+      id: user.uid,
+      name: user.displayName,
+      email: user.email,
+      role: user.role,
+      lastLogin: user.lastLogin 
+        ? format(
+            user.lastLogin instanceof Date 
+            ? user.lastLogin 
+            : user.lastLogin.toDate(), 
+            "d MMMM yyyy", 
+            { locale: fr }
+          ) 
+        : "Jamais",
+      status: user.lastLogin ? "Actif" : "Inactif"
+    }));
+  };
 
   useEffect(() => {
-    // Simulate API call
     const fetchData = async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsLoading(false);
+      setIsLoading(true);
+      
+      try {
+        // Récupérer les articles depuis Firestore
+        const articlesData = await getAllArticles();
+        setArticles(transformArticlesForUI(articlesData));
+        
+        // Récupérer les utilisateurs depuis Firestore
+        const usersData = await getAllUsers();
+        setUsers(transformUsersForUI(usersData));
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données:", error);
+        uiToast({
+          title: "Erreur",
+          description: "Impossible de charger les données. Veuillez réessayer plus tard.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchData();
-  }, []);
+  }, [uiToast]);
 
-  const handleDeleteArticle = (id: string) => {
-    setArticles(articles.filter(article => article.id !== id));
-    toast.success("Article supprimé avec succès!");
+  const handleDeleteArticle = async (id: string) => {
+    try {
+      await deleteArticle(id);
+      setArticles(articles.filter(article => article.id !== id));
+      toast.success("Article supprimé avec succès!");
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'article:", error);
+      uiToast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'article. Veuillez réessayer plus tard.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter(user => user.id !== id));
-    toast.success("Utilisateur supprimé avec succès!");
+  const handleDeleteUser = async (id: string) => {
+    try {
+      await deleteUser(id);
+      setUsers(users.filter(user => user.id !== id));
+      toast.success("Utilisateur supprimé avec succès!");
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
+      uiToast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'utilisateur. Veuillez réessayer plus tard.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleCreateArticle = (newArticle: Article) => {
-    setArticles([newArticle, ...articles]);
-    toast.success("Article créé avec succès!");
+  const handleCreateArticle = async (newUIArticle: UIArticle) => {
+    try {
+      // Convertir l'article UI en format Firestore
+      const firestoreArticle: Omit<FirestoreArticle, "id" | "createdAt" | "updatedAt"> = {
+        title: newUIArticle.title,
+        summary: newUIArticle.excerpt,
+        content: "", // À remplir selon les besoins
+        source: "",
+        author: newUIArticle.author,
+        imageUrl: newUIArticle.image || "",
+        publicationDate: new Date(),
+        verificationStatus: newUIArticle.verificationStatus,
+        tags: []
+      };
+      
+      // Créer l'article dans Firestore
+      const newArticleId = await createFirestoreArticle(firestoreArticle);
+      
+      // Ajouter l'article à l'état local avec l'ID généré
+      setArticles([{ ...newUIArticle, id: newArticleId }, ...articles]);
+      toast.success("Article créé avec succès!");
+    } catch (error) {
+      console.error("Erreur lors de la création de l'article:", error);
+      uiToast({
+        title: "Erreur",
+        description: "Impossible de créer l'article. Veuillez réessayer plus tard.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleUpdateArticle = (updatedArticle: Article) => {
-    setArticles(articles.map(article => 
-      article.id === updatedArticle.id ? updatedArticle : article
-    ));
-    toast.success("Article mis à jour avec succès!");
+  const handleUpdateArticle = async (updatedUIArticle: UIArticle) => {
+    try {
+      // Récupérer l'article complet depuis Firestore
+      const firestoreArticles = await getAllArticles();
+      const existingArticle = firestoreArticles.find(article => article.id === updatedUIArticle.id);
+      
+      if (existingArticle) {
+        // Mettre à jour uniquement les champs modifiés
+        const updates: Partial<FirestoreArticle> = {
+          title: updatedUIArticle.title,
+          summary: updatedUIArticle.excerpt,
+          author: updatedUIArticle.author,
+          verificationStatus: updatedUIArticle.verificationStatus
+        };
+        
+        if (updatedUIArticle.image) {
+          updates.imageUrl = updatedUIArticle.image;
+        }
+        
+        // Mettre à jour l'article dans Firestore
+        await updateFirestoreArticle(updatedUIArticle.id, updates);
+        
+        // Mettre à jour l'état local
+        setArticles(articles.map(article => 
+          article.id === updatedUIArticle.id ? updatedUIArticle : article
+        ));
+        
+        toast.success("Article mis à jour avec succès!");
+      } else {
+        throw new Error("Article introuvable");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'article:", error);
+      uiToast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour l'article. Veuillez réessayer plus tard.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

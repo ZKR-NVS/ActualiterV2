@@ -9,7 +9,7 @@ import {
   UserCredential,
   onAuthStateChanged
 } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, Timestamp, collection, getDocs, query, orderBy, deleteDoc } from "firebase/firestore";
 
 export interface User {
   uid: string;
@@ -34,6 +34,44 @@ const transformUserData = (user: FirebaseUser, additionalData: any = {}): User =
     createdAt: additionalData.createdAt || Timestamp.now(),
     lastLogin: additionalData.lastLogin || Timestamp.now()
   };
+};
+
+// Récupérer tous les utilisateurs (pour l'administration)
+export const getAllUsers = async (): Promise<User[]> => {
+  try {
+    const usersRef = collection(db, usersCollection);
+    const querySnapshot = await getDocs(query(usersRef, orderBy("createdAt", "desc")));
+    
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data() as User;
+      return {
+        ...data,
+        // Convertir les Timestamps en Date si nécessaire pour l'affichage
+        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
+        lastLogin: data.lastLogin instanceof Timestamp ? data.lastLogin.toDate() : data.lastLogin
+      };
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des utilisateurs:", error);
+    throw error;
+  }
+};
+
+// Supprimer un utilisateur
+export const deleteUser = async (uid: string): Promise<void> => {
+  try {
+    // Supprimer le document utilisateur de Firestore
+    const userRef = doc(db, usersCollection, uid);
+    await deleteDoc(userRef);
+    
+    // La suppression de l'utilisateur dans Firebase Auth nécessite normalement
+    // une réauthentification ou doit être effectuée par l'utilisateur lui-même,
+    // ou via les fonctions Firebase Cloud Functions
+    // Pour une implémentation complète, voir la documentation Firebase Auth
+  } catch (error) {
+    console.error(`Erreur lors de la suppression de l'utilisateur ${uid}:`, error);
+    throw error;
+  }
 };
 
 // Inscription d'un nouvel utilisateur
