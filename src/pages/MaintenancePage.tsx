@@ -1,13 +1,51 @@
-
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, LogIn } from "lucide-react";
-import { Link } from "react-router-dom";
+import { AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const MaintenancePage = () => {
+  const [adminClicks, setAdminClicks] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
+  const navigate = useNavigate();
+  
+  // Réinitialiser le compteur de clics après un certain délai
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (adminClicks > 0 && Date.now() - lastClickTime > 3000) {
+        setAdminClicks(0);
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timeout);
+  }, [adminClicks, lastClickTime]);
+  
+  // Gérer les clics sur le logo/titre pour accès administrateur
+  const handleLogoClick = () => {
+    const currentTime = Date.now();
+    setLastClickTime(currentTime);
+    
+    // Incrémenter le compteur de clics
+    setAdminClicks(prev => {
+      const newCount = prev + 1;
+      
+      // Si 5 clics rapides, rediriger vers la page de connexion
+      if (newCount >= 5) {
+        navigate("/login");
+        return 0;
+      }
+      
+      return newCount;
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="text-center max-w-md">
-        <div className="flex justify-center mb-6">
+        <div 
+          className="flex justify-center mb-6 cursor-pointer" 
+          onClick={handleLogoClick}
+          title="TruthBeacon"
+        >
           <div className="bg-amber-100 p-4 rounded-full">
             <AlertTriangle className="h-12 w-12 text-amber-600" />
           </div>
@@ -33,15 +71,6 @@ const MaintenancePage = () => {
           <Button variant="outline" className="mx-auto" onClick={() => window.location.reload()}>
             Réessayer
           </Button>
-          
-          <div className="mt-4 border-t pt-4">
-            <Link to="/login">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <LogIn className="h-4 w-4" />
-                Connexion Administrateur
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
       
