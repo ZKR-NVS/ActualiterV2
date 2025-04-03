@@ -21,6 +21,9 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
 
+    /* Types */
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
