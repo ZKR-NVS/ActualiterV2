@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UserForm } from "./UserForm";
+import { ArticleForm } from "./ArticleForm";
 
-export interface UserFormDialogProps {
+export interface ArticleFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => Promise<void>;
@@ -9,20 +9,20 @@ export interface UserFormDialogProps {
   submitButtonText: string;
 }
 
-export const UserFormDialog = ({
+export const ArticleFormDialog = ({
   open,
   onOpenChange,
   onSubmit,
   title,
   submitButtonText
-}: UserFormDialogProps) => {
+}: ArticleFormDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <UserForm onSubmit={onSubmit} submitButtonText={submitButtonText} />
+        <ArticleForm onSubmit={onSubmit} submitButtonText={submitButtonText} />
       </DialogContent>
     </Dialog>
   );

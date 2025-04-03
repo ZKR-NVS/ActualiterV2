@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
-import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
+import { getSettings, toggleMaintenanceMode } from "@/lib/services/settingsService";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -19,11 +19,15 @@ import NotFound from "./pages/NotFound";
 interface MaintenanceContextType {
   isMaintenanceMode: boolean;
   setMaintenanceMode: (value: boolean) => void;
+  maintenanceMessage: string;
+  setMaintenanceMessage: (value: string) => void;
 }
 
 export const MaintenanceContext = createContext<MaintenanceContextType>({
   isMaintenanceMode: false,
   setMaintenanceMode: () => {},
+  maintenanceMessage: "",
+  setMaintenanceMessage: () => {},
 });
 
 // Hook pour utiliser le contexte de maintenance
@@ -90,14 +94,16 @@ const AppContent = () => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
   const { currentUser } = useAuth();
+  const [maintenanceMessage, setMaintenanceMessage] = useState("");
 
   // Récupérer le mode maintenance depuis Firestore
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setIsSettingsLoading(true);
-        const settings = await getGlobalSettings();
-        setIsMaintenanceMode(settings.maintenanceMode);
+        const settings = await getSettings();
+        setIsMaintenanceMode(settings.general.maintenanceMode);
+        setMaintenanceMessage(settings.general.maintenanceMessage);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres:", error);
       } finally {
@@ -109,17 +115,12 @@ const AppContent = () => {
   }, []);
 
   // Fonction pour mettre à jour le mode maintenance
-  const handleSetMaintenanceMode = async (value: boolean) => {
+  const handleMaintenanceToggle = async (enabled: boolean) => {
     try {
-      // Mettre à jour l'état local immédiatement pour une réponse rapide
-      setIsMaintenanceMode(value);
-      
-      // Mettre à jour dans Firestore
-      await updateMaintenanceMode(value, currentUser?.uid);
+      await toggleMaintenanceMode(enabled, maintenanceMessage);
+      setIsMaintenanceMode(enabled);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du mode maintenance:", error);
-      // En cas d'erreur, revenir à l'état précédent
-      setIsMaintenanceMode(!value);
+      console.error("Erreur lors de la modification du mode maintenance:", error);
     }
   };
   
@@ -128,7 +129,7 @@ const AppContent = () => {
   }
 
   return (
-    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
+    <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleMaintenanceToggle, maintenanceMessage, setMaintenanceMessage }}>
       <BrowserRouter>
         <MaintenanceWrapper>
           <Routes>

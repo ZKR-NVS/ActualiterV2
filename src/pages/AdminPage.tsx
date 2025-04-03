@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, AlertTriangle } from "lucide-react";
+import { PlusCircle, AlertTriangle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleFormDialog } from "@/components/articles/ArticleFormDialog";
 import { ArticleTable } from "@/components/articles/ArticleTable";
@@ -19,6 +19,11 @@ import { getAllArticles, deleteArticle, updateArticle as updateFirestoreArticle,
 import { User, getAllUsers, deleteUser, updateUserProfile } from "@/lib/services/authService";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { GeneralSettingsForm } from "@/components/admin/GeneralSettings";
+import { ContentSettingsForm } from "@/components/admin/ContentSettings";
+import { EmailSettingsForm } from "@/components/admin/EmailSettings";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 
 // Interface pour les utilisateurs adaptée à l'affichage dans le tableau admin
 interface AdminUIUser {
@@ -31,10 +36,22 @@ interface AdminUIUser {
 }
 
 const AdminPage = () => {
+  const { user, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState("users");
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isArticleDialogOpen, setIsArticleDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [articles, setArticles] = useState<UIArticle[]>([]);
   const [users, setUsers] = useState<AdminUIUser[]>([]);
   const { toast: uiToast } = useToast();
+
+  if (loading) {
+    return <div>Chargement...</div>;
+  }
+
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
 
   // Convertir les articles Firestore en format d'affichage UI
   const transformArticlesForUI = (firestoreArticles: FirestoreArticle[]): UIArticle[] => {
@@ -270,7 +287,7 @@ const AdminPage = () => {
           <MaintenanceCard />
         </div>
 
-        <Tabs defaultValue="articles">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="articles">Articles</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
@@ -280,7 +297,10 @@ const AdminPage = () => {
           <TabsContent value="articles">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Gérer les Articles</h2>
-              <ArticleFormDialog onCreateArticle={handleCreateArticle} />
+              <Button onClick={() => setIsArticleDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvel Article
+              </Button>
             </div>
             
             {isLoading ? (
@@ -296,12 +316,22 @@ const AdminPage = () => {
                 onUpdateArticle={handleUpdateArticle}
               />
             )}
+            <ArticleFormDialog
+              open={isArticleDialogOpen}
+              onOpenChange={setIsArticleDialogOpen}
+              onSubmit={handleCreateArticle}
+              title="Nouvel Article"
+              submitButtonText="Créer"
+            />
           </TabsContent>
           
           <TabsContent value="users">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Gérer les Utilisateurs</h2>
-              <UserFormDialog onUserCreated={handleCreateUser} />
+              <Button onClick={() => setIsUserDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvel Utilisateur
+              </Button>
             </div>
             
             {isLoading ? (
@@ -328,55 +358,23 @@ const AdminPage = () => {
                 }} 
               />
             )}
+            <UserFormDialog
+              open={isUserDialogOpen}
+              onOpenChange={setIsUserDialogOpen}
+              onSubmit={handleCreateUser}
+              title="Nouvel Utilisateur"
+              submitButtonText="Créer"
+            />
           </TabsContent>
           
           <TabsContent value="settings">
             <h2 className="text-xl font-semibold mb-4">Paramètres du Site</h2>
             
-            <SettingsCard title="Paramètres Généraux">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="siteName">Nom du Site</Label>
-                  <Input id="siteName" defaultValue="TruthBeacon" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="siteDescription">Description du Site</Label>
-                  <Input id="siteDescription" defaultValue="Vérification des faits pour l'ère numérique" />
-                </div>
-              </div>
-              <div className="space-y-2 mt-4">
-                <Label htmlFor="contactEmail">Email de Contact</Label>
-                <Input id="contactEmail" type="email" defaultValue="contact@truthbeacon.com" />
-              </div>
-              <div className="flex items-center gap-2 mt-4">
-                <Switch id="enableRegistration" defaultChecked />
-                <Label htmlFor="enableRegistration">Autoriser les nouvelles inscriptions d'utilisateurs</Label>
-              </div>
-            </SettingsCard>
-            
-            <SettingsCard 
-              title="Paramètres Email"
-              onSave={() => toast.success("Paramètres email enregistrés")}
-            >
-              <div className="space-y-2">
-                <Label htmlFor="smtpHost">Hôte SMTP</Label>
-                <Input id="smtpHost" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="smtpUser">Nom d'utilisateur SMTP</Label>
-                  <Input id="smtpUser" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="smtpPassword">Mot de passe SMTP</Label>
-                  <Input id="smtpPassword" type="password" />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 mt-4">
-                <Switch id="enableEmailNotifications" defaultChecked />
-                <Label htmlFor="enableEmailNotifications">Activer les notifications par email</Label>
-              </div>
-            </SettingsCard>
+            <div className="grid gap-6">
+              <GeneralSettingsForm />
+              <ContentSettingsForm />
+              <EmailSettingsForm />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
