@@ -47,7 +47,7 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
         <div className="absolute top-2 left-2">
           {book.featured && (
             <Badge className="bg-primary text-white">
-              {t('bookshop.featured')}
+              {t('shop.featured')}
             </Badge>
           )}
         </div>
@@ -75,9 +75,9 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
                 )}
               </p>
               {book.stock > 0 ? (
-                <p className="text-green-300 text-xs">{t('bookshop.inStock')}</p>
+                <p className="text-green-300 text-xs">{t('shop.inStock')}</p>
               ) : (
-                <p className="text-red-300 text-xs">{t('bookshop.outOfStock')}</p>
+                <p className="text-red-300 text-xs">{t('shop.outOfStock')}</p>
               )}
             </div>
             <Button 

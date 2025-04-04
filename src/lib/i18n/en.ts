@@ -91,7 +91,24 @@ export default {
     email: "Email",
     password: "Password",
     confirmPassword: "Confirm Password",
-    loginRequired: "Login Required"
+    loginRequired: "Login Required",
+    welcome: "Welcome",
+    loginDescription: "Sign in to your Actualiter account",
+    createAccount: "Create an account",
+    registerDescription: "Join Actualiter to access more features",
+    fullName: "Full Name",
+    loading: "Signing in...",
+    creatingAccount: "Creating account...",
+    passwordsDontMatch: "Passwords do not match.",
+    passwordTooShort: "Password must be at least 6 characters long.",
+    loginSuccess: "Login successful!",
+    registerSuccess: "Registration successful! Please check your email to confirm your account.",
+    authError: "Authentication Error",
+    genericError: "An error occurred during authentication.",
+    invalidCredentials: "Incorrect email or password.",
+    emailAlreadyInUse: "This email is already in use by another account.",
+    weakPassword: "Password is too weak.",
+    networkError: "Network connection problem. Please check your internet connection."
   },
   settings: {
     general: {

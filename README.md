@@ -89,6 +89,9 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Traduction complète de la boutique et des pages de détail de produits
 - Amélioration de la gestion des textes dynamiques en fonction de la langue
 - Correction d'erreurs TypeScript liées aux paramètres de fonction
+- Mise à jour du système d'internationalisation pour supporter les fonctions de traduction
+- Correction des clés de traduction incorrectes dans les composants de la boutique
+- Traduction complète de la page de connexion et d'inscription
 
 ### v1.0.14
 - Ajout de champs obligatoires pour la création de livres (éditeur, date de publication, nombre de pages, langue)

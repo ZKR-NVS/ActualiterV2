@@ -91,7 +91,24 @@ export default {
     email: "Email",
     password: "Mot de passe",
     confirmPassword: "Confirmer le mot de passe",
-    loginRequired: "Connexion requise"
+    loginRequired: "Connexion requise",
+    welcome: "Bienvenue",
+    loginDescription: "Connectez-vous à votre compte Actualiter",
+    createAccount: "Créer un compte",
+    registerDescription: "Rejoignez Actualiter pour accéder à plus de fonctionnalités",
+    fullName: "Nom complet",
+    loading: "Connexion en cours...",
+    creatingAccount: "Création du compte...",
+    passwordsDontMatch: "Les mots de passe ne correspondent pas.",
+    passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères.",
+    loginSuccess: "Connexion réussie !",
+    registerSuccess: "Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.",
+    authError: "Erreur d'authentification",
+    genericError: "Une erreur s'est produite lors de l'authentification.",
+    invalidCredentials: "Email ou mot de passe incorrect.",
+    emailAlreadyInUse: "Cet email est déjà utilisé par un autre compte.",
+    weakPassword: "Le mot de passe est trop faible.",
+    networkError: "Problème de connexion réseau. Veuillez vérifier votre connexion internet."
   },
   settings: {
     general: {

@@ -12,11 +12,13 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, register } = useAuth();
+  const { t } = useLanguage();
   const { toast: uiToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
@@ -42,7 +44,7 @@ const LoginPage = () => {
       if (activeTab === "login") {
         // Connexion
         await login(loginEmail, loginPassword);
-        toast.success("Connexion réussie!");
+        toast.success(t("auth.loginSuccess"));
         
         // Rediriger vers la page d'origine si elle existe, sinon vers l'accueil
         const from = location.state?.from?.pathname || "/";
@@ -50,21 +52,21 @@ const LoginPage = () => {
       } else {
         // Vérifier que les mots de passe correspondent
         if (registerPassword !== confirmPassword) {
-          setError("Les mots de passe ne correspondent pas.");
+          setError(t("auth.passwordsDontMatch"));
           setIsLoading(false);
           return;
         }
 
         // Vérifier la complexité du mot de passe
         if (registerPassword.length < 6) {
-          setError("Le mot de passe doit contenir au moins 6 caractères.");
+          setError(t("auth.passwordTooShort"));
           setIsLoading(false);
           return;
         }
 
         // Inscription
         await register(registerEmail, registerPassword, registerName);
-        toast.success("Inscription réussie! Veuillez vérifier votre email pour confirmer votre compte.");
+        toast.success(t("auth.registerSuccess"));
         
         // Passer à l'onglet de connexion après l'inscription
         setActiveTab("login");
@@ -79,23 +81,23 @@ const LoginPage = () => {
       console.error("Erreur d'authentification:", error);
       
       // Traduire les messages d'erreur Firebase
-      let errorMessage = "Une erreur s'est produite lors de l'authentification.";
+      let errorMessage = t("auth.genericError");
       
       if (error.code === "auth/invalid-credential") {
-        errorMessage = "Email ou mot de passe incorrect.";
+        errorMessage = t("auth.invalidCredentials");
       } else if (error.code === "auth/email-already-in-use") {
-        errorMessage = "Cet email est déjà utilisé par un autre compte.";
+        errorMessage = t("auth.emailAlreadyInUse");
       } else if (error.code === "auth/weak-password") {
-        errorMessage = "Le mot de passe est trop faible.";
+        errorMessage = t("auth.weakPassword");
       } else if (error.code === "auth/network-request-failed") {
-        errorMessage = "Problème de connexion réseau. Veuillez vérifier votre connexion internet.";
+        errorMessage = t("auth.networkError");
       }
       
       setError(errorMessage);
       
       uiToast({
         variant: "destructive",
-        title: "Erreur d'authentification",
+        title: t("auth.authError"),
         description: errorMessage
       });
     } finally {
@@ -109,8 +111,8 @@ const LoginPage = () => {
         <Card className="w-full max-w-md">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Connexion</TabsTrigger>
-              <TabsTrigger value="register">Inscription</TabsTrigger>
+              <TabsTrigger value="login">{t("auth.signIn")}</TabsTrigger>
+              <TabsTrigger value="register">{t("auth.signUp")}</TabsTrigger>
             </TabsList>
             
             {error && (
@@ -123,14 +125,14 @@ const LoginPage = () => {
             <TabsContent value="login">
               <form onSubmit={handleSubmit}>
                 <CardHeader>
-                  <CardTitle>Bienvenue</CardTitle>
+                  <CardTitle>{t("auth.welcome")}</CardTitle>
                   <CardDescription>
-                    Connectez-vous à votre compte Actualiter
+                    {t("auth.loginDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("auth.email")}</Label>
                     <Input 
                       id="email" 
                       type="email" 
@@ -143,9 +145,9 @@ const LoginPage = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Mot de passe</Label>
+                      <Label htmlFor="password">{t("auth.password")}</Label>
                       <a href="#" className="text-sm text-primary hover:underline">
-                        Mot de passe oublié?
+                        {t("auth.forgotPassword")}
                       </a>
                     </div>
                     <Input 
@@ -164,9 +166,9 @@ const LoginPage = () => {
                     {isLoading ? (
                       <span className="flex items-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Connexion en cours...
+                        {t("auth.loading")}
                       </span>
-                    ) : "Se connecter"}
+                    ) : t("auth.signIn")}
                   </Button>
                 </CardFooter>
               </form>
@@ -175,14 +177,14 @@ const LoginPage = () => {
             <TabsContent value="register">
               <form onSubmit={handleSubmit}>
                 <CardHeader>
-                  <CardTitle>Créer un compte</CardTitle>
+                  <CardTitle>{t("auth.createAccount")}</CardTitle>
                   <CardDescription>
-                    Rejoignez Actualiter pour accéder à plus de fonctionnalités
+                    {t("auth.registerDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nom complet</Label>
+                    <Label htmlFor="name">{t("auth.fullName")}</Label>
                     <Input 
                       id="name" 
                       placeholder="Jean Dupont" 
@@ -193,7 +195,7 @@ const LoginPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="registerEmail">Email</Label>
+                    <Label htmlFor="registerEmail">{t("auth.email")}</Label>
                     <Input 
                       id="registerEmail" 
                       type="email" 
@@ -205,7 +207,7 @@ const LoginPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="registerPassword">Mot de passe</Label>
+                    <Label htmlFor="registerPassword">{t("auth.password")}</Label>
                     <Input 
                       id="registerPassword" 
                       type="password" 
@@ -217,7 +219,7 @@ const LoginPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                    <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
                     <Input 
                       id="confirmPassword" 
                       type="password" 
@@ -234,9 +236,9 @@ const LoginPage = () => {
                     {isLoading ? (
                       <span className="flex items-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Création du compte...
+                        {t("auth.creatingAccount")}
                       </span>
-                    ) : "Créer un compte"}
+                    ) : t("auth.signUp")}
                   </Button>
                 </CardFooter>
               </form>
@@ -248,10 +250,17 @@ const LoginPage = () => {
       {/* Overlay de chargement pendant le processus d'authentification */}
       {isLoading && (
         <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center">
-          <LoadingSpinner 
-            size="lg" 
-            text={activeTab === "login" ? "Connexion en cours..." : "Création du compte..."} 
-          />
+          <div className="bg-background p-6 rounded-lg shadow-lg">
+            <div className="flex flex-col items-center space-y-4">
+              <LoadingSpinner size="lg" />
+              <p className="text-lg font-medium">
+                {activeTab === "login" 
+                  ? t("auth.loading")
+                  : t("auth.creatingAccount")
+                }
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </Layout>
