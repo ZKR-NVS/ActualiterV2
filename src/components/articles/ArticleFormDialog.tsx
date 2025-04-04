@@ -4,7 +4,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDes
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Image as ImageIcon, Upload, X, Crop, Maximize2 } from "lucide-react";
+import { PlusCircle, Image as ImageIcon, Upload, X, Crop, Maximize2, Link } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ReactCrop, { Crop as CropType, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { uploadImage } from "@/lib/services/imageService";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Définir le schéma de validation pour le formulaire
 const articleFormSchema = z.object({
@@ -21,8 +23,26 @@ const articleFormSchema = z.object({
   content: z.string().min(20, { message: "Le contenu doit contenir au moins 20 caractères" }),
   author: z.string().min(2, { message: "L'auteur doit être spécifié" }),
   verificationStatus: z.enum(["true", "false", "partial"]),
-  image: z.string().optional()
+  image: z.string().optional(),
+  externalImageUrl: z.string().optional()
 });
+
+// Fonction pour convertir un lien Google Drive en lien direct
+const convertGoogleDriveLink = (url: string): string => {
+  if (!url) return url;
+  
+  // Vérifier si c'est un lien Google Drive
+  const driveRegex = /https:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view/;
+  const match = url.match(driveRegex);
+  
+  if (match && match[1]) {
+    // Extraire l'ID et créer un lien direct
+    const fileId = match[1];
+    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+  }
+  
+  return url; // Retourner l'URL originale si ce n'est pas un lien Google Drive
+};
 
 type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
@@ -54,6 +74,9 @@ export const ArticleFormDialog = ({
   const [isCropping, setIsCropping] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("upload");
+  const [useExternalImage, setUseExternalImage] = useState<boolean>(false);
+  const [externalImageUrl, setExternalImageUrl] = useState<string>("");
 
   const defaultValues = isEditMode && articleToEdit 
     ? {
@@ -61,14 +84,16 @@ export const ArticleFormDialog = ({
         content: articleToEdit.content || articleToEdit.excerpt || "",
         author: articleToEdit.author,
         verificationStatus: articleToEdit.verificationStatus,
-        image: articleToEdit.image || ""
+        image: articleToEdit.image || "",
+        externalImageUrl: ""
       }
     : {
         title: "",
         content: "",
         author: "",
         verificationStatus: "partial",
-        image: ""
+        image: "",
+        externalImageUrl: ""
       };
 
   const form = useForm<ArticleFormValues>({
@@ -94,7 +119,18 @@ export const ArticleFormDialog = ({
       setCrop(undefined);
       setCompletedCrop(undefined);
       setIsCropping(false);
+      setUseExternalImage(false);
+      setExternalImageUrl("");
     }
+  };
+
+  // Fonction pour prévisualiser l'image à partir d'une URL externe
+  const handleExternalImagePreview = (url: string) => {
+    const convertedUrl = convertGoogleDriveLink(url);
+    setExternalImageUrl(convertedUrl);
+    setImagePreview(convertedUrl);
+    setUseExternalImage(true);
+    form.setValue("externalImageUrl", convertedUrl);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +146,7 @@ export const ArticleFormDialog = ({
     const previewUrl = URL.createObjectURL(file);
     setImagePreview(previewUrl);
     setIsCropping(true);
+    setUseExternalImage(false);
 
     // Reset crop when new image is loaded
     setCrop(undefined);
@@ -198,60 +235,41 @@ export const ArticleFormDialog = ({
   };
 
   const handleFormSubmit = async (values: ArticleFormValues) => {
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
-      // Ensure verification status is properly typed
-      const verificationStatus = values.verificationStatus as "true" | "false" | "partial";
+      let imageUrlToSubmit = "";
       
-      // Télécharger l'image vers Firebase Storage si disponible
-      let storedImageUrl = imageUrl;
-      if (imageBlob) {
+      // Si on utilise une URL externe
+      if (useExternalImage && externalImageUrl) {
+        imageUrlToSubmit = externalImageUrl;
+      } 
+      // Si on a une image à uploader (pas utile maintenant, mais gardé pour compatibilité)
+      else if (imageBlob && !useExternalImage) {
+        // Cette partie reste en place pour quand Firebase Storage sera disponible
         try {
-          // Upload l'image vers Firebase Storage
-          storedImageUrl = await uploadImage(imageBlob);
-          
-          // Libérer l'URL de prévisualisation temporaire
-          if (imagePreview) {
-            URL.revokeObjectURL(imagePreview);
-          }
+          imageUrlToSubmit = await uploadImage(imageBlob);
         } catch (error) {
-          console.error("Erreur lors du téléchargement de l'image:", error);
-          toast.error("Erreur lors du téléchargement de l'image. L'article sera créé sans image.");
-          storedImageUrl = "";
+          console.error("Erreur lors de l'upload de l'image:", error);
+          toast.error("Erreur lors de l'upload de l'image. Utilisez plutôt une URL externe.");
+          setIsSubmitting(false);
+          return;
         }
       }
       
-    const article = isEditMode && articleToEdit 
-      ? { 
-          ...articleToEdit, 
-          title: values.title, 
-          author: values.author, 
-          content: values.content,
-          verificationStatus: verificationStatus,
-          image: storedImageUrl || articleToEdit.image
-        } 
-      : {
-          id: `article-${Date.now()}`, // Temporary ID for new articles
-          title: values.title,
-          author: values.author,
-          date: new Date().toLocaleDateString(),
-          verificationStatus: verificationStatus,
-          content: values.content,
-          excerpt: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),
-          image: storedImageUrl,
-          summary: values.content.substring(0, 120) + (values.content.length > 120 ? '...' : ''),  // For Firestore compatibility
-          publicationDate: new Date()  // For Firestore compatibility
+      // Article complet
+      const articleData = {
+        ...values,
+        image: imageUrlToSubmit || imagePreview || values.image
       };
       
-      // Simuler un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      onSubmit(article);
-      toast.success(isEditMode ? "Article mis à jour avec succès" : "Article créé avec succès");
+      await onSubmit(articleData);
+      form.reset();
       handleOpenChange(false);
+      toast.success(isEditMode ? "Article mis à jour avec succès!" : "Article créé avec succès!");
     } catch (error) {
-      toast.error("Une erreur s'est produite. Veuillez réessayer.");
-      console.error(error);
+      console.error("Erreur lors de la soumission:", error);
+      toast.error("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -343,123 +361,189 @@ export const ArticleFormDialog = ({
             />
             </div>
             
-            {/* Image upload field */}
-            <FormItem className="md:col-span-2">
-              <FormLabel>Image de l'article</FormLabel>
-              <div className={cn(
-                "border-2 border-dashed rounded-lg p-4 transition-colors",
-                imagePreview ? "border-primary/50 bg-primary/5" : "border-gray-300 hover:border-primary/50"
-              )}>
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  {!imagePreview ? (
-                    <>
-                      <div className="rounded-full bg-primary/10 p-2">
-                        <Upload className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">Glissez une image ou</p>
-                        <Button 
-                          type="button" 
-                          variant="link" 
-                          className="mt-0"
-                          onClick={() => document.getElementById('image-upload')?.click()}
+            {/* Section d'image modifiée */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Image d'illustration</h3>
+
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="link">URL d'image (recommandé)</TabsTrigger>
+                  <TabsTrigger value="upload">Upload (limité)</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="link" className="space-y-4">
+                  <div className="space-y-2">
+                    <FormItem>
+                      <FormLabel>URL de l'image</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="https://drive.google.com/file/d/.../view" 
+                            value={externalImageUrl}
+                            onChange={(e) => setExternalImageUrl(e.target.value)}
+                          />
+                          <Button 
+                            type="button" 
+                            onClick={() => handleExternalImagePreview(externalImageUrl)}
+                            variant="secondary"
+                          >
+                            <Link className="h-4 w-4 mr-1" />
+                            Prévisualiser
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Pour utiliser Google Drive : uploadez l'image sur Drive, partagez-la (accessible avec le lien) et collez l'URL ici
+                      </FormDescription>
+                    </FormItem>
+                    
+                    {imagePreview && useExternalImage && (
+                      <div className="relative mt-4 border rounded-md overflow-hidden aspect-video">
+                        <img src={imagePreview} alt="Aperçu" className="w-full h-full object-cover" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setExternalImageUrl("");
+                            setUseExternalImage(false);
+                          }}
                         >
-                          parcourez vos fichiers
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-500">PNG, JPG ou GIF (max. 5MB)</p>
-                    </>
-                  ) : (
-                    <div className="relative w-full">
-                      {isCropping ? (
-                        <div className="space-y-4">
-                          <ReactCrop
-                            crop={crop}
-                            onChange={(c) => setCrop(c)}
-                            onComplete={(c) => setCompletedCrop(c)}
-                            aspect={16 / 9}
-                          >
-                            <img
-                              ref={imgRef}
-                              src={imagePreview}
-                              alt="Crop preview"
-                              onLoad={onImageLoad}
-                              className="max-h-[400px] w-full object-contain"
-                            />
-                          </ReactCrop>
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                setImagePreview(null);
-                                setImageUrl("");
-                                form.setValue("image", "");
-                                setCrop(undefined);
-                                setCompletedCrop(undefined);
-                                setIsCropping(false);
-                              }}
-                            >
-                              Annuler
-                            </Button>
-                            <Button
-                              type="button"
-                              onClick={handleCropComplete}
-                              disabled={!completedCrop}
-                            >
-                              Appliquer le recadrage
-                            </Button>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="upload" className="space-y-4">
+                  <FormDescription className="text-amber-500">
+                    ⚠️ L'upload d'images directement dans l'application n'est pas recommandé actuellement.
+                    Utilisez plutôt l'option "URL d'image" avec Google Drive.
+                  </FormDescription>
+                  
+                  {/* Garder le code existant pour l'upload comme option de secours */}
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Image de l'article</FormLabel>
+                    <div className={cn(
+                      "border-2 border-dashed rounded-lg p-4 transition-colors",
+                      imagePreview ? "border-primary/50 bg-primary/5" : "border-gray-300 hover:border-primary/50"
+                    )}>
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        {!imagePreview ? (
+                          <>
+                            <div className="rounded-full bg-primary/10 p-2">
+                              <Upload className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm text-gray-600">Glissez une image ou</p>
+                              <Button 
+                                type="button" 
+                                variant="link" 
+                                className="mt-0"
+                                onClick={() => document.getElementById('image-upload')?.click()}
+                              >
+                                parcourez vos fichiers
+                              </Button>
+                            </div>
+                            <p className="text-xs text-gray-500">PNG, JPG ou GIF (max. 5MB)</p>
+                          </>
+                        ) : (
+                          <div className="relative w-full">
+                            {isCropping ? (
+                              <div className="space-y-4">
+                                <ReactCrop
+                                  crop={crop}
+                                  onChange={(c) => setCrop(c)}
+                                  onComplete={(c) => setCompletedCrop(c)}
+                                  aspect={16 / 9}
+                                >
+                                  <img
+                                    ref={imgRef}
+                                    src={imagePreview}
+                                    alt="Crop preview"
+                                    onLoad={onImageLoad}
+                                    className="max-h-[400px] w-full object-contain"
+                                  />
+                                </ReactCrop>
+                                <div className="flex justify-end space-x-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setImagePreview(null);
+                                      setImageUrl("");
+                                      form.setValue("image", "");
+                                      setCrop(undefined);
+                                      setCompletedCrop(undefined);
+                                      setIsCropping(false);
+                                    }}
+                                  >
+                                    Annuler
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    onClick={handleCropComplete}
+                                    disabled={!completedCrop}
+                                  >
+                                    Appliquer le recadrage
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="absolute top-2 right-2 z-10">
+                                  <Button 
+                                    type="button" 
+                                    size="icon"
+                                    variant="destructive"
+                                    className="h-7 w-7 rounded-full"
+                                    onClick={() => {
+                                      setImagePreview(null);
+                                      setImageUrl("");
+                                      form.setValue("image", "");
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                <div className="relative w-full h-48 rounded-md overflow-hidden">
+                                  <img 
+                                    src={imagePreview} 
+                                    alt="Aperçu" 
+                                    className="w-full h-full object-cover" 
+                                  />
+                                </div>
+                                <div className="flex justify-center mt-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsCropping(true)}
+                                  >
+                                    <Crop className="h-4 w-4 mr-2" />
+                                    Recadrer l'image
+                                  </Button>
+                                </div>
+                              </>
+                            )}
                           </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="absolute top-2 right-2 z-10">
-                            <Button 
-                              type="button" 
-                              size="icon"
-                              variant="destructive"
-                              className="h-7 w-7 rounded-full"
-                              onClick={() => {
-                                setImagePreview(null);
-                                setImageUrl("");
-                                form.setValue("image", "");
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="relative w-full h-48 rounded-md overflow-hidden">
-                            <img 
-                              src={imagePreview} 
-                              alt="Aperçu" 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                          <div className="flex justify-center mt-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsCropping(true)}
-                            >
-                              <Crop className="h-4 w-4 mr-2" />
-                              Recadrer l'image
-                            </Button>
-                          </div>
-                        </>
-                      )}
+                        )}
+                      </div>
+                      <input 
+                        id="image-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleImageChange}
+                      />
                     </div>
-                  )}
-                </div>
-                <input 
-                  id="image-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleImageChange}
-                />
-              </div>
-            </FormItem>
+                  </FormItem>
+                </TabsContent>
+              </Tabs>
+            </div>
             
             <FormField
               control={form.control}

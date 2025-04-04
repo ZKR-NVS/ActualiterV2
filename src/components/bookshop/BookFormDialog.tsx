@@ -109,6 +109,23 @@ export default function BookFormDialog({
     }
   }, [book]);
   
+  // Fonction pour convertir un lien Google Drive en lien direct
+  const convertGoogleDriveLink = (url: string): string => {
+    if (!url) return url;
+    
+    // Vérifier si c'est un lien Google Drive
+    const driveRegex = /https:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view/;
+    const match = url.match(driveRegex);
+    
+    if (match && match[1]) {
+      // Extraire l'ID et créer un lien direct
+      const fileId = match[1];
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+    
+    return url; // Retourner l'URL originale si ce n'est pas un lien Google Drive
+  };
+  
   const onSubmit = useCallback(
     async (data: BookFormValues) => {
       if (!open) return;
@@ -116,6 +133,10 @@ export default function BookFormDialog({
       setSubmissionError(null);
 
       try {
+        // Convertir le lien Google Drive si nécessaire
+        const processedCoverImageUrl = convertGoogleDriveLink(data.coverImageUrl || '');
+        const processedPdfUrl = convertGoogleDriveLink(data.pdfUrl || '');
+        
         // Données de base du livre
         const bookData: Partial<Book> = {
           title: data.title,
@@ -127,15 +148,15 @@ export default function BookFormDialog({
           pages: data.pages ? Number(data.pages) : 0,
           publisher: data.publisher || '',
           category: data.category,
-          // Utiliser l'URL externe si spécifiée, sinon utiliser l'image téléchargée ou l'image par défaut
-          coverImage: useExternalImage && data.coverImageUrl ? data.coverImageUrl : (coverImagePreview || '/placeholder.svg'),
+          // Utiliser l'URL modifiée si disponible
+          coverImage: useExternalImage && processedCoverImageUrl ? processedCoverImageUrl : (coverImagePreview || '/placeholder.svg'),
           rating: 0,
           reviewCount: 0,
           price: data.price ? Number(data.price) : 0,
           stock: data.stock ? Number(data.stock) : 0,
           featured: data.featured || false,
           discountPercentage: data.discountPercentage && data.discountPercentage > 0 ? data.discountPercentage : null,
-          pdfUrl: useExternalPdf && data.pdfUrl ? data.pdfUrl : (book?.pdfUrl || '')
+          pdfUrl: useExternalPdf && processedPdfUrl ? processedPdfUrl : (book?.pdfUrl || '')
         };
 
         if (book) {
@@ -369,98 +390,49 @@ export default function BookFormDialog({
               <div className="space-y-4 md:col-span-2">
                 <h3 className="text-lg font-medium">Image de couverture</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <div className="relative border rounded-md aspect-[3/4] overflow-hidden flex items-center justify-center bg-accent/20">
-                    {coverImagePreview ? (
-                      <img 
-                        ref={imageRef}
-                        src={coverImagePreview} 
-                        alt="Aperçu" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-center p-4">
-                        <ImagePlus className="h-12 w-12 mx-auto text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Aucune image sélectionnée
-                        </p>
-                      </div>
-                    )}
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="useExternalImage"
+                      checked={useExternalImage}
+                      onCheckedChange={(checked) => {
+                        if (checked === true || checked === false) {
+                          setUseExternalImage(checked);
+                        }
+                      }}
+                    />
+                    <label 
+                      htmlFor="useExternalImage"
+                      className="text-sm font-medium leading-none cursor-pointer"
+                    >
+                      Utiliser une URL externe pour l'image
+                    </label>
                   </div>
                   
-                  <div className="flex flex-col justify-center">
-                    <div className="mb-4">
-                      <FormField
-                        control={form.control}
-                        name="coverImageUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>URL d'image externe</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                placeholder="https://exemple.com/image.jpg" 
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  if (e.target.value) {
-                                    setUseExternalImage(true);
-                                    setCoverImagePreview(e.target.value);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Entrez l'URL d'une image existante sur internet
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="text-sm text-muted-foreground mb-2">- OU -</div>
-                    
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      onChange={handleImageChange}
-                      className="hidden"
-                      id="cover-image-upload"
+                  <FormDescription className="text-xs">
+                    Pour utiliser une image depuis Google Drive : 
+                    1. Uploadez l'image sur Drive et partagez-la (accessible avec le lien)
+                    2. Collez le lien Google Drive ici - il sera automatiquement converti
+                  </FormDescription>
+                  
+                  {useExternalImage && (
+                    <FormField
+                      control={form.control}
+                      name="coverImageUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL de l'image</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://drive.google.com/file/d/.../view" />
+                          </FormControl>
+                          <FormDescription>
+                            Collez le lien Google Drive de l'image (ou toute autre URL d'image)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setUseExternalImage(false);
-                        fileInputRef.current?.click();
-                      }}
-                      className="mb-2"
-                    >
-                      <ImagePlus className="mr-2 h-4 w-4" />
-                      {coverImagePreview && !useExternalImage ? 'Changer l\'image' : 'Télécharger une image'}
-                    </Button>
-                    
-                    {coverImagePreview && (
-                      <>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                          onClick={() => {
-                            setCoverImagePreview(null);
-                            form.setValue('coverImageUrl', '');
-                          }}
-                          className="text-destructive hover:text-destructive mb-2"
-                      >
-                          <X className="mr-2 h-4 w-4" />
-                        Supprimer l'image
-                      </Button>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          L'image sera automatiquement recadrée au format 3:4 pour s'adapter parfaitement au cadre d'affichage.
-                        </p>
-                      </>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
               
