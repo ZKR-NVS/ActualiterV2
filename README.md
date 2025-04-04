@@ -1,10 +1,10 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.9
+# Actualiter - Plateforme de vérification d'actualités - v1.0.10
 *Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
 ## État actuel du projet
-- Intégration complète avec Firebase (Auth, Firestore, Storage)
+- Intégration complète avec Firebase (Auth, Firestore)
 - Interface utilisateur moderne et fonctionnelle
 - Design responsive optimisé pour mobile et desktop
 - Fonctionnalités de vérification implémentées
@@ -31,6 +31,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Amélioration de la gestion des Timestamps Firebase dans les interfaces React
 - **NOUVEAU** : Contexte global pour le panier avec affichage du nombre d'articles dans l'en-tête
 - **NOUVEAU** : Synchronisation bidirectionnelle en temps réel du mode maintenance
+- **NOUVEAU** : Intégration avec Google Drive pour l'hébergement d'images sans Firebase Storage
+- **AMÉLIORÉ** : Formulaires d'ajout/modification de livres et d'articles optimisés
 
 ## Fonctionnalités
 ### Terminées
@@ -40,12 +42,12 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Mode maintenance pour les administrateurs
 - Design adaptatif pour mobile et desktop
 - Navigation entre les pages principales
-- Intégration Firebase (Auth, Firestore, Storage)
+- Intégration Firebase (Auth, Firestore)
 - Routes protégées pour les zones sécurisées
 - Système d'authentification complet
 - Gestion des utilisateurs (création, modification des rôles)
 - Système de commentaires avec modération
-- Upload et gestion d'images pour les articles
+- Gestion d'images pour les articles via Google Drive
 - Paramètres administrateur (général, contenu, email, sécurité)
 - Modération des commentaires
 - Système de notifications utilisateur
@@ -57,7 +59,6 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Boutique de livres avec recherche et filtrage par catégorie
 - Gestion de panier d'achat et processus de commande
 - Interface d'administration pour gérer les livres et les catégories
-- Gestion et téléchargement des fichiers PDF associés aux livres
 - Interface d'administration pour visualiser et gérer les commandes
 - **AMÉLIORÉ** : Système complet d'internationalisation avec support français/anglais
 - **AMÉLIORÉ** : Composants intégralement traduits (Page d'accueil, Footer, Préférences, etc.)
@@ -70,8 +71,18 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Gestion d'état globale du panier pour une meilleure cohérence des données
 - **NOUVEAU** : Détection en temps réel des modifications Firebase pour le mode maintenance
 - **AMÉLIORÉ** : Interface d'administration du mode maintenance avec options de synchronisation avancées
+- **NOUVEAU** : Support pour l'hébergement d'images via Google Drive avec conversion automatique des liens
 
 ## Journal des modifications
+
+### v1.0.10
+- Intégration avec Google Drive pour l'hébergement d'images et PDFs sans Firebase Storage
+- Ajout d'un convertisseur automatique de liens Google Drive en liens d'accès direct
+- Amélioration des formulaires d'ajout/modification de livres et d'articles
+- Correction du problème de réinitialisation des champs lors de la modification d'un livre
+- Correction du problème de prévisualisation d'image à partir d'URL dans le formulaire d'articles
+- Amélioration de l'affichage des badges de remise sur les livres (suppression du "0%" quand pas de remise)
+- Optimisation de l'interface du panier pour une meilleure expérience utilisateur
 
 ### v1.0.9
 - Implémentation d'une synchronisation bidirectionnelle automatique pour le mode maintenance
@@ -89,17 +100,22 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Optimisation de la sécurisation des Timestamps Firebase dans les interfaces utilisateur
 - Amélioration de la réactivité du panier avec mise à jour instantanée lors de l'ajout/suppression d'articles
 
-### v1.0.7
-- Correction de l'erreur de sérialisation des Timestamps Firebase dans les pages de détail de livre et du panier
-- Implémentation de fonctions de sécurité pour convertir les objets Timestamp en chaînes ISO avant leur utilisation dans les composants React
-- Optimisation de la gestion d'état du panier pour une meilleure réactivité de l'interface
+## Utilisation de Google Drive pour les images
 
-### v1.0.6
-- Correction de l'erreur de sérialisation des Timestamps Firebase
-- Correction de l'erreur "serverTimestamp() is not currently supported inside arrays" dans les paniers
-- Amélioration de la gestion des erreurs d'autorisation pour les utilisateurs non-admin
-- Optimisation du chargement des paramètres (plus de blocage pour les utilisateurs standard)
-- Mise à jour de la documentation
+Pour ajouter des images à vos articles ou livres sans Firebase Storage :
+
+1. **Uploader l'image sur Google Drive**
+   - Accédez à votre Google Drive
+   - Uploadez l'image souhaitée
+   - Faites un clic droit sur le fichier → "Partager" → "Tout le monde avec le lien"
+   - Copiez le lien partagé
+
+2. **Utiliser le lien dans l'application**
+   - Collez simplement le lien Google Drive dans le champ URL d'image du formulaire
+   - L'application convertira automatiquement le lien standard (https://drive.google.com/file/d/VOTRE_ID/view) en lien d'accès direct
+   - Prévisualisez l'image pour vérifier qu'elle s'affiche correctement
+
+Cette solution permet d'utiliser l'application sans avoir besoin de payer pour Firebase Storage.
 
 ## Technologies utilisées
 
@@ -113,7 +129,7 @@ Ce projet est construit avec :
 - shadcn/ui
 - Lucide Icons
 - TanStack Query
-- Firebase (Auth, Firestore, Storage)
+- Firebase (Auth, Firestore)
 - date-fns pour la gestion des dates
 - react-image-crop pour l'édition d'images
 - zod pour la validation des formulaires

@@ -126,6 +126,45 @@ export default function BookFormDialog({
     return url; // Retourner l'URL originale si ce n'est pas un lien Google Drive
   };
   
+  // Prévisualiser l'image à partir d'une URL
+  const handlePreviewImage = () => {
+    const coverImageUrl = form.getValues('coverImageUrl');
+    if (!coverImageUrl) {
+      toast({
+        title: "URL manquante",
+        description: "Veuillez entrer une URL d'image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const convertedUrl = convertGoogleDriveLink(coverImageUrl);
+    
+    // Vérifier si l'image peut être chargée
+    const img = new Image();
+    img.onload = () => {
+      setCoverImagePreview(convertedUrl);
+      setUseExternalImage(true);
+      toast({
+        title: "Image chargée",
+        description: "Prévisualisation mise à jour avec succès",
+        variant: "default"
+      });
+    };
+    img.onerror = () => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger l'image. Vérifiez l'URL et les permissions.",
+        variant: "destructive"
+      });
+    };
+    
+    // Appliquer un timeout pour éviter les problèmes de CORS
+    setTimeout(() => {
+      img.src = convertedUrl;
+    }, 100);
+  };
+  
   const onSubmit = useCallback(
     async (data: BookFormValues) => {
       if (!open) return;
@@ -416,22 +455,53 @@ export default function BookFormDialog({
                   </FormDescription>
                   
                   {useExternalImage && (
-                    <FormField
-                      control={form.control}
-                      name="coverImageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL de l'image</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="https://drive.google.com/file/d/.../view" />
-                          </FormControl>
-                          <FormDescription>
-                            Collez le lien Google Drive de l'image (ou toute autre URL d'image)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="coverImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>URL de l'image</FormLabel>
+                            <FormControl>
+                              <div className="flex space-x-2">
+                                <Input {...field} placeholder="https://drive.google.com/file/d/.../view" className="flex-1" />
+                                <Button 
+                                  type="button" 
+                                  variant="secondary" 
+                                  onClick={handlePreviewImage}
+                                >
+                                  Prévisualiser
+                                </Button>
+                              </div>
+                            </FormControl>
+                            <FormDescription>
+                              Collez le lien Google Drive de l'image (ou toute autre URL d'image)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {coverImagePreview && (
+                        <div className="mt-2 border rounded-md overflow-hidden">
+                          <div className="relative aspect-[3/4] w-full max-w-[200px] mx-auto">
+                            <img 
+                              src={coverImagePreview}
+                              alt="Prévisualisation" 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder.svg';
+                                toast({
+                                  title: "Erreur d'image",
+                                  description: "Impossible d'afficher l'image. Vérifiez l'URL.",
+                                  variant: "destructive"
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
                       )}
-                    />
+                    </>
                   )}
                 </div>
               </div>

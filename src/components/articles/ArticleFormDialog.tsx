@@ -126,11 +126,30 @@ export const ArticleFormDialog = ({
 
   // Fonction pour prévisualiser l'image à partir d'une URL externe
   const handleExternalImagePreview = (url: string) => {
+    if (!url) {
+      toast.error("Veuillez entrer une URL d'image valide");
+      return;
+    }
+    
     const convertedUrl = convertGoogleDriveLink(url);
-    setExternalImageUrl(convertedUrl);
-    setImagePreview(convertedUrl);
-    setUseExternalImage(true);
-    form.setValue("externalImageUrl", convertedUrl);
+    
+    // Vérifier si l'image peut être chargée avant de mettre à jour l'état
+    const img = new Image();
+    img.onload = () => {
+      setExternalImageUrl(convertedUrl);
+      setImagePreview(convertedUrl);
+      setUseExternalImage(true);
+      form.setValue("externalImageUrl", convertedUrl);
+      toast.success("Image chargée avec succès");
+    };
+    img.onerror = () => {
+      toast.error("Impossible de charger l'image. Vérifiez l'URL et les permissions d'accès.");
+    };
+    
+    // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
+    setTimeout(() => {
+      img.src = convertedUrl;
+    }, 100);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -425,122 +444,122 @@ export const ArticleFormDialog = ({
                   </FormDescription>
                   
                   {/* Garder le code existant pour l'upload comme option de secours */}
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Image de l'article</FormLabel>
-                    <div className={cn(
-                      "border-2 border-dashed rounded-lg p-4 transition-colors",
-                      imagePreview ? "border-primary/50 bg-primary/5" : "border-gray-300 hover:border-primary/50"
-                    )}>
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        {!imagePreview ? (
-                          <>
-                            <div className="rounded-full bg-primary/10 p-2">
-                              <Upload className="h-6 w-6 text-primary" />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-600">Glissez une image ou</p>
-                              <Button 
-                                type="button" 
-                                variant="link" 
-                                className="mt-0"
-                                onClick={() => document.getElementById('image-upload')?.click()}
-                              >
-                                parcourez vos fichiers
-                              </Button>
-                            </div>
-                            <p className="text-xs text-gray-500">PNG, JPG ou GIF (max. 5MB)</p>
-                          </>
-                        ) : (
-                          <div className="relative w-full">
-                            {isCropping ? (
-                              <div className="space-y-4">
-                                <ReactCrop
-                                  crop={crop}
-                                  onChange={(c) => setCrop(c)}
-                                  onComplete={(c) => setCompletedCrop(c)}
-                                  aspect={16 / 9}
-                                >
-                                  <img
-                                    ref={imgRef}
-                                    src={imagePreview}
-                                    alt="Crop preview"
-                                    onLoad={onImageLoad}
-                                    className="max-h-[400px] w-full object-contain"
-                                  />
-                                </ReactCrop>
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                      setImagePreview(null);
-                                      setImageUrl("");
-                                      form.setValue("image", "");
-                                      setCrop(undefined);
-                                      setCompletedCrop(undefined);
-                                      setIsCropping(false);
-                                    }}
-                                  >
-                                    Annuler
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    onClick={handleCropComplete}
-                                    disabled={!completedCrop}
-                                  >
-                                    Appliquer le recadrage
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="absolute top-2 right-2 z-10">
-                                  <Button 
-                                    type="button" 
-                                    size="icon"
-                                    variant="destructive"
-                                    className="h-7 w-7 rounded-full"
-                                    onClick={() => {
-                                      setImagePreview(null);
-                                      setImageUrl("");
-                                      form.setValue("image", "");
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                                <div className="relative w-full h-48 rounded-md overflow-hidden">
-                                  <img 
-                                    src={imagePreview} 
-                                    alt="Aperçu" 
-                                    className="w-full h-full object-cover" 
-                                  />
-                                </div>
-                                <div className="flex justify-center mt-2">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setIsCropping(true)}
-                                  >
-                                    <Crop className="h-4 w-4 mr-2" />
-                                    Recadrer l'image
-                                  </Button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        )}
+            <FormItem className="md:col-span-2">
+              <FormLabel>Image de l'article</FormLabel>
+              <div className={cn(
+                "border-2 border-dashed rounded-lg p-4 transition-colors",
+                imagePreview ? "border-primary/50 bg-primary/5" : "border-gray-300 hover:border-primary/50"
+              )}>
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  {!imagePreview ? (
+                    <>
+                      <div className="rounded-full bg-primary/10 p-2">
+                        <Upload className="h-6 w-6 text-primary" />
                       </div>
-                      <input 
-                        id="image-upload" 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={handleImageChange}
-                      />
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">Glissez une image ou</p>
+                        <Button 
+                          type="button" 
+                          variant="link" 
+                          className="mt-0"
+                          onClick={() => document.getElementById('image-upload')?.click()}
+                        >
+                          parcourez vos fichiers
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG ou GIF (max. 5MB)</p>
+                    </>
+                  ) : (
+                    <div className="relative w-full">
+                      {isCropping ? (
+                        <div className="space-y-4">
+                          <ReactCrop
+                            crop={crop}
+                            onChange={(c) => setCrop(c)}
+                            onComplete={(c) => setCompletedCrop(c)}
+                            aspect={16 / 9}
+                          >
+                            <img
+                              ref={imgRef}
+                              src={imagePreview}
+                              alt="Crop preview"
+                              onLoad={onImageLoad}
+                              className="max-h-[400px] w-full object-contain"
+                            />
+                          </ReactCrop>
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setImagePreview(null);
+                                setImageUrl("");
+                                form.setValue("image", "");
+                                setCrop(undefined);
+                                setCompletedCrop(undefined);
+                                setIsCropping(false);
+                              }}
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={handleCropComplete}
+                              disabled={!completedCrop}
+                            >
+                              Appliquer le recadrage
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="absolute top-2 right-2 z-10">
+                            <Button 
+                              type="button" 
+                              size="icon"
+                              variant="destructive"
+                              className="h-7 w-7 rounded-full"
+                              onClick={() => {
+                                setImagePreview(null);
+                                setImageUrl("");
+                                form.setValue("image", "");
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="relative w-full h-48 rounded-md overflow-hidden">
+                            <img 
+                              src={imagePreview} 
+                              alt="Aperçu" 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                          <div className="flex justify-center mt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsCropping(true)}
+                            >
+                              <Crop className="h-4 w-4 mr-2" />
+                              Recadrer l'image
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </FormItem>
+                  )}
+                </div>
+                <input 
+                  id="image-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleImageChange}
+                />
+              </div>
+            </FormItem>
                 </TabsContent>
               </Tabs>
             </div>
