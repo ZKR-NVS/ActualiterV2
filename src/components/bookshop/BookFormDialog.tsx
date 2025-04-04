@@ -181,6 +181,9 @@ export default function BookFormDialog({
       return;
     }
 
+    // Vérifier si c'est un lien ImgBB (solution recommandée)
+    const isImgBB = coverImageUrl.includes('i.ibb.co') || coverImageUrl.includes('imgbb.com');
+    
     // Convertir le lien Google Drive en lien direct si nécessaire
     const convertedUrl = convertGoogleDriveLink(coverImageUrl);
     
@@ -189,7 +192,9 @@ export default function BookFormDialog({
     // Afficher immédiatement un message de chargement
     toast({
       title: "Chargement...",
-      description: "Tentative de chargement de l'image",
+      description: isImgBB 
+        ? "Chargement de l'image depuis ImgBB..." 
+        : "Tentative de chargement de l'image...",
     });
     
     // Créer une nouvelle image pour tester le chargement
@@ -204,19 +209,31 @@ export default function BookFormDialog({
       
       toast({
         title: "Image chargée",
-        description: "Prévisualisation mise à jour avec succès",
+        description: isImgBB 
+          ? "Image ImgBB chargée avec succès !" 
+          : "Prévisualisation mise à jour avec succès",
         variant: "default"
       });
     };
     
     img.onerror = () => {
-      // Tentative alternative avec un proxy CORS si disponible
+      // Si c'est déjà un lien ImgBB, il ne devrait pas y avoir d'erreur CORS
+      if (isImgBB) {
+        toast({
+          title: "Erreur ImgBB",
+          description: "Impossible de charger l'image ImgBB. Vérifiez que le lien est correct et réessayez.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Tentative alternative avec un proxy CORS si c'est Google Drive
       const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
       console.log("Tentative avec proxy CORS:", corsProxyUrl);
       
       toast({
         title: "Premier essai échoué",
-        description: "Tentative d'utilisation d'un proxy CORS...",
+        description: "Tentative d'utilisation d'un proxy CORS. Nous vous recommandons d'utiliser ImgBB à la place de Google Drive.",
       });
       
       // Deuxième tentative avec proxy
@@ -229,7 +246,7 @@ export default function BookFormDialog({
         
         toast({
           title: "Image chargée via proxy",
-          description: "L'image a été chargée via un proxy CORS",
+          description: "L'image a été chargée via un proxy CORS. Pour une solution plus fiable, utilisez ImgBB.",
           variant: "default"
         });
       };
@@ -237,13 +254,23 @@ export default function BookFormDialog({
       imgWithProxy.onerror = () => {
         toast({
           title: "Erreur",
-          description: "Impossible de charger l'image. Vérifiez l'URL et les permissions d'accès. Assurez-vous que l'image est partagée publiquement.",
+          description: "Impossible de charger l'image. Pour éviter ce problème, nous vous recommandons d'utiliser ImgBB (voir README).",
           variant: "destructive"
         });
+        
+        // Afficher un message explicatif avec un lien vers ImgBB
+        setTimeout(() => {
+          toast({
+            title: "Solution recommandée",
+            description: "Utilisez ImgBB.com pour héberger vos images sans problèmes CORS.",
+            variant: "default"
+          });
+        }, 1000);
       };
       
       // Appliquer un délai avant de charger l'image avec proxy
       setTimeout(() => {
+        imgWithProxy.crossOrigin = "anonymous";
         imgWithProxy.src = corsProxyUrl;
       }, 300);
     };

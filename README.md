@@ -1,5 +1,5 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.11
-*Dernière mise à jour : 6 avril 2024*
+# Actualiter - Plateforme de vérification d'actualités - v1.0.12
+*Dernière mise à jour : 8 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
@@ -34,6 +34,9 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **NOUVEAU** : Intégration avec Google Drive pour l'hébergement d'images sans Firebase Storage
 - **AMÉLIORÉ** : Formulaires d'ajout/modification de livres et d'articles optimisés
 - **AMÉLIORÉ** : Gestion robuste du chargement d'images avec support de secours CORS
+- **NOUVEAU** : Support pour l'hébergement d'images via ImgBB comme alternative à Google Drive
+- **CORRIGÉ** : Affichage conditionnel du nombre de pages dans la page de détail des livres
+- **AMÉLIORÉ** : Contrôle d'accès aux fichiers PDF uniquement après achat des livres
 
 ## Fonctionnalités
 ### Terminées
@@ -76,6 +79,12 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 
 ## Journal des modifications
 
+### v1.0.12
+- Ajout d'ImgBB comme alternative recommandée pour l'hébergement d'images
+- Correction de l'affichage du nombre de pages (n'affiche plus "0 pages" quand non spécifié)
+- Amélioration du système d'accès aux PDF avec contrôle des achats
+- Optimisation de la vérification des commandes pour l'accès aux PDF
+- Instructions détaillées pour résoudre les problèmes CORS persistants
 ### v1.0.11
 - Amélioration robuste du chargement des images externes dans les formulaires
 - Ajout d'un système de secours avec proxy CORS pour le chargement des images
@@ -128,7 +137,35 @@ Pour ajouter des images à vos articles ou livres sans Firebase Storage :
 3. **En cas de problème de chargement**
    - Vérifiez que les permissions sont correctement définies (fichier accessible par lien)
    - Assurez-vous que le format d'image est standard (JPG, PNG)
-   - Si le problème persiste, essayez d'héberger l'image sur un autre service comme Imgur ou ImgBB
+   - Si le problème persiste, essayez d'héberger l'image sur ImgBB (voir ci-dessous)
+
+4. **En cas de problème de chargement persistant avec Google Drive**
+   - **Important** : Google Drive peut poser des problèmes CORS, même avec notre système de secours
+   - Nous recommandons fortement d'utiliser ImgBB comme alternative plus fiable
+
+## Solution recommandée : Utilisation d'ImgBB pour l'hébergement d'images
+
+Pour éviter les problèmes CORS avec Google Drive, nous recommandons l'utilisation d'ImgBB :
+
+1. **Uploader l'image sur ImgBB**
+   - Accédez à [ImgBB](https://imgbb.com/)
+   - Cliquez sur "Start uploading" (pas besoin de créer un compte)
+   - Uploadez votre image
+   - Une fois l'image uploadée, copiez le "Direct link"
+
+2. **Utiliser le lien direct dans l'application**
+   - Collez le lien direct ImgBB dans le champ URL d'image du formulaire
+   - Cliquez sur "Prévisualiser" pour vérifier que l'image s'affiche correctement
+   - Les liens ImgBB sont optimisés pour le web et ne posent généralement pas de problèmes CORS
+
+3. **Avantages d'ImgBB par rapport à Google Drive**
+   - Pas de problèmes CORS
+   - Liens d'accès direct sans conversion nécessaire
+   - Service gratuit sans limite raisonnable d'utilisation
+   - Optimisation automatique des images pour le web
+   - Conservation de vos images pendant des années sans suppression
+
+Cette solution est fortement recommandée pour tous les utilisateurs qui rencontrent des problèmes de chargement d'images avec Google Drive.
 
 Cette solution permet d'utiliser l'application sans avoir besoin de payer pour Firebase Storage.
 
