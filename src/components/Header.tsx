@@ -6,7 +6,9 @@ import { useMaintenanceMode } from "@/App";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { ThemeSwitcher } from "./ui/theme-switcher";
+import { LanguageSwitcher } from "./ui/language-switcher";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { NotificationDropdown } from "./NotificationDropdown";
 
@@ -14,6 +16,7 @@ export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isMaintenanceMode, setMaintenanceMode } = useMaintenanceMode();
   const { currentUser, isAdmin, loading, logout } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
 
   const toggleMenu = () => {
@@ -55,7 +58,7 @@ export const Header: React.FC = () => {
               {isMaintenanceMode && (
                 <Badge variant="outline" className="ml-2 bg-partial text-partial-foreground border-partial">
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  Maintenance
+                  {t('common.maintenance')}
                 </Badge>
               )}
             </Link>
@@ -64,36 +67,36 @@ export const Header: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className={`text-foreground hover:text-primary ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}>
-              Accueil
+              {t('common.home')}
             </Link>
             <Link to="/bookshop" className={`text-foreground hover:text-primary flex items-center ${location.pathname.startsWith('/bookshop') || location.pathname.startsWith('/book/') ? 'text-primary font-medium' : ''}`}>
               <BookOpen className="h-4 w-4 mr-1" />
-              Boutique
+              {t('common.bookshop')}
             </Link>
             {currentUser && (
               <Link to="/profile" className={`text-foreground hover:text-primary ${location.pathname === '/profile' ? 'text-primary font-medium' : ''}`}>
-                Profil
+                {t('common.profile')}
               </Link>
             )}
             {currentUser && isAdmin && (
               <Link to="/admin" className={`text-foreground hover:text-primary ${location.pathname === '/admin' ? 'text-primary font-medium' : ''}`}>
-                Admin
+                {t('common.admin')}
               </Link>
             )}
             {currentUser && isAdmin && (
               <Link to="/admin/books" className={`text-foreground hover:text-primary ${location.pathname === '/admin/books' ? 'text-primary font-medium' : ''}`}>
-                Gestion Boutique
+                {t('common.shopManagement')}
               </Link>
             )}
             {currentUser && isAdmin && (
               <Link to="/admin/orders" className={`text-foreground hover:text-primary ${location.pathname === '/admin/orders' ? 'text-primary font-medium' : ''}`}>
-                Commandes
+                {t('common.orders')}
               </Link>
             )}
             
             {currentUser && isAdmin && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Maintenance:</span>
+                <span>{t('header.maintenanceMode')}:</span>
                 <Switch 
                   checked={isMaintenanceMode} 
                   onCheckedChange={setMaintenanceMode}
@@ -103,6 +106,7 @@ export const Header: React.FC = () => {
             )}
             
             <div className="flex items-center space-x-2">
+              <LanguageSwitcher />
               <ThemeSwitcher />
               
               {currentUser && (
@@ -129,13 +133,13 @@ export const Header: React.FC = () => {
                       )}
                     </Avatar>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={handleLogout} title="Déconnexion">
+                  <Button variant="ghost" size="icon" onClick={handleLogout} title={t('common.logout')}>
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </>
               ) : (
                 <Link to="/login">
-                  <Button variant="outline">Connexion</Button>
+                  <Button variant="outline">{t('common.login')}</Button>
                 </Link>
               ))}
             </div>
@@ -143,6 +147,7 @@ export const Header: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeSwitcher />
             {currentUser && (
               <Link to="/cart">
@@ -168,21 +173,21 @@ export const Header: React.FC = () => {
                 to="/"
                 className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/' ? 'text-primary font-medium bg-muted' : ''}`}
               >
-                Accueil
+                {t('common.home')}
               </Link>
               <Link
                 to="/bookshop"
                 className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted flex items-center ${location.pathname.startsWith('/bookshop') || location.pathname.startsWith('/book/') ? 'text-primary font-medium bg-muted' : ''}`}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
-                Boutique de livres
+                {t('common.bookshop')}
               </Link>
               {currentUser && (
                 <Link
                   to="/profile"
                   className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/profile' ? 'text-primary font-medium bg-muted' : ''}`}
                 >
-                  Profil
+                  {t('common.profile')}
                 </Link>
               )}
               {currentUser && isAdmin && (
@@ -190,7 +195,7 @@ export const Header: React.FC = () => {
                   to="/admin"
                   className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/admin' ? 'text-primary font-medium bg-muted' : ''}`}
                 >
-                  Admin
+                  {t('common.admin')}
                 </Link>
               )}
               {currentUser && isAdmin && (
@@ -198,7 +203,7 @@ export const Header: React.FC = () => {
                   to="/admin/books"
                   className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/admin/books' ? 'text-primary font-medium bg-muted' : ''}`}
                 >
-                  Gestion de la boutique
+                  {t('common.shopManagement')}
                 </Link>
               )}
               {currentUser && isAdmin && (
@@ -206,13 +211,13 @@ export const Header: React.FC = () => {
                   to="/admin/orders"
                   className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/admin/orders' ? 'text-primary font-medium bg-muted' : ''}`}
                 >
-                  Gestion des commandes
+                  {t('common.orders')}
                 </Link>
               )}
               
               {currentUser && isAdmin && (
                 <div className="flex items-center justify-between px-4 py-2">
-                  <span className="text-muted-foreground">Mode maintenance</span>
+                  <span className="text-muted-foreground">{t('header.maintenanceMode')}</span>
                   <Switch 
                     checked={isMaintenanceMode} 
                     onCheckedChange={setMaintenanceMode}
@@ -228,14 +233,14 @@ export const Header: React.FC = () => {
                   onClick={handleLogout}
                 >
                   <LogOut className="h-5 w-5 mr-2" />
-                  Déconnexion
+                  {t('common.logout')}
                 </Button>
               ) : (
                 <Link
                   to="/login"
                   className="w-full px-4"
                 >
-                  <Button variant="outline" className="w-full">Connexion</Button>
+                  <Button variant="outline" className="w-full">{t('common.login')}</Button>
                 </Link>
               ))}
             </div>

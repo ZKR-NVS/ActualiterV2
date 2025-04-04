@@ -7,6 +7,7 @@ import { createContext, useState, useContext, ReactNode, useEffect } from "react
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
 import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -250,9 +251,11 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </LanguageProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

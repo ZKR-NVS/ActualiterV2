@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { Language, availableLanguages } from "@/lib/i18n";
 
 export const PreferencesForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [language, setLanguage] = useState("fr");
   const [notifications, setNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
   const [compactView, setCompactView] = useState(false);
+  
+  const { language, setLanguage, t } = useLanguage();
 
   const handleSavePreferences = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,10 +25,10 @@ export const PreferencesForm = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Dans une vraie implémentation, vous feriez un appel au backend
-      toast.success("Préférences enregistrées avec succès");
+      toast.success(t('preferences.savePreferences'));
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des préférences:", error);
-      toast.error("Erreur lors de l'enregistrement des préférences");
+      toast.error(t('common.error'));
     } finally {
       setIsLoading(false);
     }
@@ -35,28 +38,31 @@ export const PreferencesForm = () => {
     <Card>
       <form onSubmit={handleSavePreferences}>
         <CardHeader>
-          <CardTitle>Préférences</CardTitle>
+          <CardTitle>{t('preferences.title')}</CardTitle>
           <CardDescription>
-            Personnalisez votre expérience sur l'application
+            {t('preferences.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="language">Langue</Label>
-            <Select value={language} onValueChange={setLanguage}>
+            <Label htmlFor="language">{t('preferences.language')}</Label>
+            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
               <SelectTrigger id="language">
-                <SelectValue placeholder="Sélectionner une langue" />
+                <SelectValue placeholder={t('preferences.language')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="en">English</SelectItem>
+                {availableLanguages.map(lang => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="notifications">Notifications</Label>
+              <Label htmlFor="notifications">{t('preferences.notifications')}</Label>
               <Switch 
                 id="notifications" 
                 checked={notifications} 
@@ -65,7 +71,7 @@ export const PreferencesForm = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="autoSave">Sauvegarde automatique</Label>
+              <Label htmlFor="autoSave">{t('preferences.autoSave')}</Label>
               <Switch 
                 id="autoSave" 
                 checked={autoSave} 
@@ -74,7 +80,7 @@ export const PreferencesForm = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="compactView">Vue compacte</Label>
+              <Label htmlFor="compactView">{t('preferences.compactView')}</Label>
               <Switch 
                 id="compactView" 
                 checked={compactView} 
@@ -85,7 +91,7 @@ export const PreferencesForm = () => {
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Enregistrement..." : "Enregistrer les préférences"}
+            {isLoading ? t('preferences.saving') : t('preferences.savePreferences')}
           </Button>
         </CardFooter>
       </form>
