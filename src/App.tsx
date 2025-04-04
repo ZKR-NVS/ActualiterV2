@@ -129,19 +129,24 @@ const queryClient = new QueryClient();
 // Composant pour le contenu de l'application qui utilisera useAuth
 const AppContent = () => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
-  const { currentUser } = useAuth();
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const { currentUser, isAdmin } = useAuth();
 
   // Récupérer le mode maintenance depuis Firestore
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        setIsSettingsLoading(true);
+        // Pour les utilisateurs non-admin, ne pas afficher l'écran de chargement
+        if (isAdmin) {
+          setIsSettingsLoading(true);
+        }
         
-        // Synchroniser d'abord les paramètres de maintenance entre les documents
-        await synchronizeMaintenanceMode();
+        // Optimisation: Pour les utilisateurs non-admin, pas besoin de synchroniser
+        if (isAdmin) {
+          await synchronizeMaintenanceMode();
+        }
         
-        // Puis récupérer les paramètres
+        // Récupérer les paramètres (cette fonction gère déjà les erreurs de permission)
         const settings = await getGlobalSettings();
         setIsMaintenanceMode(settings.maintenanceMode);
       } catch (error) {
@@ -152,7 +157,7 @@ const AppContent = () => {
     };
 
     fetchSettings();
-  }, []);
+  }, [isAdmin]);
 
   // Fonction pour mettre à jour le mode maintenance
   const handleSetMaintenanceMode = async (value: boolean) => {
@@ -169,7 +174,7 @@ const AppContent = () => {
     }
   };
   
-  if (isSettingsLoading) {
+  if (isAdmin && isSettingsLoading) {
     return <LoadingSpinner size="lg" text="Chargement des paramètres..." fullScreen />;
   }
 

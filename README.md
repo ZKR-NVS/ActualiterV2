@@ -1,4 +1,4 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.5
+# Actualiter - Plateforme de vérification d'actualités - v1.0.6
 *Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
@@ -22,6 +22,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **NOUVEAU** : Traduction complète de toutes les pages principales, y compris la page d'accueil
 - **NOUVEAU** : Format de date localisé selon la langue sélectionnée
 - **AMÉLIORÉ** : Formulaire d'ajout de livres avec support pour les URLs externes
+- **AMÉLIORÉ** : Optimisation des performances de chargement de l'application
+- **CORRIGÉ** : Gestion des accès aux paramètres pour les utilisateurs non-admin
 
 ## Fonctionnalités
 ### Terminées
@@ -55,6 +57,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Sélecteur de langue dans l'interface utilisateur avec persistance des préférences
 - **NOUVEAU** : Format de date localisé selon la langue sélectionnée
 - **AMÉLIORÉ** : Formulaire d'ajout de livres simplifié avec support pour les URLs externes
+- **NOUVEAU** : Gestion gracieuse des erreurs d'autorisation pour les utilisateurs standards
+- **AMÉLIORÉ** : Optimisation du temps de chargement initial de l'application
 
 ### En cours
 - Système de contrôle d'accès aux PDF basé sur les achats
@@ -127,6 +131,10 @@ return (
 - **NOUVEAU** : Correction des problèmes de permissions Firebase pour les paniers d'achat
 - **NOUVEAU** : Amélioration du formulaire d'ajout de livres avec champs pour les URLs externes
 - **NOUVEAU** : Correction des erreurs TypeScript dans le formulaire de livres
+- **NOUVEAU** : Correction du problème de sérialisation des Timestamps Firebase sur la page de détails des livres
+- **NOUVEAU** : Correction des erreurs d'autorisation lors de l'accès aux paramètres par des utilisateurs standards
+- **NOUVEAU** : Optimisation du chargement initial pour éviter les délais inutiles
+- **NOUVEAU** : Résolution du problème d'utilisation de serverTimestamp() dans les tableaux du panier
 
 ## Technologies utilisées
 
@@ -463,6 +471,13 @@ Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les re
 - Ajout de nouvelles langues (espagnol, allemand, etc.)
 
 ## Journal des modifications
+
+### v1.0.6 (4 avril 2024)
+- Correction des problèmes de sérialisation des Timestamps Firebase sur la page de détails des livres
+- Résolution de l'erreur "serverTimestamp() is not currently supported inside arrays" dans le panier
+- Amélioration de la gestion des erreurs d'autorisation pour les utilisateurs non-administrateurs
+- Optimisation du temps de chargement initial de l'application
+- Amélioration du comportement des paramètres pour les différents types d'utilisateurs
 
 ### v1.0.5 (4 avril 2024)
 - Correction des problèmes de permissions Firebase pour les paniers d'achat
