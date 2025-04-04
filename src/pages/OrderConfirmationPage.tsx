@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, ShoppingBag, Download, BookOpen, ArrowRight, Gift } from 'lucide-react';
+import { CheckCircle, ShoppingBag, Download, BookOpen, ArrowRight, Gift, Link } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { getUserOrders, getBookById } from '@/lib/services/bookService';
@@ -23,6 +23,11 @@ export default function OrderConfirmationPage() {
   const orderIdFromState = location.state?.orderId;
   const emailFromState = location.state?.email;
   const isGuestFromState = location.state?.isGuest;
+  
+  // Génération d'un numéro de commande unique
+  const orderNumber = orderIdFromState 
+    ? orderIdFromState.substring(0, 6) // Utiliser les 6 premiers caractères de l'ID de commande
+    : Math.floor(Math.random() * 900000) + 100000; // ou générer un nombre aléatoire à 6 chiffres
   
   useEffect(() => {
     const checkOrderStatus = async () => {
@@ -119,6 +124,25 @@ export default function OrderConfirmationPage() {
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-6">
+                {/* Message de confirmation avec numéro de commande */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-center">
+                  <p className="text-lg font-medium">
+                    Votre commande #{orderNumber} est confirmée ! 
+                    {isGuestFromState && (
+                      <span>
+                        {" "}
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto inline font-medium" 
+                          onClick={() => navigate('/login')}
+                        >
+                          [Connectez-vous]
+                        </Button> pour suivre la livraison et accumuler des points fidélité.
+                      </span>
+                    )}
+                  </p>
+                </div>
+                
                 {isGuestFromState && (
                   <Card className="bg-primary/10 border-primary/30">
                     <CardHeader>

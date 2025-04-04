@@ -132,12 +132,59 @@ export default function BookDetailPage() {
   }, [id, toast, t]);
   
   const handleAddToCart = async () => {
-    if (!currentUser || !book) {
+    if (!book) return;
+    
+    if (!currentUser) {
+      // Ajout au panier local pour les invités
+      // Vérifier que le livre est sécurisé (sans Timestamps)
+      const safeBook = safeData(book);
+      if (!safeBook) {
+        toast({
+          title: t("errors.error"),
+          description: "Impossible de traiter les données du livre",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const cartItem = {
+        bookId: safeBook.id!,
+        title: safeBook.title,
+        author: safeBook.author,
+        price: safeBook.price,
+        quantity: quantity,
+        coverImage: safeBook.coverImage
+      };
+      
+      // Récupérer le panier local existant ou en créer un nouveau
+      const savedCart = localStorage.getItem('guestCart');
+      let guestCart = savedCart ? JSON.parse(savedCart) : { items: [], totalAmount: 0 };
+      
+      // Vérifier si le livre est déjà dans le panier
+      const existingItemIndex = guestCart.items.findIndex((item: any) => item.bookId === safeBook.id);
+      
+      if (existingItemIndex >= 0) {
+        // Mettre à jour la quantité si le livre est déjà dans le panier
+        guestCart.items[existingItemIndex].quantity += quantity;
+      } else {
+        // Ajouter le nouvel élément
+        guestCart.items.push(cartItem);
+      }
+      
+      // Recalculer le montant total
+      guestCart.totalAmount = guestCart.items.reduce(
+        (sum: number, item: any) => sum + (item.price * item.quantity), 
+        0
+      );
+      
+      // Sauvegarder le panier dans localStorage
+      localStorage.setItem('guestCart', JSON.stringify(guestCart));
+      
       toast({
-        title: t("auth.loginRequired"),
-        description: t("shop.loginToAddToCart"),
-        variant: "destructive"
+        title: t("shop.addedToCart"),
+        description: `${safeBook.title} (${quantity} ${quantity > 1 ? t("bookDetails.copies") : t("bookDetails.copy")}) ${t("shop.hasBeenAddedToCart")}`
       });
+      
       return;
     }
     

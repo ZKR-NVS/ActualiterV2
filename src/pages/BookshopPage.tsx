@@ -136,11 +136,45 @@ export default function BookshopPage() {
 
   const handleAddToCart = async (book: Book) => {
     if (!currentUser) {
+      // Au lieu d'exiger une connexion, ajouter au panier local
+      const cartItem: CartItem = {
+        bookId: book.id!,
+        title: book.title,
+        author: book.author,
+        price: book.price,
+        quantity: 1,
+        coverImage: book.coverImage
+      };
+      
+      // Récupérer le panier local existant ou en créer un nouveau
+      const savedCart = localStorage.getItem('guestCart');
+      let guestCart = savedCart ? JSON.parse(savedCart) : { items: [], totalAmount: 0 };
+      
+      // Vérifier si le livre est déjà dans le panier
+      const existingItemIndex = guestCart.items.findIndex((item: any) => item.bookId === book.id);
+      
+      if (existingItemIndex >= 0) {
+        // Mettre à jour la quantité si le livre est déjà dans le panier
+        guestCart.items[existingItemIndex].quantity += 1;
+      } else {
+        // Ajouter le nouvel élément
+        guestCart.items.push(cartItem);
+      }
+      
+      // Recalculer le montant total
+      guestCart.totalAmount = guestCart.items.reduce(
+        (sum: number, item: any) => sum + (item.price * item.quantity), 
+        0
+      );
+      
+      // Sauvegarder le panier dans localStorage
+      localStorage.setItem('guestCart', JSON.stringify(guestCart));
+      
       toast({
-        title: t("auth.loginRequired"),
-        description: t("shop.loginToAddToCart"),
-        variant: "destructive"
+        title: t("shop.addedToCart"),
+        description: `${book.title} ${t("shop.hasBeenAddedToCart")}`
       });
+      
       return;
     }
 
