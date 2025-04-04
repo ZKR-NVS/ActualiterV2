@@ -151,4 +151,40 @@ export default {
     thankYou: "Thank you for your order!",
     orderDetails: "Order Details",
   },
+  cart: {
+    yourCart: "Your Cart",
+    items: "Items",
+    clearCart: "Clear Cart",
+    cartCleared: "Cart Cleared",
+    cartClearedSuccess: "Your cart has been successfully cleared",
+    emptyCart: "Empty Cart",
+    emptyCartDescription: "Your cart is empty. Browse our shop to find interesting books.",
+    browseShop: "Browse Shop",
+    quantityUpdated: "Quantity Updated",
+    quantityUpdatedSuccess: "The quantity has been successfully updated",
+    itemRemoved: "Item Removed",
+    itemRemovedSuccess: "The item has been removed from your cart",
+    subtotal: "Subtotal",
+    shipping: "Shipping",
+    shippingFree: "Free",
+    shippingCalculatedLater: "Exact shipping costs will be calculated during checkout.",
+    total: "Total",
+    taxesIncluded: "VAT included.",
+    proceedToPayment: "Proceed to Payment",
+    continueShopping: "Continue Shopping",
+    itemsNotReserved: "Items are not reserved.",
+    finalizeOrder: "Complete your order to guarantee availability.",
+    guaranteeAvailability: "Prices and availability subject to change.",
+    loadingCart: "Loading cart...",
+    orderSummary: "Order Summary"
+  },
+  errors: {
+    error: "Error",
+    quantityUpdateError: "An error occurred while updating the quantity",
+    removeItemError: "An error occurred while removing the item",
+    clearCartError: "An error occurred while clearing the cart"
+  },
+  loading: {
+    loadingCart: "Loading cart..."
+  }
 }; 

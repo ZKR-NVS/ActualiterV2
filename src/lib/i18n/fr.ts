@@ -151,4 +151,40 @@ export default {
     thankYou: "Merci pour votre commande !",
     orderDetails: "Détails de la commande",
   },
+  cart: {
+    yourCart: "Votre panier",
+    items: "Articles",
+    clearCart: "Vider le panier",
+    cartCleared: "Panier vidé",
+    cartClearedSuccess: "Votre panier a été vidé avec succès",
+    emptyCart: "Panier vide",
+    emptyCartDescription: "Votre panier est vide. Parcourez notre boutique pour trouver des livres intéressants.",
+    browseShop: "Parcourir la boutique",
+    quantityUpdated: "Quantité mise à jour",
+    quantityUpdatedSuccess: "La quantité a été mise à jour avec succès",
+    itemRemoved: "Article supprimé",
+    itemRemovedSuccess: "L'article a été supprimé du panier",
+    subtotal: "Sous-total",
+    shipping: "Frais de livraison",
+    shippingFree: "Gratuit",
+    shippingCalculatedLater: "Les frais de livraison exacts seront calculés lors de la finalisation de la commande.",
+    total: "Total",
+    taxesIncluded: "TVA incluse.",
+    proceedToPayment: "Procéder au paiement",
+    continueShopping: "Continuer les achats",
+    itemsNotReserved: "Les articles ne sont pas réservés.",
+    finalizeOrder: "Finalisez votre commande pour garantir leur disponibilité.",
+    guaranteeAvailability: "Les prix et la disponibilité peuvent changer.",
+    loadingCart: "Chargement du panier...",
+    orderSummary: "Récapitulatif de la commande"
+  },
+  errors: {
+    error: "Erreur",
+    quantityUpdateError: "Une erreur s'est produite lors de la mise à jour de la quantité",
+    removeItemError: "Une erreur s'est produite lors de la suppression de l'article",
+    clearCartError: "Une erreur s'est produite lors du vidage du panier"
+  },
+  loading: {
+    loadingCart: "Chargement du panier..."
+  }
 }; 
