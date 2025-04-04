@@ -407,8 +407,9 @@ export const ArticleFormDialog = ({
                           </Button>
                         </div>
                       </FormControl>
-                      <FormDescription>
-                        Pour utiliser Google Drive : uploadez l'image sur Drive, partagez-la (accessible avec le lien) et collez l'URL ici
+                      <FormDescription className="mt-1 text-xs">
+                        Il n'est pas possible d'uploader directement des images.
+                        Utilisez plutôt l'option "URL d'image" avec Postimages.
                       </FormDescription>
                     </FormItem>
                     
@@ -438,6 +439,16 @@ export const ArticleFormDialog = ({
                     ⚠️ L'upload d'images directement dans l'application n'est pas recommandé actuellement.
                     Utilisez plutôt l'option "URL d'image" avec Google Drive.
                   </FormDescription>
+                  
+                  <div className="mb-4 text-sm text-muted-foreground">
+                    <p>Nous ne pouvons pas stocker d'images directement. Utilisez Postimages.org pour héberger vos images :</p>
+                    <ol className="list-decimal pl-4 mt-1 text-xs">
+                      <li>Rendez-vous sur <a href="https://postimages.org/" target="_blank" rel="noreferrer" className="text-blue-500 underline">Postimages.org</a></li>
+                      <li>Cliquez sur "Choose Images"</li>
+                      <li>Après l'upload, copiez le lien "Direct link"</li>
+                      <li>Collez ce lien dans le champ URL ci-dessous</li>
+                    </ol>
+                  </div>
                   
                   {/* Garder le code existant pour l'upload comme option de secours */}
             <FormItem className="md:col-span-2">

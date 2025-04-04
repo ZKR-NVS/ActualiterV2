@@ -489,9 +489,9 @@ export default function BookFormDialog({
                   </div>
                   
                   <FormDescription className="text-xs">
-                    Pour utiliser une image depuis Google Drive : 
-                    1. Uploadez l'image sur Drive et partagez-la (accessible avec le lien)
-                    2. Collez le lien Google Drive ici - il sera automatiquement converti
+                    Pour utiliser une image depuis Postimages :
+                    1. Uploadez votre image sur <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">Postimages.org</a>
+                    2. Copiez le lien "Direct link" et collez-le ici
                   </FormDescription>
                   
                   {useExternalImage && (
@@ -504,7 +504,7 @@ export default function BookFormDialog({
                             <FormLabel>URL de l'image</FormLabel>
                             <FormControl>
                               <div className="flex space-x-2">
-                                <Input {...field} placeholder="https://drive.google.com/file/d/.../view" className="flex-1" />
+                                <Input {...field} placeholder="https://postimages.org/..." className="flex-1" />
                                 <Button 
                                   type="button" 
                                   variant="secondary" 
@@ -515,7 +515,7 @@ export default function BookFormDialog({
                               </div>
                             </FormControl>
                             <FormDescription>
-                              Collez le lien Google Drive de l'image (ou toute autre URL d'image)
+                              Collez le lien direct de l'image depuis Postimages (ou toute autre URL d'image)
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -584,8 +584,7 @@ export default function BookFormDialog({
                   />
                   
                   <div className="mt-2 text-xs text-muted-foreground">
-                    <p>Le téléchargement direct de PDF n'est pas disponible sans Firebase Storage.</p>
-                    <p>Veuillez utiliser un service externe comme Google Drive, Dropbox ou autre pour héberger votre PDF et coller l'URL publique ci-dessus.</p>
+                    <p>Veuillez utiliser un service externe comme Postimages, Dropbox ou autre pour héberger votre PDF et coller l'URL publique ci-dessus.</p>
                   </div>
                 </div>
               </div>

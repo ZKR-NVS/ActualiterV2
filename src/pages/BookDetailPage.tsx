@@ -391,9 +391,11 @@ export default function BookDetailPage() {
             {/* Informations détaillées */}
             <div className="mt-8">
               <h2 className="text-xl font-semibold mb-4">Description</h2>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {book.description || "Aucune description disponible."}
-              </p>
+              <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {book.description || "Aucune description disponible."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
