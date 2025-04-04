@@ -15,11 +15,11 @@ import { serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Fonction pour sécuriser les données du panier
-const safeCartItems = (cart: Cart | null): Cart | null => {
+const safeCartItems = (cart: Cart | null): (Cart & { id: string }) | null => {
   if (!cart) return null;
   
   // Créer une copie du panier
-  const safeCopy = { ...cart };
+  const safeCopy = { ...cart, id: cart.userId }; // Ajouter l'ID manquant
   
   // Traiter les éléments du panier
   if (Array.isArray(safeCopy.items)) {
@@ -59,7 +59,7 @@ export default function CartPage() {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
   
-  const [cart, setCart] = useState<Cart | null>(null);
+  const [cart, setCart] = useState<(Cart & { id: string }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -214,6 +214,11 @@ export default function CartPage() {
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <ShoppingCart className="mr-2 h-6 w-6" />
           {t("cart.yourCart")}
+          {cart && cart.items.length > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center w-6 h-6 text-sm font-medium rounded-full bg-primary text-primary-foreground">
+              {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
+          )}
         </h1>
         
         {isCheckingOut ? (
