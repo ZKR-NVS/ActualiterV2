@@ -29,6 +29,8 @@ const bookSchema = z.object({
   language: z.string().optional(),
   featured: z.boolean().default(false),
   discountPercentage: z.coerce.number().min(0, 'La remise ne peut pas être négative').max(100, 'La remise ne peut pas dépasser 100%').optional(),
+  coverImageUrl: z.string().url('Entrez une URL valide').optional(),
+  pdfUrl: z.string().url('Entrez une URL valide').optional(),
 });
 
 type BookFormValues = z.infer<typeof bookSchema>;
@@ -55,6 +57,8 @@ export default function BookFormDialog({
   const [hasPdf, setHasPdf] = useState(!!book?.pdfUrl);
   const [isCropping, setIsCropping] = useState(false);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [useExternalImage, setUseExternalImage] = useState<boolean>(false);
+  const [useExternalPdf, setUseExternalPdf] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -76,7 +80,9 @@ export default function BookFormDialog({
       pages: book.pages || undefined,
       language: book.language || '',
       featured: book.featured || false,
-      discountPercentage: book.discountPercentage || 0
+      discountPercentage: book.discountPercentage || 0,
+      coverImageUrl: book.coverImage?.startsWith('http') ? book.coverImage : '',
+      pdfUrl: book.pdfUrl || ''
     } : {
       title: '',
       author: '',
@@ -89,9 +95,19 @@ export default function BookFormDialog({
       publisher: '',
       language: 'Français',
       featured: false,
-      discountPercentage: 0
+      discountPercentage: 0,
+      coverImageUrl: '',
+      pdfUrl: ''
     }
   });
+  
+  // Effet pour déterminer si une URL externe est utilisée pour l'image
+  useEffect(() => {
+    if (book?.coverImage && book.coverImage.startsWith('http')) {
+      setUseExternalImage(true);
+      setCoverImagePreview(book.coverImage);
+    }
+  }, [book]);
   
   const onSubmit = useCallback(
     async (data: BookFormValues) => {
@@ -110,15 +126,16 @@ export default function BookFormDialog({
           language: data.language || 'fr',
           pages: data.pages ? Number(data.pages) : 0,
           publisher: data.publisher || '',
-          category: data.category, // Utilisation directe de category au lieu de categories
-          coverImage: coverImagePreview || '/placeholder.svg',
+          category: data.category,
+          // Utiliser l'URL externe si spécifiée, sinon utiliser l'image téléchargée ou l'image par défaut
+          coverImage: useExternalImage && data.coverImageUrl ? data.coverImageUrl : (coverImagePreview || '/placeholder.svg'),
           rating: 0,
           reviewCount: 0,
           price: data.price ? Number(data.price) : 0,
           stock: data.stock ? Number(data.stock) : 0,
           featured: data.featured || false,
           discountPercentage: data.discountPercentage || 0,
-          pdfUrl: ''
+          pdfUrl: useExternalPdf && data.pdfUrl ? data.pdfUrl : (book?.pdfUrl || '')
         };
 
         if (book) {
@@ -126,7 +143,7 @@ export default function BookFormDialog({
           const updatedBook = await updateBook(
             book.id!, 
             bookData, 
-            null, // Pas de téléchargement de fichier, on utilise directement l'URL
+            null, 
             null
           ).catch(error => {
             console.error("Erreur lors de la mise à jour du livre:", error);
@@ -143,7 +160,7 @@ export default function BookFormDialog({
           // Ajouter un nouveau livre
           const newBook = await addBook(
             bookData as Omit<Book, 'id' | 'createdAt' | 'updatedAt'>, 
-            null, // Pas de téléchargement de fichier, on utilise directement l'URL
+            null, 
             null
           ).catch(error => {
             console.error("Erreur lors de l'ajout du livre:", error);
@@ -178,7 +195,7 @@ export default function BookFormDialog({
         setIsSubmitting(false);
       }
     },
-    [book, coverImagePreview, form, onOpenChange, onSave, toast]
+    [book, coverImagePreview, form, onOpenChange, onSave, toast, useExternalImage, useExternalPdf]
   );
   
   /**
@@ -372,6 +389,37 @@ export default function BookFormDialog({
                   </div>
                   
                   <div className="flex flex-col justify-center">
+                    <div className="mb-4">
+                      <FormField
+                        control={form.control}
+                        name="coverImageUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>URL d'image externe</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                placeholder="https://exemple.com/image.jpg" 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  if (e.target.value) {
+                                    setUseExternalImage(true);
+                                    setCoverImagePreview(e.target.value);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Entrez l'URL d'une image existante sur internet
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="text-sm text-muted-foreground mb-2">- OU -</div>
+                    
                     <input
                       type="file"
                       accept="image/*"
@@ -383,24 +431,30 @@ export default function BookFormDialog({
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => {
+                        setUseExternalImage(false);
+                        fileInputRef.current?.click();
+                      }}
                       className="mb-2"
                     >
                       <ImagePlus className="mr-2 h-4 w-4" />
-                      {coverImagePreview ? 'Changer l\'image' : 'Ajouter une image'}
+                      {coverImagePreview && !useExternalImage ? 'Changer l\'image' : 'Télécharger une image'}
                     </Button>
                     
                     {coverImagePreview && (
                       <>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setCoverImagePreview(null)}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            setCoverImagePreview(null);
+                            form.setValue('coverImageUrl', '');
+                          }}
                           className="text-destructive hover:text-destructive mb-2"
-                      >
+                        >
                           <X className="mr-2 h-4 w-4" />
-                        Supprimer l'image
-                      </Button>
+                          Supprimer l'image
+                        </Button>
                         <p className="text-xs text-muted-foreground mt-2">
                           L'image sera automatiquement recadrée au format 3:4 pour s'adapter parfaitement au cadre d'affichage.
                         </p>
@@ -415,14 +469,29 @@ export default function BookFormDialog({
                 <h3 className="text-lg font-medium">Fichier PDF du livre</h3>
                 
                 <div className="border rounded-md p-4">
-                  <div className="flex flex-col items-center py-6">
-                    <FileUp className="h-12 w-12 text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Le téléchargement de PDF n'est pas disponible sans Firebase Storage
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Veuillez fournir une URL externe pour le PDF ou ne pas utiliser cette fonctionnalité
-                    </p>
+                  <FormField
+                    control={form.control}
+                    name="pdfUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>URL du PDF externe</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="https://exemple.com/livre.pdf" 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Entrez l'URL d'un fichier PDF accessible publiquement
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    <p>Le téléchargement direct de PDF n'est pas disponible sans Firebase Storage.</p>
+                    <p>Veuillez utiliser un service externe comme Google Drive, Dropbox ou autre pour héberger votre PDF et coller l'URL publique ci-dessus.</p>
                   </div>
                 </div>
               </div>

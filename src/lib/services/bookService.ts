@@ -11,7 +11,8 @@ import {
   orderBy,
   Timestamp,
   serverTimestamp,
-  FieldValue
+  FieldValue,
+  setDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase';
@@ -396,6 +397,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   coverImage: string;
+  updatedAt?: any;
 }
 
 export interface Cart {
@@ -408,12 +410,12 @@ export interface Cart {
 // Récupérer ou créer le panier d'un utilisateur
 export const getUserCart = async (userId: string) => {
   try {
-    const cartsRef = collection(db, 'carts');
-    const q = query(cartsRef, where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
+    // Référence directe au document du panier de l'utilisateur
+    // Nous utilisons l'ID de l'utilisateur comme ID du document pour éviter les problèmes de permission
+    const cartRef = doc(db, 'carts', userId);
+    const cartDoc = await getDoc(cartRef);
     
-    if (!querySnapshot.empty) {
-      const cartDoc = querySnapshot.docs[0];
+    if (cartDoc.exists()) {
       return {
         id: cartDoc.id,
         ...cartDoc.data()
@@ -427,10 +429,11 @@ export const getUserCart = async (userId: string) => {
         updatedAt: serverTimestamp()
       };
       
-      const docRef = await addDoc(collection(db, 'carts'), newCart);
+      // Créer le document avec l'ID de l'utilisateur
+      await setDoc(cartRef, newCart);
       
       return {
-        id: docRef.id,
+        id: userId,
         ...newCart
       };
     }
@@ -446,6 +449,12 @@ export const addToCart = async (userId: string, item: CartItem) => {
     // Obtenir le panier actuel
     const cart = await getUserCart(userId);
     
+    // Ajouter un timestamp à l'élément
+    const itemWithTimestamp = {
+      ...item,
+      updatedAt: serverTimestamp()
+    };
+    
     // Vérifier si le livre est déjà dans le panier
     const existingItemIndex = cart.items.findIndex(i => i.bookId === item.bookId);
     
@@ -453,10 +462,14 @@ export const addToCart = async (userId: string, item: CartItem) => {
     if (existingItemIndex >= 0) {
       // Mettre à jour la quantité si le livre est déjà dans le panier
       updatedItems = [...cart.items];
-      updatedItems[existingItemIndex].quantity += item.quantity;
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + item.quantity,
+        updatedAt: serverTimestamp()
+      };
     } else {
       // Ajouter le nouvel élément
-      updatedItems = [...cart.items, item];
+      updatedItems = [...cart.items, itemWithTimestamp];
     }
     
     // Calculer le nouveau montant total
@@ -466,16 +479,19 @@ export const addToCart = async (userId: string, item: CartItem) => {
     );
     
     // Mettre à jour le panier dans Firestore
-    const cartRef = doc(db, 'carts', cart.id);
+    const cartRef = doc(db, 'carts', userId);
     const timestamp = serverTimestamp();
-    await updateDoc(cartRef, {
+    
+    const updatedCart = {
       items: updatedItems,
       totalAmount,
       updatedAt: timestamp
-    });
+    };
+    
+    await updateDoc(cartRef, updatedCart);
     
     return {
-      id: cart.id,
+      id: userId,
       userId,
       items: updatedItems,
       totalAmount,
@@ -506,7 +522,11 @@ export const updateCartItemQuantity = async (userId: string, bookId: string, qua
     
     // Mettre à jour la quantité
     const updatedItems = [...cart.items];
-    updatedItems[itemIndex].quantity = quantity;
+    updatedItems[itemIndex] = {
+      ...updatedItems[itemIndex],
+      quantity: quantity,
+      updatedAt: serverTimestamp()
+    };
     
     // Calculer le nouveau montant total
     const totalAmount = updatedItems.reduce(
@@ -515,16 +535,19 @@ export const updateCartItemQuantity = async (userId: string, bookId: string, qua
     );
     
     // Mettre à jour le panier dans Firestore
-    const cartRef = doc(db, 'carts', cart.id);
+    const cartRef = doc(db, 'carts', userId);
     const timestamp = serverTimestamp();
-    await updateDoc(cartRef, {
+    
+    const updatedCart = {
       items: updatedItems,
       totalAmount,
       updatedAt: timestamp
-    });
+    };
+    
+    await updateDoc(cartRef, updatedCart);
     
     return {
-      id: cart.id,
+      id: userId,
       userId,
       items: updatedItems,
       totalAmount,
@@ -552,16 +575,19 @@ export const removeFromCart = async (userId: string, bookId: string) => {
     );
     
     // Mettre à jour le panier dans Firestore
-    const cartRef = doc(db, 'carts', cart.id);
+    const cartRef = doc(db, 'carts', userId);
     const timestamp = serverTimestamp();
-    await updateDoc(cartRef, {
+    
+    const updatedCart = {
       items: updatedItems,
       totalAmount,
       updatedAt: timestamp
-    });
+    };
+    
+    await updateDoc(cartRef, updatedCart);
     
     return {
-      id: cart.id,
+      id: userId,
       userId,
       items: updatedItems,
       totalAmount,
@@ -576,20 +602,20 @@ export const removeFromCart = async (userId: string, bookId: string) => {
 // Vider le panier
 export const clearCart = async (userId: string) => {
   try {
-    // Obtenir le panier actuel
-    const cart = await getUserCart(userId);
-    
     // Mettre à jour le panier dans Firestore
-    const cartRef = doc(db, 'carts', cart.id);
+    const cartRef = doc(db, 'carts', userId);
     const timestamp = serverTimestamp();
-    await updateDoc(cartRef, {
+    
+    const emptyCart = {
       items: [],
       totalAmount: 0,
       updatedAt: timestamp
-    });
+    };
+    
+    await updateDoc(cartRef, emptyCart);
     
     return {
-      id: cart.id,
+      id: userId,
       userId,
       items: [],
       totalAmount: 0,

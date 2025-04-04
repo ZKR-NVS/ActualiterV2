@@ -1,5 +1,5 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.3
-*Dernière mise à jour : Janvier 2025*
+# Actualiter - Plateforme de vérification d'actualités - v1.0.4
+*Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
@@ -20,6 +20,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Gestion des fichiers PDF pour les livres avec téléchargement
 - **AMÉLIORÉ** : Support multilingue complet et optimisé (français et anglais)
 - **NOUVEAU** : Traduction complète de toutes les pages principales, y compris la page d'accueil
+- **NOUVEAU** : Format de date localisé selon la langue sélectionnée
 
 ## Fonctionnalités
 ### Terminées
@@ -51,6 +52,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Système complet d'internationalisation avec support français/anglais
 - **AMÉLIORÉ** : Composants intégralement traduits (Page d'accueil, Footer, Préférences, etc.)
 - **AMÉLIORÉ** : Sélecteur de langue dans l'interface utilisateur avec persistance des préférences
+- **NOUVEAU** : Format de date localisé selon la langue sélectionnée
 
 ### En cours
 - Système de contrôle d'accès aux PDF basé sur les achats
@@ -115,6 +117,11 @@ return (
 - Ajout de la fonctionnalité de recherche dans la liste des livres
 - Implémentation du système de recadrage d'images pour assurer un ratio 3:4 cohérent dans toute l'application
 - Amélioration de la gestion des erreurs lors du téléchargement d'images vers Firebase Storage, avec une solution de contournement pour les problèmes CORS
+- Amélioration du système de traduction avec mise à jour des fichiers de langue (fr.ts et en.ts)
+- Mise à jour du composant de sélection de langue (LanguageSwitcher) pour une meilleure expérience utilisateur
+- Optimisation de l'intégration des traductions dans la page d'accueil (HomePage)
+- Adaptation du format des dates selon la langue sélectionnée
+- Mise en évidence du terme "apparences" dans le titre principal de la page d'accueil
 
 ## Technologies utilisées
 
@@ -452,7 +459,14 @@ Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les re
 
 ## Journal des modifications
 
-### v1.0.2 (Décembre 2024)
+### v1.0.4 (4 avril 2024)
+- Optimisation du système de traduction et de l'internationalisation
+- Mise à jour des fichiers de langue avec de nouvelles traductions
+- Amélioration du composant de sélection de langue
+- Adaptation du format des dates selon la langue sélectionnée
+- Mise en évidence du terme "apparences" dans le titre principal de la page d'accueil
+
+### v1.0.3 (date précédente)
 - Ajout d'un système complet de traduction avec support français/anglais
 - Implémentation d'un sélecteur de langue dans l'interface utilisateur
 - Nettoyage des données fictives dans le code source pour plus de sécurité
