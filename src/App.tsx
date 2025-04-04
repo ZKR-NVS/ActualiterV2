@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
-import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
+import { getGlobalSettings, updateMaintenanceMode, synchronizeMaintenanceMode } from "@/lib/services/settingsService";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 
@@ -137,6 +137,11 @@ const AppContent = () => {
     const fetchSettings = async () => {
       try {
         setIsSettingsLoading(true);
+        
+        // Synchroniser d'abord les paramètres de maintenance entre les documents
+        await synchronizeMaintenanceMode();
+        
+        // Puis récupérer les paramètres
         const settings = await getGlobalSettings();
         setIsMaintenanceMode(settings.maintenanceMode);
       } catch (error) {

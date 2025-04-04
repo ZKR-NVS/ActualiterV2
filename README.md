@@ -97,6 +97,10 @@ return (
 ```
 
 ## Corrections récentes
+- Correction des incohérences du mode maintenance entre les documents "global" et "site"
+- Ajout d'une fonction de synchronisation du mode maintenance entre tous les documents
+- Ajout d'un bouton pour synchroniser manuellement l'état du mode maintenance
+- Correction de l'erreur TypeScript dans `ProfilePage.tsx` (remplacement de `isLoading` par `loading`)
 - Correction de l'affichage du rôle dans le profil utilisateur (n'apparaît plus pour les utilisateurs standards)
 - Mise à jour de la page d'accueil pour utiliser le système de traduction
 - Ajout de traductions complètes pour toutes les sections de la page d'accueil

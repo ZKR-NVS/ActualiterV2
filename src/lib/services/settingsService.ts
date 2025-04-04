@@ -224,9 +224,36 @@ export const getGlobalSettings = async (): Promise<{ maintenanceMode: boolean }>
 export const updateMaintenanceMode = async (enabled: boolean, userId?: string): Promise<void> => {
   try {
     await toggleMaintenanceMode(enabled);
+    
+    // Synchroniser également avec le document global pour assurer la cohérence
+    const globalRef = doc(db, "settings", "global");
+    await updateDoc(globalRef, {
+      maintenanceMode: enabled
+    });
+    
     console.log(`Mode maintenance ${enabled ? 'activé' : 'désactivé'} par l'utilisateur ${userId || 'inconnu'}`);
   } catch (error) {
     console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+    throw error;
+  }
+};
+
+// Fonction pour synchroniser le mode maintenance entre les documents
+export const synchronizeMaintenanceMode = async (): Promise<void> => {
+  try {
+    // Obtenir les paramètres du document site
+    const siteSettings = await getSettings();
+    const maintenanceMode = siteSettings.general.maintenanceMode;
+    
+    // Mettre à jour le document global avec l'état du mode maintenance du document site
+    const globalRef = doc(db, "settings", "global");
+    await updateDoc(globalRef, {
+      maintenanceMode: maintenanceMode
+    });
+    
+    console.log(`Mode maintenance synchronisé entre les documents: ${maintenanceMode ? 'activé' : 'désactivé'}`);
+  } catch (error) {
+    console.error("Erreur lors de la synchronisation du mode maintenance:", error);
     throw error;
   }
 }; 

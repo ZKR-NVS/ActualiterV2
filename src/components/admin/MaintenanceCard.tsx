@@ -1,17 +1,33 @@
-
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useMaintenanceMode } from "@/App";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RotateCw } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { synchronizeMaintenanceMode } from "@/lib/services/settingsService";
+import { useState } from "react";
 
 export const MaintenanceCard = () => {
   const { isMaintenanceMode, setMaintenanceMode } = useMaintenanceMode();
+  const [isSynchronizing, setIsSynchronizing] = useState(false);
 
   const toggleMaintenanceMode = () => {
     setMaintenanceMode(!isMaintenanceMode);
     toast.success(`Mode maintenance ${!isMaintenanceMode ? 'activé' : 'désactivé'}!`);
+  };
+
+  const handleSynchronize = async () => {
+    try {
+      setIsSynchronizing(true);
+      await synchronizeMaintenanceMode();
+      toast.success("L'état du mode maintenance a été synchronisé entre tous les documents");
+    } catch (error) {
+      console.error("Erreur lors de la synchronisation:", error);
+      toast.error("Une erreur s'est produite lors de la synchronisation");
+    } finally {
+      setIsSynchronizing(false);
+    }
   };
 
   return (
@@ -34,13 +50,29 @@ export const MaintenanceCard = () => {
       </div>
       
       {isMaintenanceMode && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
           <p className="text-red-600 flex items-center">
             <AlertTriangle className="mr-2 h-4 w-4" />
             Le mode maintenance est actuellement actif. Seuls les administrateurs peuvent accéder au site.
           </p>
         </div>
       )}
+      
+      <div className="mt-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleSynchronize}
+          disabled={isSynchronizing}
+          className="flex items-center"
+        >
+          <RotateCw className="mr-2 h-4 w-4" />
+          {isSynchronizing ? 'Synchronisation...' : 'Synchroniser l\'état entre tous les documents'}
+        </Button>
+        <p className="text-xs text-muted-foreground mt-2">
+          Utilisez ce bouton si vous constatez des incohérences entre les différents documents de configuration.
+        </p>
+      </div>
     </Card>
   );
 };
