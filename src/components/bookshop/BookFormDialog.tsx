@@ -95,29 +95,41 @@ export default function BookFormDialog({
       
       const coverImageFile = fileInputRef.current?.files?.[0];
       
+      // S'assurer que toutes les propriétés requises sont définies
+      const completeData = {
+        title: data.title,
+        author: data.author,
+        description: data.description,
+        price: data.price,
+        stock: data.stock,
+        coverImage: coverImagePreview || '/placeholder.svg',
+        category: data.category,
+        isbn: data.isbn,
+        publicationDate: data.publicationDate,
+        publisher: data.publisher,
+        pages: data.pages,
+        language: data.language,
+        featured: data.featured,
+        discountPercentage: data.discountPercentage
+      };
+      
       if (book) {
         // Mettre à jour un livre existant
         const updatedBook = await updateBook(
           book.id!, 
-          {
-            ...data,
-            coverImage: coverImagePreview || '/placeholder.svg'
-          }, 
+          completeData, 
           coverImageFile,
           pdfFile
         );
-        onSave(updatedBook);
+        onSave(updatedBook as Book);
       } else {
         // Ajouter un nouveau livre
         const newBook = await addBook(
-          {
-            ...data,
-            coverImage: coverImagePreview || '/placeholder.svg'
-          }, 
+          completeData, 
           coverImageFile,
           pdfFile
         );
-        onSave(newBook);
+        onSave(newBook as Book);
       }
     } catch (error) {
       console.error("Erreur lors de l'enregistrement du livre:", error);
@@ -536,12 +548,12 @@ export default function BookFormDialog({
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <>
+                  <div className="flex items-center">
                     <LoadingSpinner size="sm" className="mr-2" />
-                    {book ? 'Mise à jour...' : 'Création...'}
-                  </>
+                    <span>{book ? 'Mise à jour...' : 'Création...'}</span>
+                  </div>
                 ) : (
-                  <>{book ? 'Mettre à jour' : 'Créer'}</>
+                  book ? 'Mettre à jour' : 'Créer'
                 )}
               </Button>
             </DialogFooter>

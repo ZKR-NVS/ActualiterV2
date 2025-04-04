@@ -97,6 +97,7 @@ return (
 ```
 
 ## Corrections récentes
+- Correction du problème d'interface dans le formulaire de création de livre (bouton indiquant incorrectement "Création..." avec le texte normal)
 - Correction des incohérences du mode maintenance entre les documents "global" et "site"
 - Ajout d'une fonction de synchronisation du mode maintenance entre tous les documents
 - Ajout d'un bouton pour synchroniser manuellement l'état du mode maintenance
