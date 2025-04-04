@@ -36,6 +36,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **CORRIGÉ** : Affichage conditionnel du nombre de pages dans la page de détail des livres
 - **AMÉLIORÉ** : Contrôle d'accès aux fichiers PDF uniquement après achat des livres
 - **CORRIGÉ** : Problème de modification des articles dans l'interface d'administration
+- **AMÉLIORÉ** : Mise en page des descriptions longues avec une barre de défilement
 
 ## Fonctionnalités
 ### Terminées
@@ -50,7 +51,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Système d'authentification complet
 - Gestion des utilisateurs (création, modification des rôles)
 - Système de commentaires avec modération
-- Gestion d'images pour les articles via Google Drive
+- Gestion d'images pour les articles via Postimages
 - Paramètres administrateur (général, contenu, email, sécurité)
 - Modération des commentaires
 - Système de notifications utilisateur
@@ -74,7 +75,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Gestion d'état globale du panier pour une meilleure cohérence des données
 - **NOUVEAU** : Détection en temps réel des modifications Firebase pour le mode maintenance
 - **AMÉLIORÉ** : Interface d'administration du mode maintenance avec options de synchronisation avancées
-- **NOUVEAU** : Support pour l'hébergement d'images via Google Drive avec conversion automatique des liens
+- **NOUVEAU** : Support pour l'hébergement d'images via Postimages avec intégration directe
 
 ## Journal des modifications
 
@@ -84,6 +85,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Simplification des formulaires d'ajout d'images avec Postimages comme unique solution recommandée
 - Amélioration des messages d'erreur lors du chargement d'images
 - Mise à jour de la documentation pour refléter les dernières modifications
+- Ajout d'une barre de défilement stylisée pour les descriptions longues dans la fiche produit
+- Correction de la déformation des pages par les descriptions trop longues
 
 ### v1.0.12
 - Ajout de Postimages comme solution recommandée pour l'hébergement d'images
@@ -100,8 +103,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Correction du problème de prévisualisation d'image dans les formulaires de livre et d'article
 
 ### v1.0.10
-- Intégration avec Google Drive pour l'hébergement d'images et PDFs sans Firebase Storage
-- Ajout d'un convertisseur automatique de liens Google Drive en liens d'accès direct
+- Intégration avec Postimages pour l'hébergement d'images et PDFs sans Firebase Storage
 - Amélioration des formulaires d'ajout/modification de livres et d'articles
 - Correction du problème de réinitialisation des champs lors de la modification d'un livre
 - Correction du problème de prévisualisation d'image à partir d'URL dans le formulaire d'articles

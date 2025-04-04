@@ -77,10 +77,7 @@
     --ring: 204 70% 53%; /* #3498db - Bleu clair */
 
     /* Gradient */
-    --gradient-start: 2 82% 53%; /* #e74c3c - Rouge/corail */
-    --gradient-middle: 42 93% 58%; /* #f39c12 - Orange/ambre */
-    --gradient-end: 204 70% 53%; /* #3498db - Bleu clair */
-    --gradient-text: 0 0% 100%; /* #ffffff - Blanc */
+    --gradient: linear-gradient(to right, hsl(204 70% 53%), hsl(210 33% 25%));
   }
 
   /* Alternative themes */
@@ -145,23 +142,4 @@
   .gradient-bg {
     background: var(--gradient);
   }
-}
-
-/* Style pour la barre de défilement personnalisée */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.5);
-  border-radius: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.7);
 }
