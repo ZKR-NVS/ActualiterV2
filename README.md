@@ -1,5 +1,5 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.14
-*Dernière mise à jour : 15 avril 2024*
+# Actualiter - Plateforme de vérification d'actualités - v1.0.15
+*Dernière mise à jour : 19 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
@@ -39,6 +39,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Mise en page des descriptions longues avec une barre de défilement
 - **NOUVEAU** : Champs obligatoires additionnels pour la création de livres 
 - **AMÉLIORÉ** : Interface de description des livres plus ergonomique et esthétique
+- **CORRIGÉ** : Affichage du stock limité dans la page de détail des livres
+- **AMÉLIORÉ** : Traductions optimisées pour la section boutique
 
 ## Fonctionnalités
 ### Terminées
@@ -80,6 +82,13 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **NOUVEAU** : Support pour l'hébergement d'images via Postimages avec intégration directe
 
 ## Journal des modifications
+
+### v1.0.15
+- Amélioration des traductions pour la section boutique avec termes plus clairs et précis
+- Optimisation de l'affichage des livres recommandés (anciennement "En vedette")
+- Correction de l'affichage du nombre d'articles en stock limité
+- Amélioration de la fonction de traduction pour supporter les variables dynamiques
+- Optimisation des traductions en français et anglais pour plus de cohérence
 
 ### v1.0.14
 - Ajout de champs obligatoires pour la création de livres (éditeur, date de publication, nombre de pages, langue)

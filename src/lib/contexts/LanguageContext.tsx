@@ -4,7 +4,7 @@ import { Language, defaultLanguage, getTranslation } from '@/lib/i18n';
 interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, any>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
@@ -36,8 +36,19 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     setLanguageState(newLanguage);
   };
 
-  // Fonction de traduction
-  const t = (key: string) => getTranslation(key, language);
+  // Fonction de traduction avec support pour les paramètres
+  const t = (key: string, params?: Record<string, any>) => {
+    let translation = getTranslation(key, language);
+    
+    // Si des paramètres sont fournis, remplacer les variables dans la traduction
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        translation = translation.replace(`{${paramKey}}`, String(paramValue));
+      });
+    }
+    
+    return translation;
+  };
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

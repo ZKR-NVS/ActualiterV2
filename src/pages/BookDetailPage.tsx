@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useCart } from '@/lib/contexts/CartContext';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { 
   getBookById, 
   Book, 
@@ -68,6 +69,7 @@ export default function BookDetailPage() {
   const { toast } = useToast();
   const { currentUser } = useAuth();
   const { refetchCart } = useCart();
+  const { t } = useLanguage();
   
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,8 +119,8 @@ export default function BookDetailPage() {
       } catch (error) {
         console.error("Erreur lors du chargement du livre:", error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les détails du livre. Veuillez réessayer plus tard.",
+          title: t("errors.error"),
+          description: t("bookDetails.errorLoadingBook"),
           variant: "destructive"
         });
       } finally {
@@ -127,13 +129,13 @@ export default function BookDetailPage() {
     };
     
     fetchBook();
-  }, [id, toast]);
+  }, [id, toast, t]);
   
   const handleAddToCart = async () => {
     if (!currentUser || !book) {
       toast({
-        title: "Connexion requise",
-        description: "Veuillez vous connecter pour ajouter des articles au panier.",
+        title: t("auth.loginRequired"),
+        description: t("shop.loginToAddToCart"),
         variant: "destructive"
       });
       return;
@@ -160,14 +162,14 @@ export default function BookDetailPage() {
       await refetchCart();
       
       toast({
-        title: "Ajouté au panier",
-        description: `${safeBook.title} (${quantity} exemplaire${quantity > 1 ? 's' : ''}) a été ajouté à votre panier.`
+        title: t("shop.addedToCart"),
+        description: `${safeBook.title} (${quantity} ${quantity > 1 ? t("bookDetails.copies") : t("bookDetails.copy")}) ${t("shop.hasBeenAddedToCart")}`
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout au panier:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter le livre au panier. Veuillez réessayer.",
+        title: t("errors.error"),
+        description: t("shop.errorAddingToCart"),
         variant: "destructive"
       });
     }
@@ -189,7 +191,7 @@ export default function BookDetailPage() {
     return (
       <Layout>
         <div className="container mx-auto py-8 min-h-screen flex justify-center items-center">
-          <LoadingSpinner size="lg" text="Chargement des détails du livre..." />
+          <LoadingSpinner size="lg" text={t("bookDetails.loadingDetails")} />
         </div>
       </Layout>
     );
@@ -199,11 +201,11 @@ export default function BookDetailPage() {
     return (
       <Layout>
         <div className="container mx-auto py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Livre non trouvé</h1>
-          <p className="text-muted-foreground mb-6">Le livre que vous recherchez n'existe pas ou a été supprimé.</p>
+          <h1 className="text-2xl font-bold mb-4">{t("bookDetails.bookNotFound")}</h1>
+          <p className="text-muted-foreground mb-6">{t("bookDetails.bookNotFoundMessage")}</p>
           <Button onClick={() => navigate('/bookshop')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à la boutique
+            {t("bookDetails.backToShop")}
           </Button>
         </div>
       </Layout>
@@ -224,7 +226,7 @@ export default function BookDetailPage() {
           onClick={() => navigate('/bookshop')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour à la boutique
+          {t("bookDetails.backToShop")}
         </Button>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -241,7 +243,7 @@ export default function BookDetailPage() {
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {book.featured && (
                   <Badge variant="secondary" className="bg-yellow-500 text-white hover:bg-yellow-600">
-                    En vedette
+                    {t("shop.featured")}
                   </Badge>
                 )}
                 
@@ -257,7 +259,7 @@ export default function BookDetailPage() {
           {/* Détails du livre */}
           <div>
             <h1 className="text-3xl font-bold">{book.title}</h1>
-            <p className="text-xl text-muted-foreground">par {book.author}</p>
+            <p className="text-xl text-muted-foreground">{t("bookDetails.by")} {book.author}</p>
             
             {/* Prix et stock */}
             <div className="mt-6">
@@ -274,11 +276,13 @@ export default function BookDetailPage() {
               
               <p className="mt-2">
                 {book.stock > 10 ? (
-                  <Badge variant="outline" className="bg-green-100">En stock</Badge>
+                  <Badge variant="outline" className="bg-green-100">{t("shop.inStock")}</Badge>
                 ) : book.stock > 0 ? (
-                  <Badge variant="outline" className="bg-orange-100">Plus que {book.stock} en stock</Badge>
+                  <Badge variant="outline" className="bg-orange-100">
+                    {t("bookDetails.onlyXInStock", { count: book.stock })}
+                  </Badge>
                 ) : (
-                  <Badge variant="outline" className="bg-red-100">Rupture de stock</Badge>
+                  <Badge variant="outline" className="bg-red-100">{t("shop.outOfStock")}</Badge>
                 )}
               </p>
             </div>
@@ -286,7 +290,7 @@ export default function BookDetailPage() {
             {/* Sélecteur de quantité et bouton d'achat */}
             <div className="mt-6">
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-sm font-medium">Quantité :</span>
+                <span className="text-sm font-medium">{t("bookDetails.quantity")}:</span>
                 <div className="flex items-center">
                   <Button 
                     type="button" 
@@ -328,22 +332,22 @@ export default function BookDetailPage() {
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {book.stock === 0 ? "Indisponible" : "Ajouter au panier"}
+                {book.stock === 0 ? t("bookDetails.unavailable") : t("shop.addToCart")}
               </Button>
             </div>
             
             {/* Bouton de téléchargement du PDF */}
             {book.pdfUrl && (
               <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Format numérique</h3>
+                <h3 className="text-lg font-medium mb-2">{t("bookDetails.digitalFormat")}</h3>
                 <Button
                   variant={hasPurchased ? "default" : "outline"}
                   className="w-full"
                   onClick={() => {
                     if (!currentUser) {
                       toast({
-                        title: "Connexion requise",
-                        description: "Veuillez vous connecter pour accéder au PDF.",
+                        title: t("auth.loginRequired"),
+                        description: t("bookDetails.loginForPdf"),
                         variant: "destructive"
                       });
                       return;
@@ -353,8 +357,8 @@ export default function BookDetailPage() {
                       window.open(book.pdfUrl, '_blank');
                     } else {
                       toast({
-                        title: "Accès limité",
-                        description: "Vous devez acheter ce livre pour accéder au PDF. Ajoutez-le au panier et finalisez votre achat.",
+                        title: t("bookDetails.limitedAccess"),
+                        description: t("bookDetails.buyForPdfAccess"),
                         variant: "destructive"
                       });
                     }
@@ -364,25 +368,25 @@ export default function BookDetailPage() {
                   {checkingPurchase ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" />
-                      Vérification...
+                      {t("bookDetails.verifying")}
                     </>
                   ) : hasPurchased ? (
                     <>
                       <Download className="mr-2 h-4 w-4" />
-                  Télécharger le PDF
+                      {t("bookDetails.downloadPdf")}
                     </>
                   ) : (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      PDF disponible après achat
+                      {t("bookDetails.pdfAfterPurchase")}
                     </>
                   )}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
                   {hasPurchased ? (
-                    <span className="text-green-600 font-medium">✓ Vous avez acheté ce livre et pouvez télécharger le PDF.</span>
+                    <span className="text-green-600 font-medium">✓ {t("bookDetails.youOwnThisBook")}</span>
                   ) : (
-                    <span>Un fichier PDF est disponible pour ce livre. <strong>Seulement les utilisateurs qui ont acheté ce livre peuvent le télécharger.</strong></span>
+                    <span>{t("bookDetails.pdfAvailable")} <strong>{t("bookDetails.onlyBuyersCanDownload")}</strong></span>
                   )}
                 </p>
               </div>
@@ -390,10 +394,10 @@ export default function BookDetailPage() {
             
             {/* Informations détaillées */}
             <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">Description</h2>
+              <h2 className="text-xl font-semibold mb-4">{t("bookDetails.description")}</h2>
               <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar border rounded-md p-4 bg-muted/30">
                 <p className="text-muted-foreground whitespace-pre-line">
-                  {book.description || "Aucune description disponible."}
+                  {book.description || t("bookDetails.noDescription")}
                 </p>
               </div>
             </div>
@@ -402,7 +406,7 @@ export default function BookDetailPage() {
         
         {/* Informations supplémentaires */}
         <div className="mt-12">
-          <h2 className="text-xl font-semibold mb-4">Détails du livre</h2>
+          <h2 className="text-xl font-semibold mb-4">{t("bookDetails.bookDetails")}</h2>
           <Separator className="mb-6" />
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -410,30 +414,30 @@ export default function BookDetailPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">Informations générales</h3>
+                  <h3 className="font-medium">{t("bookDetails.generalInfo")}</h3>
                 </div>
                 <ul className="space-y-2 text-sm">
                   {book.isbn && (
                     <li className="flex justify-between">
-                      <span className="text-muted-foreground">ISBN :</span>
+                      <span className="text-muted-foreground">ISBN:</span>
                       <span>{book.isbn}</span>
                     </li>
                   )}
                   {book.pages && book.pages > 0 && (
                     <li className="flex justify-between">
-                      <span className="text-muted-foreground">Nombre de pages :</span>
+                      <span className="text-muted-foreground">{t("bookDetails.pages")}:</span>
                       <span>{book.pages}</span>
                     </li>
                   )}
                   {book.language && (
                     <li className="flex justify-between">
-                      <span className="text-muted-foreground">Langue :</span>
+                      <span className="text-muted-foreground">{t("bookDetails.language")}:</span>
                       <span>{book.language}</span>
                     </li>
                   )}
                   {book.category && (
                     <li className="flex justify-between">
-                      <span className="text-muted-foreground">Catégorie :</span>
+                      <span className="text-muted-foreground">{t("bookDetails.category")}:</span>
                       <span>{book.category}</span>
                     </li>
                   )}
@@ -445,18 +449,18 @@ export default function BookDetailPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
                   <Building className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">Publication</h3>
+                  <h3 className="font-medium">{t("bookDetails.publication")}</h3>
                 </div>
                 <ul className="space-y-2 text-sm">
                   {book.publisher && (
                     <li className="flex justify-between">
-                      <span className="text-muted-foreground">Éditeur :</span>
+                      <span className="text-muted-foreground">{t("bookDetails.publisher")}:</span>
                       <span>{book.publisher}</span>
                     </li>
                   )}
                   {book.publicationDate && (
                     <li className="flex justify-between">
-                      <span className="text-muted-foreground">Date de publication :</span>
+                      <span className="text-muted-foreground">{t("bookDetails.publicationDate")}:</span>
                       <span>{book.publicationDate}</span>
                     </li>
                   )}
@@ -468,28 +472,28 @@ export default function BookDetailPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
                   <ShoppingCart className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">Informations d'achat</h3>
+                  <h3 className="font-medium">{t("bookDetails.purchaseInfo")}</h3>
                 </div>
                 <ul className="space-y-2 text-sm">
                   <li className="flex justify-between">
-                    <span className="text-muted-foreground">Prix :</span>
+                    <span className="text-muted-foreground">{t("bookDetails.price")}:</span>
                     <span className="font-medium">{book.price.toFixed(2)} €</span>
                   </li>
                   {hasDiscount && (
                     <>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Remise :</span>
+                        <span className="text-muted-foreground">{t("bookDetails.discount")}:</span>
                         <span className="text-red-500">{book.discountPercentage}%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Prix final :</span>
+                        <span className="text-muted-foreground">{t("bookDetails.finalPrice")}:</span>
                         <span className="font-bold">{discountedPrice.toFixed(2)} €</span>
                       </li>
                     </>
                   )}
                   <li className="flex justify-between">
-                    <span className="text-muted-foreground">Disponibilité :</span>
-                    <span>{book.stock > 0 ? `${book.stock} en stock` : 'Rupture de stock'}</span>
+                    <span className="text-muted-foreground">{t("bookDetails.availability")}:</span>
+                    <span>{book.stock > 0 ? `${book.stock} ${t("bookDetails.inStock")}` : t("shop.outOfStock")}</span>
                   </li>
                 </ul>
               </CardContent>

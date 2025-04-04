@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Search } from 'lucide-react';
 import BookCard from '@/components/bookshop/BookCard';
 import BookFilter from '@/components/bookshop/BookFilter';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Fonction pour sécuriser l'affichage de données Firebase
 const safeBookData = (books: Book[]): Book[] => {
@@ -55,6 +56,7 @@ export default function BookshopPage() {
   const { toast } = useToast();
   const { currentUser } = useAuth();
   const { refetchCart } = useCart();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -135,8 +137,8 @@ export default function BookshopPage() {
   const handleAddToCart = async (book: Book) => {
     if (!currentUser) {
       toast({
-        title: "Connexion requise",
-        description: "Veuillez vous connecter pour ajouter des articles au panier.",
+        title: t("auth.loginRequired"),
+        description: t("shop.loginToAddToCart"),
         variant: "destructive"
       });
       return;
@@ -157,14 +159,14 @@ export default function BookshopPage() {
       await refetchCart();
       
       toast({
-        title: "Ajouté au panier",
-        description: `${book.title} a été ajouté à votre panier.`
+        title: t("shop.addedToCart"),
+        description: `${book.title} ${t("shop.hasBeenAddedToCart")}`
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout au panier:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter le livre au panier. Veuillez réessayer.",
+        title: t("errors.error"),
+        description: t("shop.errorAddingToCart"),
         variant: "destructive"
       });
     }
@@ -200,14 +202,14 @@ export default function BookshopPage() {
           <div className="w-full md:w-64 lg:w-72">
             <Card>
               <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Filtres</h2>
+                <h2 className="text-xl font-semibold mb-4">{t("shop.filters")}</h2>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Rechercher</label>
+                    <label className="text-sm font-medium mb-2 block">{t("shop.search")}</label>
                     <div className="flex space-x-2">
                       <Input
-                        placeholder="Titre, auteur..."
+                        placeholder={t("shop.titleAuthor")}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -229,7 +231,7 @@ export default function BookshopPage() {
                   <Separator />
                   
                   <Button variant="outline" onClick={resetFilters} className="w-full">
-                    Réinitialiser les filtres
+                    {t("shop.resetFilters")}
                   </Button>
                 </div>
               </CardContent>
@@ -240,25 +242,25 @@ export default function BookshopPage() {
           <div className="flex-1">
             <Tabs value={currentTab} onValueChange={setCurrentTab}>
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Boutique de Livres</h1>
+                <h1 className="text-3xl font-bold">{t("shop.title")}</h1>
                 <TabsList>
-                  <TabsTrigger value="tous">Tous</TabsTrigger>
-                  <TabsTrigger value="vedette">En vedette</TabsTrigger>
+                  <TabsTrigger value="tous">{t("shop.all")}</TabsTrigger>
+                  <TabsTrigger value="vedette">{t("shop.featured")}</TabsTrigger>
                 </TabsList>
               </div>
               
               {loading ? (
                 <div className="flex justify-center items-center py-20">
-                  <LoadingSpinner size="lg" text="Chargement des livres..." />
+                  <LoadingSpinner size="lg" text={t("shop.loadingBooks")} />
                 </div>
               ) : (
                 <>
                   <TabsContent value="tous" className="mt-0">
                     {books.length === 0 ? (
                       <div className="text-center py-10">
-                        <p className="text-lg text-muted-foreground">Aucun livre trouvé</p>
+                        <p className="text-lg text-muted-foreground">{t("shop.noBooksFound")}</p>
                         <Button variant="outline" onClick={resetFilters} className="mt-4">
-                          Afficher tous les livres
+                          {t("shop.showAllBooks")}
                         </Button>
                       </div>
                     ) : (
@@ -277,7 +279,7 @@ export default function BookshopPage() {
                   <TabsContent value="vedette" className="mt-0">
                     {featuredBooks.length === 0 ? (
                       <div className="text-center py-10">
-                        <p className="text-lg text-muted-foreground">Aucun livre en vedette pour le moment</p>
+                        <p className="text-lg text-muted-foreground">{t("shop.noFeaturedBooks")}</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
