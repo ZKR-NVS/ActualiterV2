@@ -12,32 +12,84 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, CreditCard, AlertTriangle } from 'lucide-react';
 import CheckoutForm from '@/components/bookshop/CheckoutForm';
 import { serverTimestamp } from 'firebase/firestore';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+
+// Fonction pour sécuriser les données du panier
+const safeCartItems = (cart: Cart | null): Cart | null => {
+  if (!cart) return null;
+  
+  // Créer une copie du panier
+  const safeCopy = { ...cart };
+  
+  // Traiter les éléments du panier
+  if (Array.isArray(safeCopy.items)) {
+    safeCopy.items = safeCopy.items.map(item => {
+      const safeItem = { ...item };
+      
+      // Si updatedAt est un objet Timestamp, convertir en chaîne ISO
+      if (safeItem.updatedAt && typeof safeItem.updatedAt === 'object' && 'seconds' in safeItem.updatedAt) {
+        try {
+          // @ts-ignore - nous savons que c'est un objet Timestamp
+          safeItem.updatedAt = new Date(safeItem.updatedAt.seconds * 1000).toISOString();
+        } catch (e) {
+          safeItem.updatedAt = null;
+        }
+      }
+      
+      return safeItem;
+    });
+  }
+  
+  // Si updatedAt du panier est un objet Timestamp, convertir en chaîne ISO
+  if (safeCopy.updatedAt && typeof safeCopy.updatedAt === 'object' && 'seconds' in safeCopy.updatedAt) {
+    try {
+      // @ts-ignore - nous savons que c'est un objet Timestamp
+      safeCopy.updatedAt = new Date(safeCopy.updatedAt.seconds * 1000).toISOString();
+    } catch (e) {
+      safeCopy.updatedAt = null;
+    }
+  }
+  
+  return safeCopy;
+};
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   
-  const [cart, setCart] = useState<Cart & { id: string } | null>(null);
+  const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [cardIssue, setCardIssue] = useState(false);
   
   useEffect(() => {
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
     const fetchCart = async () => {
-      if (!currentUser) {
-        navigate('/login', { state: { from: '/cart' } });
-        return;
-      }
-      
       try {
         setLoading(true);
-        const cartData = await getUserCart(currentUser.uid);
-        setCart(cartData);
+        const fetchedCart = await getUserCart(currentUser.uid);
+        // Sécuriser les données du panier
+        const safeCart = safeCartItems(fetchedCart);
+        setCart(safeCart);
+        
+        // Initialiser l'état des quantités
+        const initialQuantities: Record<string, number> = {};
+        safeCart?.items.forEach(item => {
+          initialQuantities[item.bookId] = item.quantity;
+        });
+        setQuantities(initialQuantities);
       } catch (error) {
         console.error("Erreur lors du chargement du panier:", error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger votre panier. Veuillez réessayer plus tard.",
+          title: t("errors.error"),
+          description: t("errors.cartLoadError"),
           variant: "destructive"
         });
       } finally {
@@ -46,26 +98,39 @@ export default function CartPage() {
     };
     
     fetchCart();
-  }, [currentUser, navigate, toast]);
+  }, [currentUser, navigate, toast, t]);
   
   const handleUpdateQuantity = async (bookId: string, quantity: number) => {
     if (!currentUser || !cart) return;
     
+    // Mettre à jour localement d'abord pour une interface réactive
+    const newQuantities = { ...quantities, [bookId]: quantity };
+    setQuantities(newQuantities);
+    
     try {
-      const updatedCart = await updateCartItemQuantity(currentUser.uid, bookId, quantity);
-      setCart(updatedCart);
+      await updateCartItemQuantity(currentUser.uid, bookId, quantity);
+      
+      // Mettre à jour l'état du panier
+      const updatedCart = await getUserCart(currentUser.uid);
+      setCart(safeCartItems(updatedCart));
       
       toast({
-        title: "Panier mis à jour",
-        description: "La quantité a été mise à jour avec succès."
+        title: t("cart.quantityUpdated"),
+        description: t("cart.quantityUpdatedSuccess")
       });
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la quantité:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour la quantité. Veuillez réessayer.",
+        title: t("errors.error"),
+        description: t("errors.quantityUpdateError"),
         variant: "destructive"
       });
+      
+      // Restaurer la quantité précédente en cas d'erreur
+      const item = cart.items.find(item => item.bookId === bookId);
+      if (item) {
+        setQuantities({ ...quantities, [bookId]: item.quantity });
+      }
     }
   };
   
@@ -73,44 +138,45 @@ export default function CartPage() {
     if (!currentUser || !cart) return;
     
     try {
-      const updatedCart = await removeFromCart(currentUser.uid, bookId);
-      setCart(updatedCart);
+      await removeFromCart(currentUser.uid, bookId);
+      
+      // Mettre à jour l'état du panier
+      const updatedCart = await getUserCart(currentUser.uid);
+      setCart(safeCartItems(updatedCart));
       
       toast({
-        title: "Article supprimé",
-        description: "L'article a été supprimé de votre panier."
+        title: t("cart.itemRemoved"),
+        description: t("cart.itemRemovedSuccess")
       });
     } catch (error) {
       console.error("Erreur lors de la suppression de l'article:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer l'article. Veuillez réessayer.",
+        title: t("errors.error"),
+        description: t("errors.removeItemError"),
         variant: "destructive"
       });
     }
   };
   
   const handleClearCart = async () => {
-    if (!currentUser || !cart) return;
+    if (!currentUser || !cart || cart.items.length === 0) return;
     
     try {
       await clearCart(currentUser.uid);
-      setCart({
-        ...cart,
-        items: [],
-        totalAmount: 0,
-        updatedAt: serverTimestamp()
-      });
+      
+      // Mettre à jour l'état du panier
+      const updatedCart = await getUserCart(currentUser.uid);
+      setCart(safeCartItems(updatedCart));
       
       toast({
-        title: "Panier vidé",
-        description: "Tous les articles ont été supprimés de votre panier."
+        title: t("cart.cartCleared"),
+        description: t("cart.cartClearedSuccess")
       });
     } catch (error) {
       console.error("Erreur lors du vidage du panier:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de vider le panier. Veuillez réessayer.",
+        title: t("errors.error"),
+        description: t("errors.clearCartError"),
         variant: "destructive"
       });
     }
@@ -121,8 +187,8 @@ export default function CartPage() {
       setIsCheckingOut(true);
     } else {
       toast({
-        title: "Panier vide",
-        description: "Ajoutez des articles à votre panier avant de procéder au paiement.",
+        title: t("cart.emptyCart"),
+        description: t("cart.emptyCartDescription"),
         variant: "destructive"
       });
     }
@@ -132,7 +198,7 @@ export default function CartPage() {
     return (
       <Layout>
         <div className="container mx-auto py-8 min-h-screen flex justify-center items-center">
-          <LoadingSpinner size="lg" text="Chargement de votre panier..." />
+          <LoadingSpinner size="lg" text={t("loading.loadingCart")} />
         </div>
       </Layout>
     );
@@ -147,7 +213,7 @@ export default function CartPage() {
       <div className="container mx-auto py-8">
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <ShoppingCart className="mr-2 h-6 w-6" />
-          Votre Panier
+          {t("cart.yourCart")}
         </h1>
         
         {isCheckingOut ? (
@@ -169,12 +235,12 @@ export default function CartPage() {
                   <CardContent className="pt-6 text-center">
                     <div className="flex flex-col items-center justify-center py-12">
                       <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
-                      <h2 className="text-2xl font-semibold mb-2">Votre panier est vide</h2>
+                      <h2 className="text-2xl font-semibold mb-2">{t("cart.emptyCart")}</h2>
                       <p className="text-muted-foreground mb-6">
-                        Parcourez notre boutique et ajoutez des livres à votre panier
+                        {t("cart.emptyCartDescription")}
                       </p>
                       <Button onClick={() => navigate('/bookshop')} className="px-6">
-                        Parcourir la boutique
+                        {t("cart.browseShop")}
                       </Button>
                     </div>
                   </CardContent>
@@ -182,7 +248,7 @@ export default function CartPage() {
               ) : (
                 <>
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Articles ({cart.items.length})</h2>
+                    <h2 className="text-xl font-semibold">{t("cart.items")} ({cart.items.length})</h2>
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -190,7 +256,7 @@ export default function CartPage() {
                       className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Vider le panier
+                      {t("cart.clearCart")}
                     </Button>
                   </div>
                 
@@ -272,28 +338,28 @@ export default function CartPage() {
             <div>
               <Card>
                 <CardHeader>
-                  <CardTitle>Résumé de la commande</CardTitle>
+                  <CardTitle>{t("cart.orderSummary")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sous-total</span>
+                      <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                       <span>{cart ? cart.totalAmount.toFixed(2) : "0.00"} €</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Livraison</span>
-                      <span>Gratuite</span>
+                      <span className="text-muted-foreground">{t("cart.shipping")}</span>
+                      <span>{t("cart.shippingFree")}</span>
                     </div>
                     
                     <Separator />
                     
                     <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
+                      <span>{t("cart.total")}</span>
                       <span>{cart ? cart.totalAmount.toFixed(2) : "0.00"} €</span>
                     </div>
                     
                     <div className="text-sm text-muted-foreground">
-                      Taxes incluses. Frais de livraison calculés à l'étape suivante.
+                      {t("cart.taxesIncluded")} {t("cart.shippingCalculatedLater")}
                     </div>
                   </div>
                 </CardContent>
@@ -305,7 +371,7 @@ export default function CartPage() {
                     onClick={handleProceedToCheckout}
                   >
                     <CreditCard className="mr-2 h-5 w-5" />
-                    Procéder au paiement
+                    {t("cart.proceedToPayment")}
                   </Button>
                   
                   <Button 
@@ -314,13 +380,13 @@ export default function CartPage() {
                     onClick={() => navigate('/bookshop')}
                   >
                     <ArrowRight className="mr-2 h-4 w-4" />
-                    Continuer vos achats
+                    {t("cart.continueShopping")}
                   </Button>
                   
                   <div className="flex items-start gap-2 mt-2 text-sm text-muted-foreground">
                     <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <p>
-                      Les articles dans votre panier ne sont pas réservés. Finalisez votre commande pour garantir leur disponibilité.
+                      {t("cart.itemsNotReserved")} {t("cart.finalizeOrder")} {t("cart.guaranteeAvailability")}
                     </p>
                   </div>
                 </CardFooter>

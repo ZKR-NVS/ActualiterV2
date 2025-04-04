@@ -1,4 +1,4 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.6
+# Actualiter - Plateforme de vérification d'actualités - v1.0.7
 *Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
@@ -24,6 +24,11 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Formulaire d'ajout de livres avec support pour les URLs externes
 - **AMÉLIORÉ** : Optimisation des performances de chargement de l'application
 - **CORRIGÉ** : Gestion des accès aux paramètres pour les utilisateurs non-admin
+- **AMÉLIORÉ** : Amélioration du système de traduction
+- **AMÉLIORÉ** : Mise à jour du composant de sélection de langue
+- **CORRIGÉ** : Correction des problèmes de permission Firebase liés aux paniers
+- **CORRIGÉ** : Correction des erreurs Firebase "Cannot use serverTimestamp() in arrays"
+- **AMÉLIORÉ** : Amélioration de la gestion des Timestamps Firebase dans les interfaces React
 
 ## Fonctionnalités
 ### Terminées
@@ -472,51 +477,30 @@ Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les re
 
 ## Journal des modifications
 
-### v1.0.6 (4 avril 2024)
-- Correction des problèmes de sérialisation des Timestamps Firebase sur la page de détails des livres
-- Résolution de l'erreur "serverTimestamp() is not currently supported inside arrays" dans le panier
-- Amélioration de la gestion des erreurs d'autorisation pour les utilisateurs non-administrateurs
-- Optimisation du temps de chargement initial de l'application
-- Amélioration du comportement des paramètres pour les différents types d'utilisateurs
+### v1.0.7
+- Correction de l'erreur de sérialisation des Timestamps Firebase dans les pages de détail de livre et du panier
+- Implémentation de fonctions de sécurité pour convertir les objets Timestamp en chaînes ISO avant leur utilisation dans les composants React
+- Optimisation de la gestion d'état du panier pour une meilleure réactivité de l'interface
 
-### v1.0.5 (4 avril 2024)
-- Correction des problèmes de permissions Firebase pour les paniers d'achat
-- Amélioration du formulaire d'ajout de livres avec champs pour les URLs externes
-- Modification des règles de sécurité Firebase pour corriger les accès aux paniers
-- Correction des erreurs TypeScript dans le formulaire de livres
-- Ajout des propriétés rating et reviewCount à l'interface Book
+### v1.0.6
+- Correction de l'erreur de sérialisation des Timestamps Firebase
+- Correction de l'erreur "serverTimestamp() is not currently supported inside arrays" dans les paniers
+- Amélioration de la gestion des erreurs d'autorisation pour les utilisateurs non-admin
+- Optimisation du chargement des paramètres (plus de blocage pour les utilisateurs standard)
+- Mise à jour de la documentation
 
-### v1.0.4 (4 avril 2024)
-- Optimisation du système de traduction et de l'internationalisation
-- Mise à jour des fichiers de langue avec de nouvelles traductions
-- Amélioration du composant de sélection de langue
-- Adaptation du format des dates selon la langue sélectionnée
-- Mise en évidence du terme "apparences" dans le titre principal de la page d'accueil
+### v1.0.5
+- Ajout du composant de sélection de langue
+- Système de traduction complet (français, anglais)
+- Correction des problèmes d'affichage sur mobile
+- Amélioration de la performance globale
 
-### v1.0.3 (date précédente)
-- Ajout d'un système complet de traduction avec support français/anglais
-- Implémentation d'un sélecteur de langue dans l'interface utilisateur
-- Nettoyage des données fictives dans le code source pour plus de sécurité
-- Correction des références incohérentes au nom du site
-- Mise à jour des traductions dans toute l'application
-- Optimisation des performances générales
-- Résolution de problèmes de compatibilité des dépendances
-
-### v1.0.1 (Août 2024)
-- Ajout de la gestion des fichiers PDF pour les livres
-- Implémentation de l'interface d'administration des commandes
-- Ajout d'un bouton de téléchargement de PDF dans la page de détail des livres
-- Correction des bugs et amélioration des performances
-
-### v1.0 (Août 2024)
-- Implémentation d'une boutique de livres complète et fonctionnelle
-- Ajout du panier d'achat avec gestion des quantités
-- Interface de gestion des livres et catégories pour les administrateurs
-- Processus de commande avec formulaire de livraison
-- Page de confirmation de commande
-- Correction des erreurs TypeScript dans plusieurs composants
-- Optimisation des performances de la boutique
-- Documentation complète des fonctionnalités
+### v1.0.0
+- Version initiale du projet
+- Mise en place de l'authentification Firebase
+- Création de la boutique de livres
+- Système de panier
+- Interface administrateur basique
 
 ### v0.9 (Août 2024)
 - Correction des erreurs TypeScript dans les composants de paramètres

@@ -13,6 +13,36 @@ import { Search } from 'lucide-react';
 import BookCard from '@/components/bookshop/BookCard';
 import BookFilter from '@/components/bookshop/BookFilter';
 
+// Fonction pour sécuriser l'affichage de données Firebase
+const safeBookData = (books: Book[]): Book[] => {
+  return books.map(book => {
+    // Créer une copie sûre de l'objet livre
+    const safeCopy = { ...book };
+    
+    // Si createdAt est un objet Timestamp, convertit-le en chaîne
+    if (safeCopy.createdAt && typeof safeCopy.createdAt === 'object' && 'seconds' in safeCopy.createdAt) {
+      try {
+        // @ts-ignore - on ignore l'erreur car on sait que c'est un objet Timestamp
+        safeCopy.createdAt = new Date(safeCopy.createdAt.seconds * 1000).toISOString();
+      } catch (e) {
+        safeCopy.createdAt = null;
+      }
+    }
+    
+    // Si updatedAt est un objet Timestamp, convertit-le en chaîne
+    if (safeCopy.updatedAt && typeof safeCopy.updatedAt === 'object' && 'seconds' in safeCopy.updatedAt) {
+      try {
+        // @ts-ignore - on ignore l'erreur car on sait que c'est un objet Timestamp
+        safeCopy.updatedAt = new Date(safeCopy.updatedAt.seconds * 1000).toISOString();
+      } catch (e) {
+        safeCopy.updatedAt = null;
+      }
+    }
+    
+    return safeCopy;
+  });
+};
+
 export default function BookshopPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
@@ -33,8 +63,9 @@ export default function BookshopPage() {
           getFeaturedBooks(),
           getAllCategories()
         ]);
-        setBooks(allBooks);
-        setFeaturedBooks(featured);
+        // Sécuriser les données avant de les afficher
+        setBooks(safeBookData(allBooks));
+        setFeaturedBooks(safeBookData(featured));
         setCategories(allCategories);
       } catch (error) {
         console.error("Erreur lors du chargement des livres:", error);
@@ -58,11 +89,13 @@ export default function BookshopPage() {
       
       if (categoryId) {
         const categoryBooks = await getBooksByCategory(categoryId);
-        setBooks(categoryBooks);
+        // Sécuriser les données avant de les afficher
+        setBooks(safeBookData(categoryBooks));
         setCurrentTab('tous');
       } else {
         const allBooks = await getAllBooks();
-        setBooks(allBooks);
+        // Sécuriser les données avant de les afficher
+        setBooks(safeBookData(allBooks));
       }
     } catch (error) {
       console.error("Erreur lors du chargement des livres par catégorie:", error);
@@ -82,7 +115,8 @@ export default function BookshopPage() {
     try {
       setLoading(true);
       const results = await searchBooks(searchTerm);
-      setBooks(results);
+      // Sécuriser les données avant de les afficher
+      setBooks(safeBookData(results));
       setCurrentTab('tous');
     } catch (error) {
       console.error("Erreur lors de la recherche:", error);
@@ -139,7 +173,8 @@ export default function BookshopPage() {
       setSearchTerm('');
       
       const allBooks = await getAllBooks();
-      setBooks(allBooks);
+      // Sécuriser les données avant de les afficher
+      setBooks(safeBookData(allBooks));
       setCurrentTab('tous');
     } catch (error) {
       console.error("Erreur lors de la réinitialisation des filtres:", error);

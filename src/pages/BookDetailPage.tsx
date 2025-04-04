@@ -23,6 +23,36 @@ import {
   Download
 } from 'lucide-react';
 
+// Fonction pour sécuriser l'affichage de données Firebase
+const safeData = (book: Book | null): Book | null => {
+  if (!book) return null;
+
+  // Crée une copie sûre de l'objet livre
+  const safeCopy = { ...book };
+  
+  // Si createdAt est un objet Timestamp, convertit-le en chaîne
+  if (safeCopy.createdAt && typeof safeCopy.createdAt === 'object' && 'seconds' in safeCopy.createdAt) {
+    try {
+      // @ts-ignore - on ignore l'erreur car on sait que c'est un objet Timestamp
+      safeCopy.createdAt = new Date(safeCopy.createdAt.seconds * 1000).toISOString();
+    } catch (e) {
+      safeCopy.createdAt = null;
+    }
+  }
+  
+  // Si updatedAt est un objet Timestamp, convertit-le en chaîne
+  if (safeCopy.updatedAt && typeof safeCopy.updatedAt === 'object' && 'seconds' in safeCopy.updatedAt) {
+    try {
+      // @ts-ignore - on ignore l'erreur car on sait que c'est un objet Timestamp
+      safeCopy.updatedAt = new Date(safeCopy.updatedAt.seconds * 1000).toISOString();
+    } catch (e) {
+      safeCopy.updatedAt = null;
+    }
+  }
+  
+  return safeCopy;
+};
+
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -40,7 +70,8 @@ export default function BookDetailPage() {
       try {
         setLoading(true);
         const bookData = await getBookById(id);
-        setBook(bookData);
+        // Utiliser la fonction de sécurisation des données
+        setBook(safeData(bookData));
       } catch (error) {
         console.error("Erreur lors du chargement du livre:", error);
         toast({
@@ -67,20 +98,26 @@ export default function BookDetailPage() {
     }
     
     try {
+      // Vérifier que le livre est sécurisé (sans Timestamps)
+      const safeBook = safeData(book);
+      if (!safeBook) {
+        throw new Error("Impossible de traiter les données du livre");
+      }
+      
       const cartItem: CartItem = {
-        bookId: book.id!,
-        title: book.title,
-        author: book.author,
-        price: book.price,
+        bookId: safeBook.id!,
+        title: safeBook.title,
+        author: safeBook.author,
+        price: safeBook.price,
         quantity: quantity,
-        coverImage: book.coverImage
+        coverImage: safeBook.coverImage
       };
       
       await addToCart(currentUser.uid, cartItem);
       
       toast({
         title: "Ajouté au panier",
-        description: `${book.title} (${quantity} exemplaire${quantity > 1 ? 's' : ''}) a été ajouté à votre panier.`
+        description: `${safeBook.title} (${quantity} exemplaire${quantity > 1 ? 's' : ''}) a été ajouté à votre panier.`
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout au panier:", error);
