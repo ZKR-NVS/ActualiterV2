@@ -95,7 +95,7 @@ export default function BookFormDialog({
       publisher: '',
       language: 'Français',
       featured: false,
-      discountPercentage: 0,
+      discountPercentage: null,
       coverImageUrl: '',
       pdfUrl: ''
     }
@@ -134,7 +134,7 @@ export default function BookFormDialog({
           price: data.price ? Number(data.price) : 0,
           stock: data.stock ? Number(data.stock) : 0,
           featured: data.featured || false,
-          discountPercentage: data.discountPercentage || 0,
+          discountPercentage: data.discountPercentage && data.discountPercentage > 0 ? data.discountPercentage : null,
           pdfUrl: useExternalPdf && data.pdfUrl ? data.pdfUrl : (book?.pdfUrl || '')
         };
 

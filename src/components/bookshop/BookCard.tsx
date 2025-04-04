@@ -44,7 +44,7 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
         </div>
         
         {/* Badge de remise */}
-        {book.discountPercentage && book.discountPercentage > 0 && (
+        {hasDiscount && (
           <Badge className="absolute top-2 right-2 bg-destructive text-white">
             -{book.discountPercentage}%
           </Badge>
@@ -62,10 +62,10 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-white font-bold text-lg">
-                {book.discountPercentage && book.discountPercentage > 0 ? (
+                {hasDiscount ? (
                   <>
                     <span className="text-red-300 line-through text-sm mr-2">{book.price.toFixed(2)}€</span>
-                    <span>{(book.price * (1 - book.discountPercentage / 100)).toFixed(2)}€</span>
+                    <span>{(book.price * (1 - book.discountPercentage! / 100)).toFixed(2)}€</span>
                   </>
                 ) : (
                   <span>{book.price.toFixed(2)}€</span>
