@@ -10,8 +10,9 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useCart } from '@/lib/contexts/CartContext';
 import { updateCartItemQuantity, removeFromCart, clearCart, Cart } from '@/lib/services/bookService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, CreditCard, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, CreditCard, AlertTriangle, User } from 'lucide-react';
 import CheckoutForm from '@/components/bookshop/CheckoutForm';
+import GuestCheckoutForm from '@/components/bookshop/GuestCheckoutForm';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Fonction pour sécuriser les données du panier
@@ -61,27 +62,44 @@ export default function CartPage() {
   const { t } = useLanguage();
   
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [localCart, setLocalCart] = useState<{items: any[], totalAmount: number} | null>(null);
   
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
-    
-    // Initialiser l'état des quantités depuis le panier global
-    if (cart) {
+    // Si l'utilisateur est connecté, utiliser le panier du contexte
+    if (currentUser && cart) {
       const initialQuantities: Record<string, number> = {};
       cart.items.forEach(item => {
         initialQuantities[item.bookId] = item.quantity;
       });
       setQuantities(initialQuantities);
+      setLocalCart(null);
+    } 
+    // Si utilisateur non connecté, vérifier s'il y a un panier dans le localStorage
+    else if (!currentUser) {
+      const savedCart = localStorage.getItem('guestCart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        setLocalCart(parsedCart);
+        
+        const localQuantities: Record<string, number> = {};
+        parsedCart.items.forEach((item: any) => {
+          localQuantities[item.bookId] = item.quantity;
+        });
+        setQuantities(localQuantities);
+      } else {
+        // Initialiser un panier vide pour les invités
+        setLocalCart({
+          items: [],
+          totalAmount: 0
+        });
+      }
     }
-  }, [currentUser, navigate, cart]);
+  }, [currentUser, cart]);
   
   const handleUpdateQuantity = async (bookId: string, quantity: number) => {
-    if (!currentUser || !cart) return;
-    
+    if (currentUser && cart) {
     // Mettre à jour localement d'abord pour une interface réactive
     const newQuantities = { ...quantities, [bookId]: quantity };
     setQuantities(newQuantities);
@@ -107,12 +125,54 @@ export default function CartPage() {
       if (item) {
         setQuantities({ ...quantities, [bookId]: item.quantity });
       }
+      }
+    } 
+    // Pour les invités, mettre à jour le panier local
+    else if (localCart) {
+      const newQuantities = { ...quantities, [bookId]: quantity };
+      setQuantities(newQuantities);
+      
+      const updatedItems = [...localCart.items];
+      const itemIndex = updatedItems.findIndex(item => item.bookId === bookId);
+      
+      if (quantity <= 0) {
+        // Supprimer l'article si quantité <= 0
+        if (itemIndex >= 0) {
+          updatedItems.splice(itemIndex, 1);
+        }
+      } else {
+        // Mettre à jour la quantité
+        if (itemIndex >= 0) {
+          updatedItems[itemIndex] = {
+            ...updatedItems[itemIndex],
+            quantity
+          };
+        }
+      }
+      
+      // Recalculer le montant total
+      const totalAmount = updatedItems.reduce(
+        (sum, item) => sum + (item.price * item.quantity), 
+        0
+      );
+      
+      const updatedCart = {
+        items: updatedItems,
+        totalAmount
+      };
+      
+      setLocalCart(updatedCart);
+      localStorage.setItem('guestCart', JSON.stringify(updatedCart));
+      
+      toast({
+        title: t("cart.quantityUpdated"),
+        description: t("cart.quantityUpdatedSuccess")
+      });
     }
   };
   
   const handleRemoveItem = async (bookId: string) => {
-    if (!currentUser || !cart) return;
-    
+    if (currentUser && cart) {
     try {
       await removeFromCart(currentUser.uid, bookId);
       await refetchCart(); // Mettre à jour l'état global du panier
@@ -127,13 +187,36 @@ export default function CartPage() {
         title: t("errors.error"),
         description: t("errors.removeItemError"),
         variant: "destructive"
+        });
+      }
+    }
+    // Pour les invités, supprimer du panier local
+    else if (localCart) {
+      const updatedItems = localCart.items.filter(item => item.bookId !== bookId);
+      
+      // Recalculer le montant total
+      const totalAmount = updatedItems.reduce(
+        (sum, item) => sum + (item.price * item.quantity), 
+        0
+      );
+      
+      const updatedCart = {
+        items: updatedItems,
+        totalAmount
+      };
+      
+      setLocalCart(updatedCart);
+      localStorage.setItem('guestCart', JSON.stringify(updatedCart));
+      
+      toast({
+        title: t("cart.itemRemoved"),
+        description: t("cart.itemRemovedSuccess")
       });
     }
   };
   
   const handleClearCart = async () => {
-    if (!currentUser || !cart || cart.items.length === 0) return;
-    
+    if (currentUser && cart && cart.items.length > 0) {
     try {
       await clearCart(currentUser.uid);
       await refetchCart(); // Mettre à jour l'état global du panier
@@ -148,13 +231,38 @@ export default function CartPage() {
         title: t("errors.error"),
         description: t("errors.clearCartError"),
         variant: "destructive"
+        });
+      }
+    }
+    // Pour les invités, vider le panier local
+    else if (localCart && localCart.items.length > 0) {
+      const emptyCart = {
+        items: [],
+        totalAmount: 0
+      };
+      
+      setLocalCart(emptyCart);
+      localStorage.setItem('guestCart', JSON.stringify(emptyCart));
+      
+      toast({
+        title: t("cart.cartCleared"),
+        description: t("cart.cartClearedSuccess")
       });
     }
   };
   
   const handleProceedToCheckout = () => {
-    if (cart && cart.items.length > 0) {
+    const activeCart = currentUser ? cart : localCart;
+    
+    if (activeCart && activeCart.items.length > 0) {
+      if (currentUser) {
       setIsCheckingOut(true);
+        setIsGuestCheckout(false);
+      } else {
+        // Proposer la connexion ou l'achat en tant qu'invité
+        setIsGuestCheckout(false);
+        navigate('/login', { state: { returnTo: '/cart' } });
+      }
     } else {
       toast({
         title: t("cart.emptyCart"),
@@ -164,7 +272,20 @@ export default function CartPage() {
     }
   };
   
-  if (cartLoading) {
+  const handleGuestCheckout = () => {
+    if (localCart && localCart.items.length > 0) {
+      setIsGuestCheckout(true);
+      setIsCheckingOut(false);
+    } else {
+      toast({
+        title: t("cart.emptyCart"),
+        description: t("cart.emptyCartDescription"),
+        variant: "destructive"
+      });
+    }
+  };
+  
+  if (cartLoading && currentUser) {
     return (
       <Layout>
         <div className="container mx-auto py-8 min-h-screen flex justify-center items-center">
@@ -174,9 +295,7 @@ export default function CartPage() {
     );
   }
   
-  if (!currentUser) {
-    return null; // Redirection gérée dans useEffect
-  }
+  const activeCart = currentUser ? cart : localCart;
   
   return (
     <Layout>
@@ -186,9 +305,9 @@ export default function CartPage() {
           {t("cart.yourCart")}
         </h1>
         
-        {isCheckingOut ? (
+        {isCheckingOut && currentUser && cart ? (
           <CheckoutForm 
-            cart={cart!} 
+            cart={cart} 
             onCancel={() => setIsCheckingOut(false)} 
             onSuccess={() => {
               // Redirige vers une page de confirmation après une commande réussie
@@ -196,11 +315,35 @@ export default function CartPage() {
               navigate('/order-confirmation');
             }}
           />
+        ) : isGuestCheckout && localCart ? (
+          <GuestCheckoutForm
+            items={localCart.items}
+            totalAmount={localCart.totalAmount}
+            onCancel={() => setIsGuestCheckout(false)}
+            onSuccess={(orderId, email) => {
+              // Vider le panier local après une commande réussie
+              localStorage.removeItem('guestCart');
+              setLocalCart({
+                items: [],
+                totalAmount: 0
+              });
+              
+              // Redirige vers une page de confirmation avec l'ID de commande et l'email
+              setIsGuestCheckout(false);
+              navigate('/order-confirmation', { 
+                state: { 
+                  orderId,
+                  email,
+                  isGuest: true
+                } 
+              });
+            }}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Liste des articles */}
             <div className="md:col-span-2">
-              {!cart || cart.items.length === 0 ? (
+              {!activeCart || activeCart.items.length === 0 ? (
                 <Card>
                   <CardContent className="pt-6 text-center">
                     <div className="flex flex-col items-center justify-center py-12">
@@ -216,95 +359,86 @@ export default function CartPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">{t("cart.items")} ({cart.items.length})</h2>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleClearCart}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {t("cart.clearCart")}
-                    </Button>
-                  </div>
-                
-                  <div className="space-y-4">
-                    {cart.items.map((item) => (
-                      <Card key={item.bookId} className="overflow-hidden">
-                        <div className="flex flex-col sm:flex-row">
-                          {/* Image du livre */}
-                          <div className="w-full sm:w-24 h-24 overflow-hidden">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("cart.cartItems")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {activeCart.items.map((item) => (
+                        <div key={item.bookId} className="flex flex-col md:flex-row md:items-center gap-4 pb-4 border-b">
+                          <div className="flex-shrink-0">
                             <img 
                               src={item.coverImage || '/placeholder.svg'} 
                               alt={item.title} 
-                              className="w-full h-full object-cover"
+                              className="w-24 h-24 object-cover rounded"
                             />
                           </div>
-                          
-                          {/* Détails de l'article */}
-                          <CardContent className="flex-1 py-3 sm:py-4">
-                            <div className="flex flex-col sm:flex-row justify-between h-full">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-lg line-clamp-1">{item.title}</h3>
-                                <p className="text-muted-foreground text-sm">par {item.author}</p>
-                                <p className="font-medium mt-1">{item.price.toFixed(2)} €</p>
-                              </div>
-                              
-                              <div className="flex items-center gap-4 mt-4 sm:mt-0">
-                                {/* Contrôles de quantité */}
-                                <div className="flex items-center">
+                            <h3 className="font-medium">{item.title}</h3>
+                            <p className="text-sm text-muted-foreground">{item.author}</p>
+                            <div className="mt-2 flex items-center">
                                   <Button 
-                                    type="button" 
                                     variant="outline" 
                                     size="icon" 
-                                    onClick={() => handleUpdateQuantity(item.bookId, item.quantity - 1)}
-                                    disabled={item.quantity <= 1}
+                                onClick={() => handleUpdateQuantity(item.bookId, quantities[item.bookId] - 1)}
+                                disabled={quantities[item.bookId] <= 1}
                                   >
                                     <Minus className="h-3 w-3" />
                                   </Button>
-                                  <span className="w-8 text-center mx-1">
-                                    {item.quantity}
-                                  </span>
+                              <Input
+                                className="w-14 mx-2 text-center"
+                                min="1"
+                                type="number"
+                                value={quantities[item.bookId] || 1}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  if (!isNaN(val) && val >= 1) {
+                                    handleUpdateQuantity(item.bookId, val);
+                                  }
+                                }}
+                              />
                                   <Button 
-                                    type="button" 
                                     variant="outline" 
                                     size="icon" 
-                                    onClick={() => handleUpdateQuantity(item.bookId, item.quantity + 1)}
+                                onClick={() => handleUpdateQuantity(item.bookId, quantities[item.bookId] + 1)}
                                   >
                                     <Plus className="h-3 w-3" />
                                   </Button>
                                 </div>
-                                
-                                {/* Sous-total pour cet article */}
-                                <div className="text-right w-20">
-                                  <span className="font-semibold">
-                                    {(item.price * item.quantity).toFixed(2)} €
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="font-medium">
+                              {(item.price * (quantities[item.bookId] || item.quantity)).toFixed(2)} €
                                   </span>
-                                </div>
-                                
-                                {/* Bouton de suppression */}
                                 <Button 
                                   variant="ghost" 
-                                  size="icon" 
+                              size="sm" 
+                              className="text-red-500 h-auto p-1"
                                   onClick={() => handleRemoveItem(item.bookId)}
-                                  className="text-destructive hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              {t("cart.remove")}
                                 </Button>
                               </div>
-                            </div>
-                          </CardContent>
                         </div>
-                      </Card>
                     ))}
                   </div>
-                </>
+                  </CardContent>
+                  <CardFooter className="flex flex-col md:flex-row justify-between gap-4">
+                    <Button variant="outline" onClick={handleClearCart}>
+                      {t("cart.clearCart")}
+                    </Button>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">{t("cart.subtotal")}</p>
+                      <p className="text-2xl font-bold">{activeCart.totalAmount.toFixed(2)} €</p>
+                    </div>
+                  </CardFooter>
+                </Card>
               )}
             </div>
             
-            {/* Résumé de la commande */}
+            {/* Résumé et actions */}
             <div>
               <Card>
                 <CardHeader>
@@ -313,52 +447,59 @@ export default function CartPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("cart.subtotal")}</span>
-                      <span>{cart ? cart.totalAmount.toFixed(2) : "0.00"} €</span>
+                      <span>{t("cart.subtotal")}</span>
+                      <span>{(activeCart?.totalAmount || 0).toFixed(2)} €</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t("cart.shipping")}</span>
-                      <span>{t("cart.shippingFree")}</span>
+                      <span>{t("cart.shipping")}</span>
+                      <span>{t("cart.free")}</span>
                     </div>
-                    
                     <Separator />
-                    
-                    <div className="flex justify-between font-bold text-lg">
+                    <div className="flex justify-between font-bold">
                       <span>{t("cart.total")}</span>
-                      <span>{cart ? cart.totalAmount.toFixed(2) : "0.00"} €</span>
-                    </div>
-                    
-                    <div className="text-sm text-muted-foreground">
-                      {t("cart.taxesIncluded")} {t("cart.shippingCalculatedLater")}
+                      <span>{(activeCart?.totalAmount || 0).toFixed(2)} €</span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex flex-col gap-4">
+                <CardFooter className="flex flex-col gap-3">
+                  {currentUser ? (
                   <Button 
-                    className="w-full" 
+                      className="w-full py-6" 
                     size="lg"
-                    disabled={!cart || cart.items.length === 0}
                     onClick={handleProceedToCheckout}
+                      disabled={!activeCart || activeCart.items.length === 0}
                   >
                     <CreditCard className="mr-2 h-5 w-5" />
-                    {t("cart.proceedToPayment")}
+                      {t("cart.proceedToCheckout")}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        className="w-full py-6" 
+                        size="lg"
+                        onClick={handleProceedToCheckout}
+                        disabled={!activeCart || activeCart.items.length === 0}
+                      >
+                        <User className="mr-2 h-5 w-5" />
+                        {t("cart.checkoutWithAccount")}
                   </Button>
                   
                   <Button 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={() => navigate('/bookshop')}
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    {t("cart.continueShopping")}
+                        className="w-full py-6" 
+                        size="lg"
+                        variant="secondary"
+                        onClick={handleGuestCheckout}
+                        disabled={!activeCart || activeCart.items.length === 0}
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        {t("cart.guestCheckout")}
                   </Button>
                   
-                  <div className="flex items-start gap-2 mt-2 text-sm text-muted-foreground">
-                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <p>
-                      {t("cart.itemsNotReserved")} {t("cart.finalizeOrder")} {t("cart.guaranteeAvailability")}
-                    </p>
-                  </div>
+                      <p className="text-sm text-muted-foreground text-center mt-2">
+                        {t("cart.guestCheckoutHint")}
+                      </p>
+                    </>
+                  )}
                 </CardFooter>
               </Card>
             </div>

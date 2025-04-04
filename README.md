@@ -216,6 +216,10 @@ La boutique de livres d'Actualiter offre une expérience d'achat complète :
 - Panier d'achat avec gestion des quantités
 - Processus de commande avec formulaire d'adresse de livraison
 - Page de confirmation de commande
+- **NOUVEAU** : Achat sans compte (guest checkout) avec option de création ultérieure
+- **NOUVEAU** : Détection des utilisateurs existants pendant le checkout invité
+- **NOUVEAU** : Fidélisation post-achat avec incitations à créer un compte
+- **NOUVEAU** : Téléchargement direct des livres numériques même sans compte
 
 ### Pour les administrateurs
 - Interface de gestion complète des livres (ajout, modification, suppression)
@@ -224,6 +228,30 @@ La boutique de livres d'Actualiter offre une expérience d'achat complète :
 - Contrôle des prix et des stocks
 - Suivi et gestion des commandes avec mise à jour du statut
 - Statistiques de vente (revenus, nombre de commandes)
+
+## Achat sans compte (Guest Checkout)
+
+La nouvelle fonctionnalité d'achat sans compte permet aux visiteurs d'acheter des livres sans avoir à créer un compte, tout en offrant des incitations à s'inscrire ultérieurement :
+
+### Fonctionnement
+- **Bouton "Acheter sans compte"** : Clairement visible dans le panier pour faciliter la conversion
+- **Formulaire simplifié** : Ne demande que les informations essentielles (email, adresse de livraison, paiement)
+- **Option d'inscription à la newsletter** : Case à cocher facultative pour recevoir des offres sur les livres
+- **Détection des clients existants** : Si l'email existe déjà dans la base, propose de se connecter pour accéder à l'historique des commandes
+- **Lien "Mot de passe oublié"** facilement accessible
+
+### Fidélisation après achat
+- **Page de confirmation optimisée** : Incite à créer un compte avec des avantages clairement présentés
+- **Bonus exclusifs** : Propose des contenus exclusifs pour encourager l'inscription
+- **Email de confirmation** : Inclut un lien direct pour créer un compte facilement
+- **Pré-remplissage des données** : Utilise l'email et les informations de livraison déjà saisies pour simplifier l'inscription
+
+### Téléchargement des livres numériques
+- **Accès immédiat** : Les livres numériques sont directement accessibles après l'achat, même sans compte
+- **Lien de téléchargement par email** : Envoi automatique des liens de téléchargement sécurisés
+- **Accès permanent** : Incitation à créer un compte pour conserver un accès permanent aux achats
+
+Cette fonctionnalité améliore significativement le taux de conversion en éliminant la friction lors de l'achat tout en favorisant la création de comptes après la transaction.
 
 ## Structure du projet
 

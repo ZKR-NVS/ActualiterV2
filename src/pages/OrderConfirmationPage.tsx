@@ -1,86 +1,210 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, ShoppingBag, BookOpen } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle, ShoppingBag, Download, BookOpen, ArrowRight, Gift } from 'lucide-react';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import { getUserOrders, getBookById } from '@/lib/services/bookService';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export default function OrderConfirmationPage() {
+  const { t } = useLanguage();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { currentUser } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [hasDigitalProducts, setHasDigitalProducts] = useState(false);
   
-  // Ajout d'un effet pour rediriger après un délai (valeur temporaire pour le développement)
+  // État pour les achats en tant qu'invité
+  const orderIdFromState = location.state?.orderId;
+  const emailFromState = location.state?.email;
+  const isGuestFromState = location.state?.isGuest;
+  
   useEffect(() => {
-    // On pourrait ajouter un compteur ici qui redirige après un certain temps
-    const redirectTimer = setTimeout(() => {
-      // Décommenter la ligne suivante pour une redirection automatique
-      // navigate('/bookshop');
-    }, 30000); // 30 secondes
+    const checkOrderStatus = async () => {
+      try {
+        setLoading(true);
+        
+        // Si nous avons une commande invité depuis l'état de location
+        if (isGuestFromState && orderIdFromState) {
+          // Pour les invités, on a déjà l'information sur la commande
+          // Vérifier si la commande contient des livres numériques
+          setHasDigitalProducts(true); // Simplifié pour cet exemple, idéalement vérifier avec une API
+          setLoading(false);
+          return;
+        }
+        
+        // Pour les utilisateurs connectés
+        if (currentUser) {
+          const orders = await getUserOrders(currentUser.uid);
+          
+          if (orders.length > 0) {
+            // Récupérer la dernière commande
+            const latestOrder = orders[0];
+            
+            // Vérifier si la commande contient des livres numériques
+            const books = latestOrder.books || [];
+            let hasDigital = false;
+            
+            for (const bookItem of books) {
+              try {
+                const book = await getBookById(bookItem.bookId);
+                if (book && book.pdfUrl) {
+                  hasDigital = true;
+                  break;
+                }
+              } catch (error) {
+                console.error(`Erreur lors de la récupération du livre ${bookItem.bookId}:`, error);
+              }
+            }
+            
+            setHasDigitalProducts(hasDigital);
+          }
+        } else if (!isGuestFromState) {
+          // L'utilisateur n'est pas connecté et ce n'est pas une commande invité
+          // Rediriger vers la page d'accueil
+          navigate('/');
+          toast({
+            title: t("errors.error"),
+            description: t("errors.accessDenied"),
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de la commande:", error);
+        toast({
+          title: t("errors.error"),
+          description: t("errors.orderCheckError"),
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    return () => clearTimeout(redirectTimer);
-  }, [navigate]);
+    checkOrderStatus();
+  }, [currentUser, navigate, toast, t, isGuestFromState, orderIdFromState]);
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-8 min-h-screen flex justify-center items-center">
+          <LoadingSpinner size="lg" text={t("loading.processingOrder")} />
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout>
-      <div className="container mx-auto py-12 px-4">
-        <Card className="max-w-3xl mx-auto">
-          <CardContent className="pt-6 pb-8 flex flex-col items-center text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-            
-            <h1 className="text-3xl font-bold mb-2">Commande confirmée!</h1>
-            <p className="text-muted-foreground mb-8 max-w-lg">
-              Merci pour votre achat. Un e-mail de confirmation a été envoyé à votre adresse avec les détails de votre commande.
-            </p>
-            
-            <div className="w-full max-w-md bg-accent/20 rounded-lg p-6 mb-8">
-              <h2 className="font-semibold text-lg mb-4">Détails de la commande</h2>
-              
-              <div className="space-y-3 text-left">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Numéro de commande:</span>
-                  <span className="font-medium">ORD-{Math.floor(Math.random() * 10000).toString().padStart(4, '0')}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date:</span>
-                  <span className="font-medium">{new Date().toLocaleDateString()}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status:</span>
-                  <span className="font-medium text-green-600">Confirmée</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Méthode de paiement:</span>
-                  <span className="font-medium">Carte de crédit</span>
+      <div className="container mx-auto py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          <Card className="border-green-300 shadow-lg">
+            <CardHeader className="text-center border-b">
+              <div className="flex justify-center mb-4">
+                <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-lg mb-8">
-              <Button 
-                variant="outline" 
-                className="flex items-center justify-center gap-2"
-                onClick={() => navigate('/bookshop')}
-              >
-                <BookOpen className="h-4 w-4" />
-                Continuer vos achats
-              </Button>
+              <CardTitle className="text-2xl sm:text-3xl text-green-700">
+                {t("orderConfirmation.thankYou")}
+              </CardTitle>
+              <CardDescription className="text-lg">
+                {t("orderConfirmation.orderSuccess")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-6">
+                {isGuestFromState && (
+                  <Card className="bg-primary/10 border-primary/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Gift className="h-5 w-5 mr-2" />
+                        {t("orderConfirmation.createAccountTitle")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="mb-4">
+                        {t("orderConfirmation.createAccountDescription")}
+                      </p>
+                      <ul className="space-y-2 mb-4">
+                        <li className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                          <span>{t("orderConfirmation.benefit1")}</span>
+                        </li>
+                        <li className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                          <span>{t("orderConfirmation.benefit2")}</span>
+                        </li>
+                        <li className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                          <span>{t("orderConfirmation.benefit3")}</span>
+                        </li>
+                      </ul>
+                      <Button 
+                        className="w-full"
+                        onClick={() => navigate('/register', { state: { email: emailFromState }})}
+                      >
+                        {t("orderConfirmation.createAccount")}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
               
-              <Button 
-                className="flex items-center justify-center gap-2"
-                onClick={() => navigate('/orders')}
-              >
-                <ShoppingBag className="h-4 w-4" />
-                Voir mes commandes
+                <div className="rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
+                  <h3 className="font-medium text-lg mb-2">{t("orderConfirmation.orderDetails")}</h3>
+                  
+                  {isGuestFromState ? (
+                    <p className="text-muted-foreground">
+                      {t("orderConfirmation.confirmation1")} <span className="font-medium">{emailFromState}</span> {t("orderConfirmation.confirmation2")}
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      {t("orderConfirmation.confirmationAccount")}
+                    </p>
+                  )}
+                </div>
+                
+                {hasDigitalProducts && (
+                  <div className="rounded-lg p-4 border border-primary">
+                    <h3 className="font-medium text-lg mb-2 flex items-center">
+                      <Download className="h-5 w-5 mr-2 text-primary" />
+                      {t("orderConfirmation.digitalProducts")}
+                    </h3>
+                    
+                    {isGuestFromState ? (
+                      <p className="text-muted-foreground mb-4">
+                        {t("orderConfirmation.downloadInstructions")}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground mb-4">
+                        {t("orderConfirmation.accessDigitalProducts")}
+                      </p>
+                    )}
+                    
+                    <Button variant="outline" className="w-full" onClick={() => navigate('/profile/downloads')}>
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      {t("orderConfirmation.accessDownloads")}
+                    </Button>
+                </div>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col sm:flex-row gap-4">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/')}>
+                {t("common.backToHome")}
               </Button>
+              <Button className="w-full sm:w-auto" onClick={() => navigate('/bookshop')}>
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                {t("orderConfirmation.continueShopping")}
+              </Button>
+            </CardFooter>
+          </Card>
             </div>
-            
-            <p className="text-sm text-muted-foreground">
-              Si vous avez des questions concernant votre commande, n'hésitez pas à nous contacter.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </Layout>
   );

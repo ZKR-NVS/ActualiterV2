@@ -12,7 +12,8 @@ import {
   Timestamp,
   serverTimestamp,
   FieldValue,
-  setDoc
+  setDoc,
+  limit
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase';
@@ -648,6 +649,86 @@ export const clearCart = async (userId: string) => {
     };
   } catch (error) {
     console.error(`Erreur lors du vidage du panier pour l'utilisateur ${userId}:`, error);
+    throw error;
+  }
+};
+
+// Interface pour l'achat sans compte (guest)
+export interface GuestCheckoutData {
+  email: string;
+  shippingAddress: {
+    fullName: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+  };
+  paymentMethod: string;
+  items: CartItem[];
+  totalAmount: number;
+  subscribeToNewsletter?: boolean;
+}
+
+// Vérifier si un email existe déjà dans la base utilisateurs
+export const checkIfEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('email', '==', email), limit(1));
+    const querySnapshot = await getDocs(q);
+    
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error(`Erreur lors de la vérification de l'email ${email}:`, error);
+    throw error;
+  }
+};
+
+// Créer une commande pour un utilisateur invité
+export const createGuestOrder = async (guestData: GuestCheckoutData) => {
+  try {
+    // Créer la commande dans Firestore
+    const orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & { guestEmail: string } = {
+      guestEmail: guestData.email,
+      books: guestData.items.map(item => ({
+        bookId: item.bookId,
+        title: item.title,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalAmount: guestData.totalAmount,
+      status: 'pending',
+      shippingAddress: guestData.shippingAddress,
+      paymentMethod: guestData.paymentMethod,
+      paymentStatus: 'pending'
+    };
+    
+    // Ajouter à la collection orders avec un ID généré automatiquement
+    const ordersRef = collection(db, 'orders');
+    const docRef = await addDoc(ordersRef, {
+      ...orderData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    // Si l'utilisateur souhaite s'abonner à la newsletter
+    if (guestData.subscribeToNewsletter) {
+      // Ajouter à la collection newsletter
+      const newsletterRef = collection(db, 'newsletter');
+      await addDoc(newsletterRef, {
+        email: guestData.email,
+        subscribedAt: serverTimestamp()
+      });
+    }
+    
+    // Récupérer l'ordre créé
+    const orderSnapshot = await getDoc(docRef);
+    return {
+      id: orderSnapshot.id,
+      ...orderSnapshot.data()
+    } as Order & { id: string, guestEmail: string };
+  } catch (error) {
+    console.error(`Erreur lors de la création de la commande invité:`, error);
     throw error;
   }
 };
