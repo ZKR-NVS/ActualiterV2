@@ -9,7 +9,7 @@ import { CartProvider } from "@/lib/contexts/CartContext";
 import { getGlobalSettings, updateMaintenanceMode, synchronizeMaintenanceMode } from "@/lib/services/settingsService";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
-import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 // Pages
@@ -180,11 +180,33 @@ const AppContent = () => {
     // Écouteur pour le document global
     const globalUnsubscribe = onSnapshot(
       doc(db, "settings", "global"),
-      (docSnapshot) => {
+      async (docSnapshot) => {
         if (docSnapshot.exists()) {
           const data = docSnapshot.data();
           console.log(`Changement détecté dans le document global: maintenanceMode=${data.maintenanceMode}`);
+          
+          // Mettre à jour l'état de l'application
           setIsMaintenanceMode(data.maintenanceMode);
+          
+          // Synchroniser avec le document site
+          try {
+            const siteRef = doc(db, "settings", "site");
+            const siteDoc = await getDoc(siteRef);
+            
+            if (siteDoc.exists()) {
+              // Vérifier si une synchronisation est nécessaire
+              const siteData = siteDoc.data();
+              if (siteData.general && siteData.general.maintenanceMode !== data.maintenanceMode) {
+                console.log(`Synchronisation automatique de global vers site: ${data.maintenanceMode}`);
+                await updateDoc(siteRef, {
+                  "general.maintenanceMode": data.maintenanceMode,
+                  "lastUpdated": new Date().toISOString()
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Erreur lors de la synchronisation automatique global -> site:", error);
+          }
         }
       },
       (error) => {
@@ -195,21 +217,48 @@ const AppContent = () => {
     // Écouteur pour le document site (au cas où global ne serait pas disponible)
     const siteUnsubscribe = onSnapshot(
       doc(db, "settings", "site"),
-      (docSnapshot) => {
+      async (docSnapshot) => {
         if (docSnapshot.exists()) {
           const data = docSnapshot.data();
           if (data.general && data.general.maintenanceMode !== undefined) {
             console.log(`Changement détecté dans le document site: maintenanceMode=${data.general.maintenanceMode}`);
-            // Ne mettre à jour que si le document global n'existe pas ou n'est pas accessible
-            const globalRef = doc(db, "settings", "global");
-            getDoc(globalRef).then(globalDoc => {
-              if (!globalDoc.exists()) {
+            
+            // Vérifier la cohérence avec le document global et synchroniser si nécessaire
+            try {
+              const globalRef = doc(db, "settings", "global");
+              const globalDoc = await getDoc(globalRef);
+              
+              if (globalDoc.exists()) {
+                const globalData = globalDoc.data();
+                
+                // Si les valeurs sont différentes, mettre à jour global depuis site
+                if (globalData.maintenanceMode !== data.general.maintenanceMode) {
+                  console.log(`Synchronisation automatique de site vers global: ${data.general.maintenanceMode}`);
+                  await updateDoc(globalRef, {
+                    "maintenanceMode": data.general.maintenanceMode,
+                    "lastUpdated": new Date().toISOString()
+                  });
+                }
+                
+                // Dans tous les cas, mettre à jour l'état de l'application pour refléter le changement
+                setIsMaintenanceMode(data.general.maintenanceMode);
+              } else {
+                // Si le document global n'existe pas, le créer
+                console.log(`Création du document global avec maintenanceMode: ${data.general.maintenanceMode}`);
+                await setDoc(globalRef, {
+                  "maintenanceMode": data.general.maintenanceMode,
+                  "lastUpdated": new Date().toISOString()
+                });
+                
+                // Mettre à jour l'état de l'application
                 setIsMaintenanceMode(data.general.maintenanceMode);
               }
-            }).catch(() => {
-              // En cas d'erreur d'accès au document global, utiliser site
+            } catch (error) {
+              console.error("Erreur lors de la synchronisation automatique site -> global:", error);
+              
+              // En cas d'erreur, mettre quand même à jour l'état de l'application
               setIsMaintenanceMode(data.general.maintenanceMode);
-            });
+            }
           }
         }
       },
