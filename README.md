@@ -93,6 +93,7 @@ npm install
 
 # Démarrer le serveur de développement
 npm run dev
+npm run deploy
 ```
 
 ## Fonctionnalités de la boutique de livres
