@@ -106,6 +106,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Gestion des cas où les titres des livres sont manquants ou corrompus
 - **CORRIGÉ** : Problème empêchant les utilisateurs non connectés d'accéder au panier
 - **AMÉLIORÉ** : Notifications d'ajout au panier avec bouton direct vers le panier
+- **AMÉLIORÉ** : Traduction complète du formulaire de commande invité et des éléments de paiement
+- **NOUVEAU** : Support multilingue complet pour le processus d'achat sans compte
 
 ### v1.0.15
 - Correction du formatage des textes conditionnels dans les traductions (fonction vs objet)
@@ -677,7 +679,16 @@ Actualiter est désormais entièrement traduit en français et en anglais :
 - **Persistance des préférences** - Sauvegarde de la langue choisie dans le localStorage
 - **Sélecteur de langue** - Interface simple permettant de changer la langue depuis n'importe quelle page
 - **Extensibilité** - Architecture conçue pour faciliter l'ajout de nouvelles langues
+- **Traduction complète** - Tous les composants de l'application sont traduits, y compris le panier et le processus d'achat
+- **Formulaires multilingues** - Les formulaires d'achat, de paiement et les messages de confirmation sont entièrement localisés
 
 Les utilisateurs peuvent changer la langue via :
 - Le sélecteur de langue dans la barre de navigation principale
 - Les paramètres de leur profil utilisateur
+
+La boutique et le processus d'achat bénéficient d'une traduction complète :
+- Pages de catalogue et de détail des produits
+- Panier d'achat et processus de commande
+- Formulaire d'achat sans compte
+- Options de paiement et messages de confirmation
+- Emails de confirmation de commande
