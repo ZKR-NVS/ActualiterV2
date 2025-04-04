@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { ShoppingCart, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface BookCardProps {
   book: Book;
@@ -12,6 +13,7 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book, onAddToCart }: BookCardProps) {
+  const { t } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
   
@@ -20,94 +22,81 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
     ? book.price - (book.price * book.discountPercentage! / 100)
     : book.price;
   
+  // Gérer les erreurs d'image
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/placeholder.svg';
+  };
+  
   return (
     <Card 
-      className="overflow-hidden transition-all duration-300 hover:shadow-lg"
+      className="h-full overflow-hidden transition-shadow hover:shadow-md"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[3/4] overflow-hidden">
-        {/* Image du livre */}
-        <img 
-          src={book.coverImage || '/placeholder.svg'} 
-          alt={book.title} 
-          className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-100'}`}
-        />
-        
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-2">
-          {book.featured && (
-            <Badge variant="secondary" className="bg-yellow-500 text-white hover:bg-yellow-600">
-              En vedette
-            </Badge>
-          )}
-          
-          {hasDiscount && (
-            <Badge variant="destructive">
-              -{book.discountPercentage}%
-            </Badge>
-          )}
-          
-          {book.stock <= 5 && book.stock > 0 && (
-            <Badge variant="outline" className="bg-orange-100">
-              Plus que {book.stock} en stock
-            </Badge>
-          )}
-          
-          {book.stock === 0 && (
-            <Badge variant="outline" className="bg-red-100">
-              Rupture de stock
-            </Badge>
-          )}
+      <div className="relative cursor-pointer" onClick={() => navigate(`/book/${book.id}`)}>
+        <div className="aspect-[3/4] w-full overflow-hidden bg-accent/10">
+          <img 
+            src={book.coverImage || '/placeholder.svg'} 
+            alt={book.title}
+            className="h-full w-full object-cover transition-transform duration-300 ease-in-out hover:scale-105"
+            onError={handleImageError}
+          />
         </div>
         
-        {/* Bouton de détails qui apparaît au survol */}
-        <div
-          className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <Button 
-            variant="secondary" 
-            className="flex items-center gap-2" 
-            onClick={() => navigate(`/book/${book.id}`)}
-          >
-            <Eye size={16} />
-            Voir les détails
-          </Button>
+        {/* Badge de remise */}
+        {book.discountPercentage && book.discountPercentage > 0 && (
+          <Badge className="absolute top-2 right-2 bg-destructive text-white">
+            -{book.discountPercentage}%
+          </Badge>
+        )}
+        
+        {/* Badge "En vedette" */}
+        {book.featured && (
+          <Badge className="absolute top-2 left-2 bg-primary text-white">
+            {t('bookshop.featured')}
+          </Badge>
+        )}
+        
+        {/* Prix et ajout au panier sur hover */}
+        <div className={`absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-white font-bold text-lg">
+                {book.discountPercentage && book.discountPercentage > 0 ? (
+                  <>
+                    <span className="text-red-300 line-through text-sm mr-2">{book.price.toFixed(2)}€</span>
+                    <span>{(book.price * (1 - book.discountPercentage / 100)).toFixed(2)}€</span>
+                  </>
+                ) : (
+                  <span>{book.price.toFixed(2)}€</span>
+                )}
+              </p>
+              {book.stock > 0 ? (
+                <p className="text-green-300 text-xs">{t('bookshop.inStock')}</p>
+              ) : (
+                <p className="text-red-300 text-xs">{t('bookshop.outOfStock')}</p>
+              )}
+            </div>
+            <Button 
+              size="icon"
+              variant="secondary"
+              className="rounded-full"
+              disabled={book.stock <= 0}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onAddToCart) onAddToCart();
+              }}
+            >
+              <ShoppingCart className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
       
-      <CardContent className="pt-4">
-        <h3 className="font-semibold text-lg line-clamp-1">{book.title}</h3>
-        <p className="text-muted-foreground text-sm mb-2">par {book.author}</p>
-        
-        <div className="flex items-baseline mt-2">
-          {hasDiscount ? (
-            <>
-              <span className="text-lg font-bold text-primary">{discountedPrice.toFixed(2)} €</span>
-              <span className="text-sm text-muted-foreground line-through ml-2">{book.price.toFixed(2)} €</span>
-            </>
-          ) : (
-            <span className="text-lg font-bold text-primary">{book.price.toFixed(2)} €</span>
-          )}
-        </div>
-        
-        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-          {book.description || "Aucune description disponible."}
-        </p>
+      <CardContent className="p-4">
+        <h3 className="font-bold line-clamp-1">{book.title}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-1">{book.author}</p>
       </CardContent>
-      
-      <CardFooter>
-        <Button 
-          onClick={onAddToCart} 
-          className="w-full" 
-          disabled={book.stock === 0}
-        >
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          {book.stock === 0 ? "Indisponible" : "Ajouter au panier"}
-        </Button>
-      </CardFooter>
     </Card>
   );
 } 

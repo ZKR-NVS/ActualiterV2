@@ -97,15 +97,12 @@ return (
 ```
 
 ## Corrections récentes
-- Amélioration du recadrage des images de livres pour garantir un ratio 3:4 cohérent dans toute l'application
-- Correction du problème d'interface dans le formulaire de création de livre (bouton indiquant incorrectement "Création..." avec le texte normal)
-- Correction des incohérences du mode maintenance entre les documents "global" et "site"
-- Ajout d'une fonction de synchronisation du mode maintenance entre tous les documents
-- Ajout d'un bouton pour synchroniser manuellement l'état du mode maintenance
-- Correction de l'erreur TypeScript dans `ProfilePage.tsx` (remplacement de `isLoading` par `loading`)
-- Correction de l'affichage du rôle dans le profil utilisateur (n'apparaît plus pour les utilisateurs standards)
-- Mise à jour de la page d'accueil pour utiliser le système de traduction
-- Ajout de traductions complètes pour toutes les sections de la page d'accueil
+- Implémentation d'une version sans Firebase Storage pour la boutique de livres (utilisation d'URLs externes ou d'images par défaut)
+- Amélioration de la gestion des erreurs lors du téléchargement d'images vers Firebase Storage, avec une solution de contournement pour les problèmes CORS
+- Amélioration de l'interface utilisateur pour la création et l'édition de livres
+- Correction de la mise en page sur les petits écrans
+- Ajout de la fonctionnalité de recherche dans la liste des livres
+- Implémentation du système de recadrage d'images pour assurer un ratio 3:4 cohérent dans toute l'application
 - Amélioration de l'affichage du titre avec mise en évidence sur la page d'accueil
 - Correction des erreurs TypeScript dans `Header.tsx` (remplacement de `isLoading` par `loading`)
 - Correction des erreurs TypeScript dans `CartPage.tsx` (ajout de `updatedAt` aux objets de panier)

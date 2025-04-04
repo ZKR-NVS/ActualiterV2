@@ -100,9 +100,8 @@ export default function BookFormDialog({
       setSubmissionError(null);
 
       try {
-        const coverImageFile = fileInputRef.current?.files?.[0];
-        
-        const bookData = {
+        // Données de base du livre
+        const bookData: Partial<Book> = {
           title: data.title,
           author: data.author,
           description: data.description || '',
@@ -111,30 +110,24 @@ export default function BookFormDialog({
           language: data.language || 'fr',
           pages: data.pages ? Number(data.pages) : 0,
           publisher: data.publisher || '',
-          categories: data.category ? [data.category] : [],
+          category: data.category, // Utilisation directe de category au lieu de categories
           coverImage: coverImagePreview || '/placeholder.svg',
           rating: 0,
           reviewCount: 0,
           price: data.price ? Number(data.price) : 0,
           stock: data.stock ? Number(data.stock) : 0,
-          pdfUrl: data.pdfUrl || '',
           featured: data.featured || false,
-          discountPercentage: data.discountPercentage || 0
+          discountPercentage: data.discountPercentage || 0,
+          pdfUrl: ''
         };
-
-        // Assurer que toutes les propriétés requises sont définies
-        const completeData = {
-          ...bookData,
-          coverImage: bookData.coverImage || '/placeholder.svg',
-        } as Book;
 
         if (book) {
           // Mettre à jour un livre existant
           const updatedBook = await updateBook(
             book.id!, 
-            completeData, 
-            coverImageFile,
-            pdfFile
+            bookData, 
+            null, // Pas de téléchargement de fichier, on utilise directement l'URL
+            null
           ).catch(error => {
             console.error("Erreur lors de la mise à jour du livre:", error);
             throw error;
@@ -149,9 +142,9 @@ export default function BookFormDialog({
         } else {
           // Ajouter un nouveau livre
           const newBook = await addBook(
-            completeData, 
-            coverImageFile,
-            pdfFile
+            bookData as Omit<Book, 'id' | 'createdAt' | 'updatedAt'>, 
+            null, // Pas de téléchargement de fichier, on utilise directement l'URL
+            null
           ).catch(error => {
             console.error("Erreur lors de l'ajout du livre:", error);
             throw error;
@@ -173,33 +166,24 @@ export default function BookFormDialog({
       } catch (error: any) {
         console.error('Erreur lors de la soumission:', error);
         
-        // Message d'erreur spécifique pour les erreurs CORS de Firebase Storage
-        if (error?.message?.includes('cors') || error?.message?.includes('CORS')) {
-          setSubmissionError('Erreur lors du téléchargement de l\'image. Le livre a été créé avec l\'image par défaut.');
-          toast({
-            title: 'Avertissement',
-            description: 'Problème de CORS lors du téléchargement de l\'image. Le livre a été créé avec l\'image par défaut.',
-            variant: "default"
-          });
-        } else {
-          // Message d'erreur général
-          setSubmissionError(`Une erreur s'est produite: ${error?.message || 'Erreur inconnue'}`);
-          toast({
-            title: 'Erreur',
-            description: `Une erreur s'est produite lors de la création du livre: ${error?.message || 'Erreur inconnue'}`,
-            variant: "destructive"
-          });
-        }
+        // Message d'erreur général
+        setSubmissionError(`Une erreur s'est produite: ${error?.message || 'Erreur inconnue'}`);
+        toast({
+          title: 'Erreur',
+          description: `Une erreur s'est produite lors de la création du livre: ${error?.message || 'Erreur inconnue'}`,
+          variant: "destructive"
+        });
       } finally {
         // Toujours réinitialiser l'état de soumission, qu'il y ait une erreur ou non
         setIsSubmitting(false);
       }
     },
-    [book, coverImagePreview, pdfFile, onOpenChange, form, toast]
+    [book, coverImagePreview, form, onOpenChange, onSave, toast]
   );
   
   /**
    * Recadre l'image pour qu'elle s'adapte au ratio 3:4 (aspect-[3/4]) utilisé dans l'application
+   * et retourne l'URL de l'image recadrée
    * @param imageDataUrl L'URL de données de l'image
    * @returns Une promesse qui se résout en une URL de données de l'image recadrée
    */
@@ -431,65 +415,15 @@ export default function BookFormDialog({
                 <h3 className="text-lg font-medium">Fichier PDF du livre</h3>
                 
                 <div className="border rounded-md p-4">
-                  {hasPdf || pdfFile ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <FileText className="h-8 w-8 text-primary mr-3" />
-                        <div>
-                          <p className="font-medium">{pdfFile ? pdfFile.name : "Fichier PDF disponible"}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {pdfFile ? `${(pdfFile.size / (1024 * 1024)).toFixed(2)} MB` : book?.pdfUrl ? "PDF existant" : ""}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {book?.pdfUrl && !pdfFile && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(book.pdfUrl, '_blank')}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Voir
-                          </Button>
-                        )}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={removePdf}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Supprimer
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center py-6">
-                      <FileUp className="h-12 w-12 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Aucun fichier PDF n'a été ajouté
-                      </p>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        ref={pdfInputRef}
-                        onChange={handlePdfChange}
-                        className="hidden"
-                        id="pdf-upload"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => pdfInputRef.current?.click()}
-                      >
-                        <FileUp className="mr-2 h-4 w-4" />
-                        Ajouter un PDF
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex flex-col items-center py-6">
+                    <FileUp className="h-12 w-12 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Le téléchargement de PDF n'est pas disponible sans Firebase Storage
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Veuillez fournir une URL externe pour le PDF ou ne pas utiliser cette fonctionnalité
+                    </p>
+                  </div>
                 </div>
               </div>
               
