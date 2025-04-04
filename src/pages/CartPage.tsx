@@ -256,12 +256,12 @@ export default function CartPage() {
     
     if (activeCart && activeCart.items.length > 0) {
       if (currentUser) {
-      setIsCheckingOut(true);
+        setIsCheckingOut(true);
         setIsGuestCheckout(false);
       } else {
-        // Proposer la connexion ou l'achat en tant qu'invité
-        setIsGuestCheckout(false);
-        navigate('/login', { state: { returnTo: '/cart' } });
+        // Activer directement le checkout invité au lieu de rediriger vers login
+        setIsGuestCheckout(true);
+        setIsCheckingOut(false);
       }
     } else {
       toast({

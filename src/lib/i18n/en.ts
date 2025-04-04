@@ -190,6 +190,7 @@ export default {
   cart: {
     yourCart: "Your Cart",
     items: "Items",
+    cartItems: "Cart Items",
     clearCart: "Clear Cart",
     cartCleared: "Cart Cleared",
     cartClearedSuccess: "Your cart has been successfully cleared",
@@ -202,17 +203,23 @@ export default {
     itemRemovedSuccess: "The item has been removed from your cart",
     subtotal: "Subtotal",
     shipping: "Shipping",
+    free: "Free",
     shippingFree: "Free",
     shippingCalculatedLater: "Exact shipping costs will be calculated during checkout.",
     total: "Total",
     taxesIncluded: "VAT included.",
     proceedToPayment: "Proceed to Payment",
+    proceedToCheckout: "Proceed to Checkout",
     continueShopping: "Continue Shopping",
     itemsNotReserved: "Items are not reserved.",
     finalizeOrder: "Complete your order to guarantee availability.",
     guaranteeAvailability: "Prices and availability subject to change.",
     loadingCart: "Loading cart...",
-    orderSummary: "Order Summary"
+    orderSummary: "Order Summary",
+    checkoutWithAccount: "Checkout with Account",
+    guestCheckout: "Guest Checkout",
+    guestCheckoutHint: "Guest checkout allows you to order quickly without creating an account.",
+    remove: "Remove"
   },
   errors: {
     error: "Error",

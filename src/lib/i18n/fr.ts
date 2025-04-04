@@ -190,6 +190,7 @@ export default {
   cart: {
     yourCart: "Votre panier",
     items: "Articles",
+    cartItems: "Articles du panier",
     clearCart: "Vider le panier",
     cartCleared: "Panier vidé",
     cartClearedSuccess: "Votre panier a été vidé avec succès",
@@ -202,17 +203,23 @@ export default {
     itemRemovedSuccess: "L'article a été supprimé du panier",
     subtotal: "Sous-total",
     shipping: "Frais de livraison",
+    free: "Gratuit",
     shippingFree: "Gratuit",
     shippingCalculatedLater: "Les frais de livraison exacts seront calculés lors de la finalisation de la commande.",
     total: "Total",
     taxesIncluded: "TVA incluse.",
     proceedToPayment: "Procéder au paiement",
+    proceedToCheckout: "Procéder au paiement",
     continueShopping: "Continuer les achats",
     itemsNotReserved: "Les articles ne sont pas réservés.",
     finalizeOrder: "Finalisez votre commande pour garantir leur disponibilité.",
     guaranteeAvailability: "Les prix et la disponibilité peuvent changer.",
     loadingCart: "Chargement du panier...",
-    orderSummary: "Récapitulatif de la commande"
+    orderSummary: "Récapitulatif de la commande",
+    checkoutWithAccount: "Commander avec un compte",
+    guestCheckout: "Acheter sans compte",
+    guestCheckoutHint: "L'achat sans compte vous permet de commander rapidement sans avoir à créer un compte.",
+    remove: "Supprimer"
   },
   errors: {
     error: "Erreur",
