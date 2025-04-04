@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,6 +58,7 @@ export default function BookFormDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   
   // Formulaire avec validation
   const form = useForm<BookFormValues>({
@@ -92,59 +93,110 @@ export default function BookFormDialog({
     }
   });
   
-  const onSubmit = async (data: BookFormValues) => {
-    try {
+  const onSubmit = useCallback(
+    async (data: BookFormValues) => {
+      if (!open) return;
       setIsSubmitting(true);
-      
-      const coverImageFile = fileInputRef.current?.files?.[0];
-      
-      // S'assurer que toutes les propriétés requises sont définies
-      const completeData = {
-        title: data.title,
-        author: data.author,
-        description: data.description,
-        price: data.price,
-        stock: data.stock,
-        coverImage: coverImagePreview || '/placeholder.svg',
-        category: data.category,
-        isbn: data.isbn,
-        publicationDate: data.publicationDate,
-        publisher: data.publisher,
-        pages: data.pages,
-        language: data.language,
-        featured: data.featured,
-        discountPercentage: data.discountPercentage
-      };
-      
-      if (book) {
-        // Mettre à jour un livre existant
-        const updatedBook = await updateBook(
-          book.id!, 
-          completeData, 
-          coverImageFile,
-          pdfFile
-        );
-        onSave(updatedBook as Book);
-      } else {
-        // Ajouter un nouveau livre
-        const newBook = await addBook(
-          completeData, 
-          coverImageFile,
-          pdfFile
-        );
-        onSave(newBook as Book);
+      setSubmissionError(null);
+
+      try {
+        const coverImageFile = fileInputRef.current?.files?.[0];
+        
+        const bookData = {
+          title: data.title,
+          author: data.author,
+          description: data.description || '',
+          publicationDate: data.publicationDate ? new Date(data.publicationDate) : new Date(),
+          isbn: data.isbn || '',
+          language: data.language || 'fr',
+          pages: data.pages ? Number(data.pages) : 0,
+          publisher: data.publisher || '',
+          categories: data.category ? [data.category] : [],
+          coverImage: coverImagePreview || '/placeholder.svg',
+          rating: 0,
+          reviewCount: 0,
+          price: data.price ? Number(data.price) : 0,
+          stock: data.stock ? Number(data.stock) : 0,
+          pdfUrl: data.pdfUrl || '',
+          featured: data.featured || false,
+          discountPercentage: data.discountPercentage || 0
+        };
+
+        // Assurer que toutes les propriétés requises sont définies
+        const completeData = {
+          ...bookData,
+          coverImage: bookData.coverImage || '/placeholder.svg',
+        } as Book;
+
+        if (book) {
+          // Mettre à jour un livre existant
+          const updatedBook = await updateBook(
+            book.id!, 
+            completeData, 
+            coverImageFile,
+            pdfFile
+          ).catch(error => {
+            console.error("Erreur lors de la mise à jour du livre:", error);
+            throw error;
+          });
+          onSave(updatedBook as Book);
+
+          toast({
+            title: "Livre mis à jour",
+            description: `Le livre "${data.title}" a été mis à jour avec succès.`,
+            variant: "default"
+          });
+        } else {
+          // Ajouter un nouveau livre
+          const newBook = await addBook(
+            completeData, 
+            coverImageFile,
+            pdfFile
+          ).catch(error => {
+            console.error("Erreur lors de l'ajout du livre:", error);
+            throw error;
+          });
+          onSave(newBook as Book);
+
+          toast({
+            title: "Livre créé",
+            description: `Le livre "${data.title}" a été créé avec succès.`,
+            variant: "default"
+          });
+        }
+
+        // Réinitialiser les champs du formulaire et fermer le modal
+        form.reset();
+        setCoverImagePreview(null);
+        setPdfFile(null);
+        onOpenChange(false);
+      } catch (error: any) {
+        console.error('Erreur lors de la soumission:', error);
+        
+        // Message d'erreur spécifique pour les erreurs CORS de Firebase Storage
+        if (error?.message?.includes('cors') || error?.message?.includes('CORS')) {
+          setSubmissionError('Erreur lors du téléchargement de l\'image. Le livre a été créé avec l\'image par défaut.');
+          toast({
+            title: 'Avertissement',
+            description: 'Problème de CORS lors du téléchargement de l\'image. Le livre a été créé avec l\'image par défaut.',
+            variant: "default"
+          });
+        } else {
+          // Message d'erreur général
+          setSubmissionError(`Une erreur s'est produite: ${error?.message || 'Erreur inconnue'}`);
+          toast({
+            title: 'Erreur',
+            description: `Une erreur s'est produite lors de la création du livre: ${error?.message || 'Erreur inconnue'}`,
+            variant: "destructive"
+          });
+        }
+      } finally {
+        // Toujours réinitialiser l'état de soumission, qu'il y ait une erreur ou non
+        setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement du livre:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement du livre. Veuillez réessayer.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+    [book, coverImagePreview, pdfFile, onOpenChange, form, toast]
+  );
   
   /**
    * Recadre l'image pour qu'elle s'adapte au ratio 3:4 (aspect-[3/4]) utilisé dans l'application
@@ -356,15 +408,15 @@ export default function BookFormDialog({
                     
                     {coverImagePreview && (
                       <>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => setCoverImagePreview(null)}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setCoverImagePreview(null)}
                           className="text-destructive hover:text-destructive mb-2"
-                        >
+                      >
                           <X className="mr-2 h-4 w-4" />
-                          Supprimer l'image
-                        </Button>
+                        Supprimer l'image
+                      </Button>
                         <p className="text-xs text-muted-foreground mt-2">
                           L'image sera automatiquement recadrée au format 3:4 pour s'adapter parfaitement au cadre d'affichage.
                         </p>

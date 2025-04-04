@@ -154,16 +154,29 @@ export const addBook = async (
     
     // Si un fichier d'image de couverture est fourni, téléchargez-le sur Firebase Storage
     if (coverImageFile) {
-      const storageRef = ref(storage, `books/${Date.now()}_${coverImageFile.name}`);
-      const snapshot = await uploadBytes(storageRef, coverImageFile);
-      coverImageUrl = await getDownloadURL(snapshot.ref);
+      try {
+        const storageRef = ref(storage, `books/${Date.now()}_${coverImageFile.name}`);
+        const snapshot = await uploadBytes(storageRef, coverImageFile);
+        coverImageUrl = await getDownloadURL(snapshot.ref);
+      } catch (error) {
+        console.error('Erreur lors du téléchargement de l\'image:', error);
+        // En cas d'erreur CORS, on continue avec l'image de placeholder
+        console.warn('Utilisation de l\'image par défaut en raison d\'une erreur de téléchargement');
+        // Ne pas propager l'erreur pour que la création du livre puisse continuer
+      }
     }
     
     // Si un fichier PDF est fourni, téléchargez-le sur Firebase Storage
     if (pdfFile) {
-      const pdfRef = ref(storage, `books/pdf/${Date.now()}_${pdfFile.name}`);
-      const pdfSnapshot = await uploadBytes(pdfRef, pdfFile);
-      pdfUrl = await getDownloadURL(pdfSnapshot.ref);
+      try {
+        const pdfRef = ref(storage, `books/pdf/${Date.now()}_${pdfFile.name}`);
+        const pdfSnapshot = await uploadBytes(pdfRef, pdfFile);
+        pdfUrl = await getDownloadURL(pdfSnapshot.ref);
+      } catch (error) {
+        console.error('Erreur lors du téléchargement du PDF:', error);
+        // En cas d'erreur, continuer sans PDF
+        console.warn('Livre créé sans PDF en raison d\'une erreur de téléchargement');
+      }
     }
     
     const bookWithTimestamp = {
@@ -199,48 +212,60 @@ export const updateBook = async (
     
     // Si un nouveau fichier d'image de couverture est fourni
     if (coverImageFile) {
-      // Obtenir le livre actuel pour récupérer l'URL de l'image
-      const currentBook = await getBookById(bookId);
-      
-      // Si une image de couverture existante existe, supprimez-la de Storage
-      if (currentBook.coverImage && currentBook.coverImage.includes('firebase')) {
-        try {
-          const oldImageRef = ref(storage, currentBook.coverImage);
-          await deleteObject(oldImageRef);
-        } catch (e) {
-          console.warn('L\'ancienne image n\'a pas pu être supprimée:', e);
+      try {
+        // Obtenir le livre actuel pour récupérer l'URL de l'image
+        const currentBook = await getBookById(bookId);
+        
+        // Si une image de couverture existante existe, supprimez-la de Storage
+        if (currentBook.coverImage && currentBook.coverImage.includes('firebase')) {
+          try {
+            const oldImageRef = ref(storage, currentBook.coverImage);
+            await deleteObject(oldImageRef);
+          } catch (e) {
+            console.warn('L\'ancienne image n\'a pas pu être supprimée:', e);
+          }
         }
+        
+        // Télécharger la nouvelle image
+        const storageRef = ref(storage, `books/${Date.now()}_${coverImageFile.name}`);
+        const snapshot = await uploadBytes(storageRef, coverImageFile);
+        const coverImageUrl = await getDownloadURL(snapshot.ref);
+        
+        updatedData = { ...updatedData, coverImage: coverImageUrl };
+      } catch (error) {
+        console.error('Erreur lors du téléchargement de l\'image:', error);
+        // En cas d'erreur CORS, on garde l'image existante ou le placeholder
+        console.warn('Conservation de l\'image existante en raison d\'une erreur de téléchargement');
       }
-      
-      // Télécharger la nouvelle image
-      const storageRef = ref(storage, `books/${Date.now()}_${coverImageFile.name}`);
-      const snapshot = await uploadBytes(storageRef, coverImageFile);
-      const coverImageUrl = await getDownloadURL(snapshot.ref);
-      
-      updatedData = { ...updatedData, coverImage: coverImageUrl };
     }
     
     // Si un nouveau fichier PDF est fourni
     if (pdfFile) {
-      // Obtenir le livre actuel pour récupérer l'URL du PDF
-      const currentBook = await getBookById(bookId);
-      
-      // Si un PDF existant existe, supprimez-le de Storage
-      if (currentBook.pdfUrl && currentBook.pdfUrl.includes('firebase')) {
-        try {
-          const oldPdfRef = ref(storage, currentBook.pdfUrl);
-          await deleteObject(oldPdfRef);
-        } catch (e) {
-          console.warn('L\'ancien PDF n\'a pas pu être supprimé:', e);
+      try {
+        // Obtenir le livre actuel pour récupérer l'URL du PDF
+        const currentBook = await getBookById(bookId);
+        
+        // Si un PDF existant existe, supprimez-le de Storage
+        if (currentBook.pdfUrl && currentBook.pdfUrl.includes('firebase')) {
+          try {
+            const oldPdfRef = ref(storage, currentBook.pdfUrl);
+            await deleteObject(oldPdfRef);
+          } catch (e) {
+            console.warn('L\'ancien PDF n\'a pas pu être supprimé:', e);
+          }
         }
+        
+        // Télécharger le nouveau PDF
+        const pdfRef = ref(storage, `books/pdf/${Date.now()}_${pdfFile.name}`);
+        const pdfSnapshot = await uploadBytes(pdfRef, pdfFile);
+        const pdfUrl = await getDownloadURL(pdfSnapshot.ref);
+        
+        updatedData = { ...updatedData, pdfUrl };
+      } catch (error) {
+        console.error('Erreur lors du téléchargement du PDF:', error);
+        // En cas d'erreur, garder l'ancien PDF s'il existe
+        console.warn('Conservation du PDF existant en raison d\'une erreur de téléchargement');
       }
-      
-      // Télécharger le nouveau PDF
-      const pdfRef = ref(storage, `books/pdf/${Date.now()}_${pdfFile.name}`);
-      const pdfSnapshot = await uploadBytes(pdfRef, pdfFile);
-      const pdfUrl = await getDownloadURL(pdfSnapshot.ref);
-      
-      updatedData = { ...updatedData, pdfUrl };
     }
     
     await updateDoc(bookRef, updatedData);

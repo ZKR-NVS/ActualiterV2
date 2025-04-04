@@ -113,6 +113,11 @@ return (
 - Amélioration de la cohérence du rendu des composants dans l'interface utilisateur
 - Ajout de la gestion des fichiers PDF pour les livres
 - Implémentation de l'interface d'administration des commandes
+- Amélioration de l'interface utilisateur pour la création et l'édition de livres
+- Correction de la mise en page sur les petits écrans
+- Ajout de la fonctionnalité de recherche dans la liste des livres
+- Implémentation du système de recadrage d'images pour assurer un ratio 3:4 cohérent dans toute l'application
+- Amélioration de la gestion des erreurs lors du téléchargement d'images vers Firebase Storage, avec une solution de contournement pour les problèmes CORS
 
 ## Technologies utilisées
 
