@@ -68,12 +68,12 @@ export default function BookFormDialog({
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookSchema),
     defaultValues: book ? {
-      title: book.title,
-      author: book.author,
+      title: book.title || '',
+      author: book.author || '',
       description: book.description || '',
-      price: book.price,
-      stock: book.stock,
-      category: book.category,
+      price: book.price || 0,
+      stock: book.stock || 0,
+      category: book.category || '',
       isbn: book.isbn || '',
       publicationDate: book.publicationDate || '',
       publisher: book.publisher || '',
@@ -103,11 +103,54 @@ export default function BookFormDialog({
   
   // Effet pour déterminer si une URL externe est utilisée pour l'image
   useEffect(() => {
-    if (book?.coverImage && book.coverImage.startsWith('http')) {
-      setUseExternalImage(true);
-      setCoverImagePreview(book.coverImage);
+    if (book) {
+      // Mettre à jour les valeurs du formulaire à chaque fois que le livre change
+      form.reset({
+        title: book.title || '',
+        author: book.author || '',
+        description: book.description || '',
+        price: book.price || 0,
+        stock: book.stock || 0,
+        category: book.category || '',
+        isbn: book.isbn || '',
+        publicationDate: book.publicationDate || '',
+        publisher: book.publisher || '',
+        pages: book.pages || undefined,
+        language: book.language || '',
+        featured: book.featured || false,
+        discountPercentage: book.discountPercentage || 0,
+        coverImageUrl: book.coverImage?.startsWith('http') ? book.coverImage : '',
+        pdfUrl: book.pdfUrl || ''
+      });
+      
+      // Si le livre a une image externe, l'afficher
+      if (book.coverImage && book.coverImage.startsWith('http')) {
+        setUseExternalImage(true);
+        setCoverImagePreview(book.coverImage);
+        
+        // Tentative de pré-chargement de l'image
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          console.log("Image préchargée avec succès:", book.coverImage);
+        };
+        img.onerror = () => {
+          console.log("Erreur lors du préchargement de l'image, tentative avec proxy CORS");
+          const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${book.coverImage}`;
+          const imgWithProxy = new Image();
+          imgWithProxy.onload = () => {
+            setCoverImagePreview(corsProxyUrl);
+          };
+          imgWithProxy.onerror = () => {
+            console.log("Échec du chargement même avec proxy CORS");
+            setCoverImagePreview('/placeholder.svg');
+          };
+          imgWithProxy.src = corsProxyUrl;
+        };
+        img.src = book.coverImage;
+      }
     }
-  }, [book]);
+  }, [book, form]);
   
   // Fonction pour convertir un lien Google Drive en lien direct
   const convertGoogleDriveLink = (url: string): string => {
@@ -536,13 +579,25 @@ export default function BookFormDialog({
                               src={coverImagePreview}
                               alt="Prévisualisation" 
                               className="w-full h-full object-cover"
+                              crossOrigin="anonymous"
                               onError={(e) => {
-                                e.currentTarget.src = '/placeholder.svg';
-                                toast({
-                                  title: "Erreur d'image",
-                                  description: "Impossible d'afficher l'image. Vérifiez l'URL.",
-                                  variant: "destructive"
-                                });
+                                // En cas d'erreur, essayer avec un proxy CORS
+                                console.log("Erreur de chargement de l'image, tentative avec proxy CORS");
+                                const originalSrc = e.currentTarget.src;
+                                
+                                // Si on n'utilise pas déjà un proxy, essayer avec le proxy
+                                if (!originalSrc.includes("cors-anywhere")) {
+                                  const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${originalSrc}`;
+                                  e.currentTarget.src = corsProxyUrl;
+                                } else {
+                                  // Si ça échoue même avec le proxy, utiliser une image de placeholder
+                                  e.currentTarget.src = '/placeholder.svg';
+                                  toast({
+                                    title: "Erreur d'image",
+                                    description: "Impossible d'afficher l'image. Vérifiez l'URL et les permissions d'accès.",
+                                    variant: "destructive"
+                                  });
+                                }
                               }}
                             />
                           </div>
