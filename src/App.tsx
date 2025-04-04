@@ -9,6 +9,8 @@ import { CartProvider } from "@/lib/contexts/CartContext";
 import { getGlobalSettings, updateMaintenanceMode, synchronizeMaintenanceMode } from "@/lib/services/settingsService";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -167,6 +169,61 @@ const AppContent = () => {
     
     preloadSettings();
   }, []);
+  
+  // Écouteur en temps réel pour les changements dans Firebase
+  useEffect(() => {
+    // Ne s'exécute que lorsque le pré-chargement est terminé
+    if (isPreloading) return;
+    
+    console.log("Configuration des écouteurs en temps réel pour les documents de configuration");
+    
+    // Écouteur pour le document global
+    const globalUnsubscribe = onSnapshot(
+      doc(db, "settings", "global"),
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          console.log(`Changement détecté dans le document global: maintenanceMode=${data.maintenanceMode}`);
+          setIsMaintenanceMode(data.maintenanceMode);
+        }
+      },
+      (error) => {
+        console.error("Erreur lors de l'écoute du document global:", error);
+      }
+    );
+    
+    // Écouteur pour le document site (au cas où global ne serait pas disponible)
+    const siteUnsubscribe = onSnapshot(
+      doc(db, "settings", "site"),
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          if (data.general && data.general.maintenanceMode !== undefined) {
+            console.log(`Changement détecté dans le document site: maintenanceMode=${data.general.maintenanceMode}`);
+            // Ne mettre à jour que si le document global n'existe pas ou n'est pas accessible
+            const globalRef = doc(db, "settings", "global");
+            getDoc(globalRef).then(globalDoc => {
+              if (!globalDoc.exists()) {
+                setIsMaintenanceMode(data.general.maintenanceMode);
+              }
+            }).catch(() => {
+              // En cas d'erreur d'accès au document global, utiliser site
+              setIsMaintenanceMode(data.general.maintenanceMode);
+            });
+          }
+        }
+      },
+      (error) => {
+        console.error("Erreur lors de l'écoute du document site:", error);
+      }
+    );
+    
+    // Nettoyer les écouteurs lors du démontage du composant
+    return () => {
+      globalUnsubscribe();
+      siteUnsubscribe();
+    };
+  }, [isPreloading]);
   
   // Récupération détaillée et synchronisation pour les administrateurs
   useEffect(() => {
