@@ -3,13 +3,16 @@ export default {
   common: {
     home: "Home",
     profile: "Profile",
-    bookshop: "Shop",
-    login: "Login",
     logout: "Logout",
+    login: "Login",
+    register: "Register",
     admin: "Admin",
+    bookshop: "Bookshop",
     shopManagement: "Shop Management",
     orders: "Orders",
     maintenance: "Maintenance",
+    language: "Language",
+    backToHome: "Back to Home",
     save: "Save",
     cancel: "Cancel",
     loading: "Loading...",
@@ -245,16 +248,40 @@ export default {
     termsOfService: "terms of service",
     existingAccount: "Existing Account Detected",
     existingAccountDescription: "An account with this email already exists. Please",
-    toAccessOrderHistory: "to access your order history."
+    toAccessOrderHistory: "to access your order history.",
+    andAcknowledge: "and acknowledge the",
+    privacyPolicy: "privacy policy"
   },
   errors: {
     error: "Error",
     quantityUpdateError: "An error occurred while updating the quantity",
     removeItemError: "An error occurred while removing the item",
-    clearCartError: "An error occurred while clearing the cart"
+    clearCartError: "An error occurred while clearing the cart",
+    accessDenied: "Access denied. Please log in to access this page.",
+    orderCheckError: "Error checking your order."
   },
   loading: {
-    loadingCart: "Loading cart..."
+    loadingCart: "Loading cart...",
+    processingOrder: "Processing your order..."
+  },
+  orderConfirmation: {
+    thankYou: "Thank you for your order!",
+    orderSuccess: "Your order has been successfully processed.",
+    createAccountTitle: "Create an account for full access",
+    createAccountDescription: "Create an account to track your orders, manage your purchases, and access exclusive benefits.",
+    benefit1: "Permanent access to your digital downloads",
+    benefit2: "Track your orders and purchase history",
+    benefit3: "Exclusive offers and discounts for members",
+    createAccount: "Create an account now",
+    orderDetails: "Order Details",
+    confirmation1: "A confirmation email has been sent to",
+    confirmation2: "with your order details.",
+    confirmationAccount: "A confirmation email has been sent to your address with your order details.",
+    digitalProducts: "Digital Products",
+    downloadInstructions: "Download links for your digital products have been sent to your email.",
+    accessDigitalProducts: "You can access your digital products in your profile.",
+    accessDownloads: "Access my downloads",
+    continueShopping: "Continue shopping"
   },
   bookDetails: {
     loadingDetails: "Loading book details...",

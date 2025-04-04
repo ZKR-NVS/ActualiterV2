@@ -3,13 +3,16 @@ export default {
   common: {
     home: "Accueil",
     profile: "Profil",
-    bookshop: "Boutique",
-    login: "Connexion",
     logout: "Déconnexion",
+    login: "Connexion",
+    register: "Inscription",
     admin: "Admin",
-    shopManagement: "Gestion Boutique",
+    bookshop: "Librairie",
+    shopManagement: "Gestion boutique",
     orders: "Commandes",
     maintenance: "Maintenance",
+    language: "Langue",
+    backToHome: "Retour à l'accueil",
     save: "Enregistrer",
     cancel: "Annuler",
     loading: "Chargement...",
@@ -245,16 +248,21 @@ export default {
     termsOfService: "conditions générales de vente",
     existingAccount: "Compte existant détecté",
     existingAccountDescription: "Un compte avec cet email existe déjà. Veuillez vous",
-    toAccessOrderHistory: "pour accéder à votre historique de commandes."
+    toAccessOrderHistory: "pour accéder à votre historique de commandes.",
+    andAcknowledge: "et j'ai pris connaissance de la",
+    privacyPolicy: "politique de confidentialité"
   },
   errors: {
     error: "Erreur",
     quantityUpdateError: "Une erreur s'est produite lors de la mise à jour de la quantité",
     removeItemError: "Une erreur s'est produite lors de la suppression de l'article",
-    clearCartError: "Une erreur s'est produite lors du vidage du panier"
+    clearCartError: "Une erreur s'est produite lors du vidage du panier",
+    accessDenied: "Accès refusé. Veuillez vous connecter pour accéder à cette page.",
+    orderCheckError: "Erreur lors de la vérification de votre commande."
   },
   loading: {
-    loadingCart: "Chargement du panier..."
+    loadingCart: "Chargement du panier...",
+    processingOrder: "Traitement de votre commande..."
   },
   bookDetails: {
     loadingDetails: "Chargement des détails du livre...",
@@ -294,5 +302,24 @@ export default {
     copy: "exemplaire",
     copies: "exemplaires",
     errorLoadingBook: "Impossible de charger les détails du livre. Veuillez réessayer plus tard."
+  },
+  orderConfirmation: {
+    thankYou: "Merci pour votre commande !",
+    orderSuccess: "Votre commande a été traitée avec succès.",
+    createAccountTitle: "Créez un compte pour un accès complet",
+    createAccountDescription: "Créez un compte pour suivre vos commandes, gérer vos achats et accéder à des avantages exclusifs.",
+    benefit1: "Accès permanent à vos téléchargements numériques",
+    benefit2: "Suivi de vos commandes et historique d'achat",
+    benefit3: "Offres exclusives et remises pour les membres",
+    createAccount: "Créer un compte maintenant",
+    orderDetails: "Détails de la commande",
+    confirmation1: "Un e-mail de confirmation a été envoyé à",
+    confirmation2: "avec les détails de votre commande.",
+    confirmationAccount: "Un e-mail de confirmation a été envoyé à votre adresse avec les détails de votre commande.",
+    digitalProducts: "Produits numériques",
+    downloadInstructions: "Des liens de téléchargement vous ont été envoyés par e-mail pour vos produits numériques.",
+    accessDigitalProducts: "Vous pouvez accéder à vos produits numériques dans votre profil.",
+    accessDownloads: "Accéder à mes téléchargements",
+    continueShopping: "Continuer mes achats"
   }
 }; 
