@@ -470,10 +470,11 @@ export const addToCart = async (userId: string, item: CartItem) => {
     // Obtenir le panier actuel
     const cart = await getUserCart(userId);
     
-    // Ajouter un timestamp à l'élément
+    // Ajouter un timestamp ISO pour l'élément au lieu d'un serverTimestamp
+    const currentTime = new Date().toISOString();
     const itemWithTimestamp = {
       ...item,
-      updatedAt: serverTimestamp()
+      updatedAt: currentTime
     };
     
     // Vérifier si le livre est déjà dans le panier
@@ -486,7 +487,7 @@ export const addToCart = async (userId: string, item: CartItem) => {
       updatedItems[existingItemIndex] = {
         ...updatedItems[existingItemIndex],
         quantity: updatedItems[existingItemIndex].quantity + item.quantity,
-        updatedAt: serverTimestamp()
+        updatedAt: currentTime
       };
     } else {
       // Ajouter le nouvel élément
@@ -541,12 +542,15 @@ export const updateCartItemQuantity = async (userId: string, bookId: string, qua
       throw new Error('Élément introuvable dans le panier');
     }
     
+    // Utiliser un timestamp ISO au lieu de serverTimestamp dans le tableau
+    const currentTime = new Date().toISOString();
+    
     // Mettre à jour la quantité
     const updatedItems = [...cart.items];
     updatedItems[itemIndex] = {
       ...updatedItems[itemIndex],
       quantity: quantity,
-      updatedAt: serverTimestamp()
+      updatedAt: currentTime
     };
     
     // Calculer le nouveau montant total

@@ -210,13 +210,23 @@ export const toggleMaintenanceMode = async (enabled: boolean, message?: string):
 // Alias pour getSettings pour maintenir la compatibilité
 export const getGlobalSettings = async (): Promise<{ maintenanceMode: boolean }> => {
   try {
-    const settings = await getSettings();
-    return { 
-      maintenanceMode: settings.general.maintenanceMode 
-    };
+    try {
+      const settings = await getSettings();
+      return { 
+        maintenanceMode: settings.general.maintenanceMode 
+      };
+    } catch (error: any) {
+      // En cas d'erreur d'autorisation, retourner une valeur par défaut
+      if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+        console.warn("Permissions insuffisantes pour accéder aux paramètres. Utilisation des valeurs par défaut.");
+        return { maintenanceMode: false };
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("Erreur lors de la récupération des paramètres globaux:", error);
-    throw error;
+    // En cas d'erreur, retourner false pour le mode maintenance
+    return { maintenanceMode: false };
   }
 };
 
@@ -232,7 +242,12 @@ export const updateMaintenanceMode = async (enabled: boolean, userId?: string): 
     });
     
     console.log(`Mode maintenance ${enabled ? 'activé' : 'désactivé'} par l'utilisateur ${userId || 'inconnu'}`);
-  } catch (error) {
+  } catch (error: any) {
+    // Si c'est une erreur d'autorisation et que l'utilisateur n'est pas admin, on ignore silencieusement
+    if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+      console.warn("Permissions insuffisantes pour modifier le mode maintenance.");
+      return; // Sortir silencieusement sans propager l'erreur
+    }
     console.error("Erreur lors de la mise à jour du mode maintenance:", error);
     throw error;
   }
@@ -248,11 +263,14 @@ export const synchronizeMaintenanceMode = async (): Promise<void> => {
     // Mettre à jour le document global avec l'état du mode maintenance du document site
     const globalRef = doc(db, "settings", "global");
     await updateDoc(globalRef, {
-      maintenanceMode: maintenanceMode
+      maintenanceMode
     });
-    
-    console.log(`Mode maintenance synchronisé entre les documents: ${maintenanceMode ? 'activé' : 'désactivé'}`);
-  } catch (error) {
+  } catch (error: any) {
+    // Si c'est une erreur d'autorisation et que l'utilisateur n'est pas admin, on ignore silencieusement
+    if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+      console.warn("Permissions insuffisantes pour synchroniser le mode maintenance.");
+      return; // Sortir silencieusement sans propager l'erreur
+    }
     console.error("Erreur lors de la synchronisation du mode maintenance:", error);
     throw error;
   }
