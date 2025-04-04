@@ -505,13 +505,13 @@ export default function BookFormDialog({
                             <FormControl>
                               <div className="flex space-x-2">
                                 <Input {...field} placeholder="https://postimages.org/..." className="flex-1" />
-                                <Button 
-                                  type="button" 
+                    <Button
+                      type="button"
                                   variant="secondary" 
                                   onClick={handlePreviewImage}
-                                >
+                    >
                                   Prévisualiser
-                                </Button>
+                    </Button>
                               </div>
                             </FormControl>
                             <FormDescription>
@@ -521,8 +521,8 @@ export default function BookFormDialog({
                           </FormItem>
                         )}
                       />
-                      
-                      {coverImagePreview && (
+                    
+                    {coverImagePreview && (
                         <div className="mt-2 border rounded-md overflow-hidden">
                           <div className="relative aspect-[3/4] w-full max-w-[200px] mx-auto">
                             <img 
@@ -553,8 +553,8 @@ export default function BookFormDialog({
                           </div>
                         </div>
                       )}
-                    </>
-                  )}
+                      </>
+                    )}
                 </div>
               </div>
               

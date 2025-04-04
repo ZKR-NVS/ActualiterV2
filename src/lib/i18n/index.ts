@@ -16,7 +16,7 @@ export const availableLanguages = [
 
 export const defaultLanguage: Language = 'fr';
 
-export const getTranslation = (key: string, lang: Language = defaultLanguage): string => {
+export const getTranslation = (key: string, lang: Language = defaultLanguage): any => {
   const translation = get(translations[lang], key, '');
   
   // Si la traduction n'existe pas dans la langue demandée, essayer avec la langue par défaut

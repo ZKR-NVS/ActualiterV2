@@ -259,10 +259,10 @@ export const ArticleFormDialog = ({
       // Préparer les données de l'article
       const articleData = {
         ...(isEditMode && articleToEdit ? { id: articleToEdit.id } : {}),
-        title: values.title,
-        content: values.content,
+          title: values.title, 
+          content: values.content,
         excerpt: values.content.substring(0, 150) + "...",
-        author: values.author,
+          author: values.author,
         date: isEditMode && articleToEdit ? articleToEdit.date : new Date().toISOString().split('T')[0],
         verificationStatus: values.verificationStatus,
         image: useExternalImage 
@@ -277,7 +277,7 @@ export const ArticleFormDialog = ({
       if (typeof onSubmit === 'function') {
         await onSubmit(articleData);
         toast.success(`Article ${isEditMode ? "modifié" : "créé"} avec succès`);
-        handleOpenChange(false);
+      handleOpenChange(false);
       } else {
         console.error("onSubmit n'est pas une fonction:", onSubmit);
         toast.error("Erreur: La fonction de soumission n'est pas disponible");

@@ -278,9 +278,7 @@ export default function BookDetailPage() {
                 {book.stock > 10 ? (
                   <Badge variant="outline" className="bg-green-100">{t("shop.inStock")}</Badge>
                 ) : book.stock > 0 ? (
-                  <Badge variant="outline" className="bg-orange-100">
-                    {t("bookDetails.onlyXInStock", { count: book.stock })}
-                  </Badge>
+                  <Badge variant="outline" className="bg-orange-100">{t("bookDetails.onlyXInStock")(book.stock)}</Badge>
                 ) : (
                   <Badge variant="outline" className="bg-red-100">{t("shop.outOfStock")}</Badge>
                 )}
