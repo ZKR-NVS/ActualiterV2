@@ -131,25 +131,60 @@ export const ArticleFormDialog = ({
       return;
     }
     
+    // Convertir le lien Google Drive en lien direct si nécessaire
     const convertedUrl = convertGoogleDriveLink(url);
+    
+    console.log("URL convertie:", convertedUrl); // Log pour le débogage
+    
+    // Afficher immédiatement un message de chargement
+    toast.info("Tentative de chargement de l'image...");
     
     // Vérifier si l'image peut être chargée avant de mettre à jour l'état
     const img = new Image();
+    
+    // Configurer les gestionnaires d'événements avant de définir la source
     img.onload = () => {
+      // L'image a été chargée avec succès
       setExternalImageUrl(convertedUrl);
       setImagePreview(convertedUrl);
       setUseExternalImage(true);
       form.setValue("externalImageUrl", convertedUrl);
       toast.success("Image chargée avec succès");
     };
+    
     img.onerror = () => {
-      toast.error("Impossible de charger l'image. Vérifiez l'URL et les permissions d'accès.");
+      // Tentative alternative avec un proxy CORS si disponible
+      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
+      console.log("Tentative avec proxy CORS:", corsProxyUrl);
+      
+      toast.info("Premier essai échoué. Tentative avec un proxy CORS...");
+      
+      // Deuxième tentative avec proxy
+      const imgWithProxy = new Image();
+      
+      imgWithProxy.onload = () => {
+        setExternalImageUrl(corsProxyUrl);
+        setImagePreview(corsProxyUrl);
+        setUseExternalImage(true);
+        form.setValue("externalImageUrl", convertedUrl); // Garder l'URL originale dans le formulaire
+        toast.success("Image chargée via proxy CORS");
+      };
+      
+      imgWithProxy.onerror = () => {
+        toast.error("Impossible de charger l'image. Vérifiez l'URL et les permissions d'accès. Assurez-vous que l'image est partagée publiquement.");
+      };
+      
+      // Appliquer un délai avant de charger l'image avec proxy
+      setTimeout(() => {
+        imgWithProxy.src = corsProxyUrl;
+      }, 300);
     };
     
     // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
     setTimeout(() => {
+      img.crossOrigin = "anonymous"; // Tenter d'éviter les problèmes CORS
       img.src = convertedUrl;
-    }, 100);
+    }, 200);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

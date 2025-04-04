@@ -138,31 +138,78 @@ export default function BookFormDialog({
       return;
     }
 
+    // Convertir le lien Google Drive en lien direct si nécessaire
     const convertedUrl = convertGoogleDriveLink(coverImageUrl);
     
-    // Vérifier si l'image peut être chargée
+    console.log("URL convertie:", convertedUrl); // Log pour le débogage
+    
+    // Afficher immédiatement un message de chargement
+    toast({
+      title: "Chargement...",
+      description: "Tentative de chargement de l'image",
+    });
+    
+    // Créer une nouvelle image pour tester le chargement
     const img = new Image();
+    
+    // Configurer les gestionnaires d'événements avant de définir la source
     img.onload = () => {
+      // L'image a été chargée avec succès
       setCoverImagePreview(convertedUrl);
       setUseExternalImage(true);
+      form.setValue("coverImageUrl", convertedUrl); // Mettre à jour la valeur du formulaire avec l'URL convertie
+      
       toast({
         title: "Image chargée",
         description: "Prévisualisation mise à jour avec succès",
         variant: "default"
       });
     };
+    
     img.onerror = () => {
+      // Tentative alternative avec un proxy CORS si disponible
+      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
+      console.log("Tentative avec proxy CORS:", corsProxyUrl);
+      
       toast({
-        title: "Erreur",
-        description: "Impossible de charger l'image. Vérifiez l'URL et les permissions.",
-        variant: "destructive"
+        title: "Premier essai échoué",
+        description: "Tentative d'utilisation d'un proxy CORS...",
       });
+      
+      // Deuxième tentative avec proxy
+      const imgWithProxy = new Image();
+      
+      imgWithProxy.onload = () => {
+        setCoverImagePreview(corsProxyUrl);
+        setUseExternalImage(true);
+        form.setValue("coverImageUrl", convertedUrl); // Garder l'URL originale dans le formulaire
+        
+        toast({
+          title: "Image chargée via proxy",
+          description: "L'image a été chargée via un proxy CORS",
+          variant: "default"
+        });
+      };
+      
+      imgWithProxy.onerror = () => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger l'image. Vérifiez l'URL et les permissions d'accès. Assurez-vous que l'image est partagée publiquement.",
+          variant: "destructive"
+        });
+      };
+      
+      // Appliquer un délai avant de charger l'image avec proxy
+      setTimeout(() => {
+        imgWithProxy.src = corsProxyUrl;
+      }, 300);
     };
     
-    // Appliquer un timeout pour éviter les problèmes de CORS
+    // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
     setTimeout(() => {
+      img.crossOrigin = "anonymous"; // Tenter d'éviter les problèmes CORS
       img.src = convertedUrl;
-    }, 100);
+    }, 200);
   };
   
   const onSubmit = useCallback(

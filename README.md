@@ -1,5 +1,5 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.10
-*Dernière mise à jour : 4 avril 2024*
+# Actualiter - Plateforme de vérification d'actualités - v1.0.11
+*Dernière mise à jour : 6 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
@@ -33,6 +33,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **NOUVEAU** : Synchronisation bidirectionnelle en temps réel du mode maintenance
 - **NOUVEAU** : Intégration avec Google Drive pour l'hébergement d'images sans Firebase Storage
 - **AMÉLIORÉ** : Formulaires d'ajout/modification de livres et d'articles optimisés
+- **AMÉLIORÉ** : Gestion robuste du chargement d'images avec support de secours CORS
 
 ## Fonctionnalités
 ### Terminées
@@ -75,6 +76,13 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 
 ## Journal des modifications
 
+### v1.0.11
+- Amélioration robuste du chargement des images externes dans les formulaires
+- Ajout d'un système de secours avec proxy CORS pour le chargement des images
+- Amélioration des messages d'erreur pour guider l'utilisateur lors de problèmes de chargement d'images
+- Messages de feedback plus clairs lors de la prévisualisation d'images
+- Correction du problème de prévisualisation d'image dans les formulaires de livre et d'article
+
 ### v1.0.10
 - Intégration avec Google Drive pour l'hébergement d'images et PDFs sans Firebase Storage
 - Ajout d'un convertisseur automatique de liens Google Drive en liens d'accès direct
@@ -108,12 +116,19 @@ Pour ajouter des images à vos articles ou livres sans Firebase Storage :
    - Accédez à votre Google Drive
    - Uploadez l'image souhaitée
    - Faites un clic droit sur le fichier → "Partager" → "Tout le monde avec le lien"
+   - Assurez-vous que le paramètre est bien sur "Tout le monde avec le lien peut voir"
    - Copiez le lien partagé
 
 2. **Utiliser le lien dans l'application**
    - Collez simplement le lien Google Drive dans le champ URL d'image du formulaire
    - L'application convertira automatiquement le lien standard (https://drive.google.com/file/d/VOTRE_ID/view) en lien d'accès direct
-   - Prévisualisez l'image pour vérifier qu'elle s'affiche correctement
+   - Cliquez sur "Prévisualiser" pour vérifier que l'image s'affiche correctement
+   - Si une erreur se produit, l'application tentera automatiquement d'utiliser un proxy CORS
+
+3. **En cas de problème de chargement**
+   - Vérifiez que les permissions sont correctement définies (fichier accessible par lien)
+   - Assurez-vous que le format d'image est standard (JPG, PNG)
+   - Si le problème persiste, essayez d'héberger l'image sur un autre service comme Imgur ou ImgBB
 
 Cette solution permet d'utiliser l'application sans avoir besoin de payer pour Firebase Storage.
 
