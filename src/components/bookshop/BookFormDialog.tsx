@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Book, BookCategory, addBook, updateBook } from '@/lib/services/bookService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ImagePlus, FileUp, FileText, Download, X } from 'lucide-react';
+import { ImagePlus, FileUp, FileText, Download, X, Crop } from 'lucide-react';
 
 // Schéma de validation pour le formulaire de livre
 const bookSchema = z.object({
@@ -53,8 +53,11 @@ export default function BookFormDialog({
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(book?.coverImage || null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [hasPdf, setHasPdf] = useState(!!book?.pdfUrl);
+  const [isCropping, setIsCropping] = useState(false);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   
   // Formulaire avec validation
   const form = useForm<BookFormValues>({
@@ -143,12 +146,89 @@ export default function BookFormDialog({
     }
   };
   
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * Recadre l'image pour qu'elle s'adapte au ratio 3:4 (aspect-[3/4]) utilisé dans l'application
+   * @param imageDataUrl L'URL de données de l'image
+   * @returns Une promesse qui se résout en une URL de données de l'image recadrée
+   */
+  const cropImageToRatio = (imageDataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => {
+        // Dimensions cibles: ratio 3:4
+        const targetRatio = 3 / 4;
+        let cropWidth = image.width;
+        let cropHeight = image.height;
+        let offsetX = 0;
+        let offsetY = 0;
+        
+        // Calculer les dimensions de recadrage pour atteindre le ratio cible
+        const currentRatio = image.width / image.height;
+        
+        if (currentRatio > targetRatio) {
+          // Image trop large, recadrer les côtés
+          cropWidth = image.height * targetRatio;
+          offsetX = (image.width - cropWidth) / 2;
+        } else if (currentRatio < targetRatio) {
+          // Image trop haute, recadrer le haut et le bas
+          cropHeight = image.width / targetRatio;
+          offsetY = (image.height - cropHeight) / 2;
+        }
+        
+        // Créer un canvas pour le recadrage
+        const canvas = document.createElement('canvas');
+        // Définir une taille raisonnable pour l'image stockée (pour réduire la taille du fichier)
+        const maxDimension = 800;
+        let canvasWidth = cropWidth;
+        let canvasHeight = cropHeight;
+        
+        // Redimensionner si nécessaire
+        if (cropWidth > maxDimension || cropHeight > maxDimension) {
+          if (cropWidth > cropHeight) {
+            canvasWidth = maxDimension;
+            canvasHeight = (cropHeight / cropWidth) * maxDimension;
+          } else {
+            canvasHeight = maxDimension;
+            canvasWidth = (cropWidth / cropHeight) * maxDimension;
+          }
+        }
+        
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // Dessiner l'image recadrée sur le canvas
+          ctx.drawImage(
+            image, 
+            offsetX, offsetY, cropWidth, cropHeight, // Source
+            0, 0, canvasWidth, canvasHeight // Destination
+          );
+          
+          // Convertir le canvas en URL de données
+          const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.92);
+          resolve(croppedImageUrl);
+        } else {
+          // Fallback si le contexte 2D n'est pas disponible
+          resolve(imageDataUrl);
+        }
+      };
+      
+      image.src = imageDataUrl;
+    });
+  };
+  
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImagePreview(reader.result as string);
+      reader.onloadend = async () => {
+        const imageDataUrl = reader.result as string;
+        setOriginalImage(imageDataUrl);
+        
+        // Appliquer le recadrage automatique
+        const croppedImageUrl = await cropImageToRatio(imageDataUrl);
+        setCoverImagePreview(croppedImageUrl);
       };
       reader.readAsDataURL(file);
     }
@@ -237,9 +317,10 @@ export default function BookFormDialog({
                 <h3 className="text-lg font-medium">Image de couverture</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <div className="relative border rounded-md h-48 overflow-hidden flex items-center justify-center bg-accent/20">
+                  <div className="relative border rounded-md aspect-[3/4] overflow-hidden flex items-center justify-center bg-accent/20">
                     {coverImagePreview ? (
                       <img 
+                        ref={imageRef}
                         src={coverImagePreview} 
                         alt="Aperçu" 
                         className="w-full h-full object-cover"
@@ -274,14 +355,20 @@ export default function BookFormDialog({
                     </Button>
                     
                     {coverImagePreview && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setCoverImagePreview(null)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        Supprimer l'image
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setCoverImagePreview(null)}
+                          className="text-destructive hover:text-destructive mb-2"
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Supprimer l'image
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          L'image sera automatiquement recadrée au format 3:4 pour s'adapter parfaitement au cadre d'affichage.
+                        </p>
+                      </>
                     )}
                   </div>
                 </div>

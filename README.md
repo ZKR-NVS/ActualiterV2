@@ -97,6 +97,7 @@ return (
 ```
 
 ## Corrections récentes
+- Amélioration du recadrage des images de livres pour garantir un ratio 3:4 cohérent dans toute l'application
 - Correction du problème d'interface dans le formulaire de création de livre (bouton indiquant incorrectement "Création..." avec le texte normal)
 - Correction des incohérences du mode maintenance entre les documents "global" et "site"
 - Ajout d'une fonction de synchronisation du mode maintenance entre tous les documents

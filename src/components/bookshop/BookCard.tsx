@@ -26,7 +26,7 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative aspect-[3/4] overflow-hidden">
         {/* Image du livre */}
         <img 
           src={book.coverImage || '/placeholder.svg'} 
@@ -62,7 +62,7 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
         </div>
         
         {/* Bouton de détails qui apparaît au survol */}
-        <div 
+        <div
           className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}

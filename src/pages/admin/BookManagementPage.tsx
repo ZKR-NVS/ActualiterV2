@@ -210,7 +210,7 @@ export default function BookManagementPage() {
               ) : (
                 filteredBooks.map(book => (
                   <Card key={book.id} className="overflow-hidden">
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative aspect-[3/4] overflow-hidden">
                       <img 
                         src={book.coverImage || '/placeholder.svg'} 
                         alt={book.title} 
