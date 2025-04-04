@@ -151,7 +151,7 @@ const AppContent = () => {
   const [isPreloading, setIsPreloading] = useState(true); // État de pré-chargement
   const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-  
+
   // Récupération des paramètres globaux au pré-chargement
   useEffect(() => {
     const preloadSettings = async () => {
@@ -299,10 +299,10 @@ const AppContent = () => {
         setIsSettingsLoading(false);
       }
     };
-    
+
     fetchSettings();
   }, [currentUser, isAdmin, isPreloading]);
-  
+
   // Fonction qui permet de mettre à jour l'état local et dans Firestore
   const handleSetMaintenanceMode = async (value: boolean) => {
     setIsMaintenanceMode(value);
@@ -322,7 +322,7 @@ const AppContent = () => {
   if (isSettingsLoading && isAdmin) {
     return <LoadingSpinner size="lg" text="Chargement des paramètres..." />;
   }
-  
+
   return (
     <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
       <BrowserRouter>

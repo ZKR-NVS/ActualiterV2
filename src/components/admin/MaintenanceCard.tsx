@@ -185,11 +185,11 @@ export const MaintenanceCard = () => {
       
       <div className="mt-4 space-y-2">
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleSynchronize}
-            disabled={isSynchronizing}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleSynchronize}
+          disabled={isSynchronizing}
             className="flex items-center flex-1"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -237,10 +237,10 @@ export const MaintenanceCard = () => {
             onClick={forceDisable}
             disabled={isSynchronizing || !localState}
             className="flex items-center flex-1 text-green-600 bg-green-50 hover:bg-green-100"
-          >
-            <RotateCw className="mr-2 h-4 w-4" />
+        >
+          <RotateCw className="mr-2 h-4 w-4" />
             Forcer Désactivation
-          </Button>
+        </Button>
         </div>
         
         <p className="text-xs text-muted-foreground mt-2">

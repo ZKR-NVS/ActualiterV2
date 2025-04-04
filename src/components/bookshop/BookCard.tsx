@@ -43,19 +43,22 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
           />
         </div>
         
-        {/* Badge de remise */}
-        {hasDiscount && (
-          <Badge className="absolute top-2 right-2 bg-destructive text-white">
-            -{book.discountPercentage}%
-          </Badge>
-        )}
+        {/* Badges */}
+        <div className="absolute top-2 left-2">
+          {book.featured && (
+            <Badge className="bg-primary text-white">
+              {t('bookshop.featured')}
+            </Badge>
+          )}
+        </div>
         
-        {/* Badge "En vedette" */}
-        {book.featured && (
-          <Badge className="absolute top-2 left-2 bg-primary text-white">
-            {t('bookshop.featured')}
-          </Badge>
-        )}
+        <div className="absolute top-2 right-2">
+          {hasDiscount && (
+            <Badge className="bg-destructive text-white">
+              -{book.discountPercentage}%
+            </Badge>
+          )}
+        </div>
         
         {/* Prix et ajout au panier sur hover */}
         <div className={`absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
