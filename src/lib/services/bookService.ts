@@ -17,6 +17,25 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
+// Fonction utilitaire pour convertir les timestamps Firebase en formats utilisables par React
+const parseTimestamps = (data: any) => {
+  if (!data) return data;
+  
+  // Créer une copie pour ne pas modifier l'original
+  const result = { ...data };
+  
+  // Convertir les timestamps courants
+  if (result.createdAt && typeof result.createdAt.toDate === 'function') {
+    result.createdAt = result.createdAt.toDate().toISOString();
+  }
+  
+  if (result.updatedAt && typeof result.updatedAt.toDate === 'function') {
+    result.updatedAt = result.updatedAt.toDate().toISOString();
+  }
+  
+  return result;
+};
+
 export interface Book {
   id?: string;
   title: string;
@@ -49,7 +68,7 @@ export const getAllBooks = async () => {
     
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...parseTimestamps(doc.data())
     })) as Book[];
   } catch (error) {
     console.error('Erreur lors de la récupération des livres:', error);
@@ -70,7 +89,7 @@ export const getBooksByCategory = async (category: string) => {
     
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...parseTimestamps(doc.data())
     })) as Book[];
   } catch (error) {
     console.error(`Erreur lors de la récupération des livres de la catégorie ${category}:`, error);
@@ -91,7 +110,7 @@ export const getFeaturedBooks = async () => {
     
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...parseTimestamps(doc.data())
     })) as Book[];
   } catch (error) {
     console.error('Erreur lors de la récupération des livres en vedette:', error);
@@ -108,7 +127,7 @@ export const getBookById = async (bookId: string) => {
     if (bookSnap.exists()) {
       return {
         id: bookSnap.id,
-        ...bookSnap.data()
+        ...parseTimestamps(bookSnap.data())
       } as Book;
     } else {
       throw new Error('Livre non trouvé');
@@ -130,7 +149,7 @@ export const searchBooks = async (searchTerm: string) => {
     const results = querySnapshot.docs
       .map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...parseTimestamps(doc.data())
       }) as Book)
       .filter(book => 
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
