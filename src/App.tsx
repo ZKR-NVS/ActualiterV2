@@ -335,14 +335,7 @@ const AppContent = () => {
             {/* Routes de la boutique de livres */}
             <Route path="/bookshop" element={<BookshopPage />} />
             <Route path="/book/:id" element={<BookDetailPage />} />
-            <Route 
-              path="/cart" 
-              element={
-                <ProtectedRoute>
-                  <CartPage />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/cart" element={<CartPage />} />
             <Route 
               path="/order-confirmation" 
               element={
