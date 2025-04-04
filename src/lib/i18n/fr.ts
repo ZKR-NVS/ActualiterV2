@@ -250,7 +250,10 @@ export default {
     existingAccountDescription: "Un compte avec cet email existe déjà. Veuillez vous",
     toAccessOrderHistory: "pour accéder à votre historique de commandes.",
     andAcknowledge: "et j'ai pris connaissance de la",
-    privacyPolicy: "politique de confidentialité"
+    privacyPolicy: "politique de confidentialité",
+    orderConfirmed: "Commande confirmée",
+    orderProcessedSuccess: "Votre commande a été traitée avec succès. Merci pour votre achat!",
+    processing: "Traitement en cours..."
   },
   errors: {
     error: "Erreur",
@@ -258,7 +261,8 @@ export default {
     removeItemError: "Une erreur s'est produite lors de la suppression de l'article",
     clearCartError: "Une erreur s'est produite lors du vidage du panier",
     accessDenied: "Accès refusé. Veuillez vous connecter pour accéder à cette page.",
-    orderCheckError: "Erreur lors de la vérification de votre commande."
+    orderCheckError: "Erreur lors de la vérification de votre commande.",
+    orderError: "Une erreur s'est produite lors du traitement de votre commande. Veuillez réessayer."
   },
   loading: {
     loadingCart: "Chargement du panier...",

@@ -250,7 +250,10 @@ export default {
     existingAccountDescription: "An account with this email already exists. Please",
     toAccessOrderHistory: "to access your order history.",
     andAcknowledge: "and acknowledge the",
-    privacyPolicy: "privacy policy"
+    privacyPolicy: "privacy policy",
+    orderConfirmed: "Order Confirmed",
+    orderProcessedSuccess: "Your order has been successfully processed. Thank you for your purchase!",
+    processing: "Processing..."
   },
   errors: {
     error: "Error",
@@ -258,7 +261,8 @@ export default {
     removeItemError: "An error occurred while removing the item",
     clearCartError: "An error occurred while clearing the cart",
     accessDenied: "Access denied. Please log in to access this page.",
-    orderCheckError: "Error checking your order."
+    orderCheckError: "Error checking your order.",
+    orderError: "An error occurred while processing your order. Please try again."
   },
   loading: {
     loadingCart: "Loading cart...",
