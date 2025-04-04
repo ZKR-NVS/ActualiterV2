@@ -1,4 +1,4 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.8
+# Actualiter - Plateforme de vérification d'actualités - v1.0.9
 *Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
@@ -30,6 +30,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **CORRIGÉ** : Correction des erreurs Firebase "Cannot use serverTimestamp() in arrays"
 - **AMÉLIORÉ** : Amélioration de la gestion des Timestamps Firebase dans les interfaces React
 - **NOUVEAU** : Contexte global pour le panier avec affichage du nombre d'articles dans l'en-tête
+- **NOUVEAU** : Synchronisation bidirectionnelle en temps réel du mode maintenance
 
 ## Fonctionnalités
 ### Terminées
@@ -67,8 +68,19 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Optimisation du temps de chargement initial de l'application
 - **NOUVEAU** : Compteur d'articles du panier visible depuis toutes les pages
 - **AMÉLIORÉ** : Gestion d'état globale du panier pour une meilleure cohérence des données
+- **NOUVEAU** : Détection en temps réel des modifications Firebase pour le mode maintenance
+- **AMÉLIORÉ** : Interface d'administration du mode maintenance avec options de synchronisation avancées
 
 ## Journal des modifications
+
+### v1.0.9
+- Implémentation d'une synchronisation bidirectionnelle automatique pour le mode maintenance
+- Ajout d'écouteurs en temps réel (onSnapshot) pour les documents de configuration Firebase
+- Détection et application instantanée des modifications du mode maintenance effectuées directement dans Firebase
+- Amélioration de l'interface administrateur pour le mode maintenance avec options de synchronisation sélective
+- Correction du problème d'incohérence entre les documents de configuration "global" et "site"
+- Prévention du flash de la page d'accueil lors de l'activation du mode maintenance
+- Journalisation améliorée pour faciliter le débogage des problèmes de synchronisation
 
 ### v1.0.8
 - Mise en place d'un contexte global pour la gestion du panier (CartContext)
