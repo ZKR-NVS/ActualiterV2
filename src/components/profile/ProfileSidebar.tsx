@@ -46,7 +46,7 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ user }) => {
             </Avatar>
             <CardTitle className="mt-4">{user.name}</CardTitle>
             <CardDescription>{user.email}</CardDescription>
-            {user.role === "admin" && (
+            {user.role && user.role !== "user" && (
               <span className="bg-primary/10 text-primary px-2 py-1 rounded text-sm mt-2">
                 {capitalizeFirstLetter(user.role)}
               </span>

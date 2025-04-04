@@ -76,7 +76,7 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
               placeholder="Parlez-nous de vous..."
             />
           </div>
-          {user.role && (
+          {user.role && user.role !== "user" && (
             <div className="space-y-2">
               <Label htmlFor="role">Rôle</Label>
               <Input 

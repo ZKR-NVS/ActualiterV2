@@ -20,12 +20,68 @@ export default {
     maintenanceMode: "Maintenance Mode",
   },
   footer: {
+    description: "Dedicated to verifying news and helping you separate fact from fiction.",
     navigation: "Navigation",
     legal: "Legal",
     termsOfService: "Terms of Service",
     privacyPolicy: "Privacy Policy",
     cookiePolicy: "Cookie Policy",
     allRightsReserved: "All Rights Reserved",
+  },
+  home: {
+    hero: {
+      title: "Truth beyond appearances",
+      titleHighlight: "appearances",
+      description: "Actualiter is dedicated to verifying news and helping you identify what is true, what is false, and what falls in between.",
+      howItWorks: "How it works",
+      joinUs: "Join us"
+    },
+    stats: {
+      verifiedArticles: "Verified Articles",
+      activeUsers: "Active Users",
+      satisfactionRate: "Satisfaction Rate",
+      verifiedSources: "Verified Sources"
+    },
+    articles: {
+      latestVerified: "Latest Verified Articles",
+      searchResults: "Results for",
+      all: "All",
+      true: "True",
+      partial: "Partial",
+      false: "False",
+      clearSearch: "Clear search and view all articles",
+      loadMore: "Load more articles",
+      noResults: "No results found",
+      noResultsDescription: "No articles match your search. Try different terms or",
+      viewAllArticles: "view all articles"
+    },
+    verification: {
+      title: "Our Verification Process",
+      description: "A rigorous and transparent approach to ensure information accuracy",
+      step1Title: "Information Collection",
+      step1Description: "Our research team meticulously gathers data from primary sources, recognized experts, and credible scientific publications.",
+      step2Title: "In-depth Analysis",
+      step2Description: "We rigorously analyze the evidence collected, verifying its consistency, credibility, and validity according to strict scientific criteria.",
+      step3Title: "Verification and Publication",
+      step3Description: "Our editorial committee reviews the findings and assigns a verification status based on the evidence. The complete process is documented for total transparency."
+    },
+    testimonials: {
+      title: "They trust us",
+      description: "Discover what our users say about our platform",
+      journalist: "Journalist",
+      teacher: "Teacher",
+      student: "Student",
+      quote1: "Actualiter has become an indispensable tool in my daily work. The reliability of the verifications allows me to write articles with confidence.",
+      quote2: "I use Actualiter with my students to teach them the importance of source verification. It's an excellent educational tool for developing critical thinking.",
+      quote3: "In the era of disinformation, Actualiter is a breath of fresh air. The interface is intuitive and the explanations accompanying each verification are very clear."
+    },
+    newsletter: {
+      title: "Stay Informed",
+      description: "Subscribe to our newsletter to receive the latest verifications and analyses directly in your inbox",
+      placeholder: "Your email address",
+      subscribe: "Subscribe",
+      privacy: "We respect your privacy. You can unsubscribe at any time."
+    }
   },
   auth: {
     signIn: "Sign In",

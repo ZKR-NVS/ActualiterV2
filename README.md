@@ -1,5 +1,5 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.1
-*Dernière mise à jour : Août 2024*
+# Actualiter - Plateforme de vérification d'actualités - v1.0.3
+*Dernière mise à jour : Janvier 2025*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
@@ -16,8 +16,10 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Sections informationnelles et expérience utilisateur améliorée
 - Écrans de chargement optimisés et feedback visuel amélioré
 - Paramètres de sécurité et correction des types TypeScript
-- **NOUVEAU** : Boutique de livres complètement fonctionnelle avec panier d'achat et système de paiement
-- **NOUVEAU** : Gestion des fichiers PDF pour les livres avec téléchargement
+- Boutique de livres complètement fonctionnelle avec panier d'achat et système de paiement
+- Gestion des fichiers PDF pour les livres avec téléchargement
+- **AMÉLIORÉ** : Support multilingue complet et optimisé (français et anglais)
+- **NOUVEAU** : Traduction complète de toutes les pages principales, y compris la page d'accueil
 
 ## Fonctionnalités
 ### Terminées
@@ -41,11 +43,14 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Animations et transitions pour une meilleure UX
 - Écrans de chargement interactifs et skeletons pour les contenus
 - Paramètres de sécurité configurables
-- **NOUVEAU** : Boutique de livres avec recherche et filtrage par catégorie
-- **NOUVEAU** : Gestion de panier d'achat et processus de commande
-- **NOUVEAU** : Interface d'administration pour gérer les livres et les catégories
-- **NOUVEAU** : Gestion et téléchargement des fichiers PDF associés aux livres
-- **NOUVEAU** : Interface d'administration pour visualiser et gérer les commandes
+- Boutique de livres avec recherche et filtrage par catégorie
+- Gestion de panier d'achat et processus de commande
+- Interface d'administration pour gérer les livres et les catégories
+- Gestion et téléchargement des fichiers PDF associés aux livres
+- Interface d'administration pour visualiser et gérer les commandes
+- **AMÉLIORÉ** : Système complet d'internationalisation avec support français/anglais
+- **AMÉLIORÉ** : Composants intégralement traduits (Page d'accueil, Footer, Préférences, etc.)
+- **AMÉLIORÉ** : Sélecteur de langue dans l'interface utilisateur avec persistance des préférences
 
 ### En cours
 - Système de contrôle d'accès aux PDF basé sur les achats
@@ -55,7 +60,47 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **NOUVEAU** : Intégration de solutions de paiement réelles (Stripe, PayPal)
 - **NOUVEAU** : Système de gestion des stocks avancé
 
+## Système de traduction
+Actualiter utilise un système de traduction complet qui permet de basculer facilement entre le français et l'anglais. Voici les points clés de ce système :
+
+### Fonctionnement
+- **Fichiers de traduction** : Les traductions sont stockées dans des fichiers dédiés (`src/lib/i18n/fr.ts` et `src/lib/i18n/en.ts`)
+- **Contexte de langue** : Un contexte React (`LanguageContext`) permet de gérer la langue active et de fournir la fonction de traduction
+- **Sélecteur de langue** : Un composant dédié permet aux utilisateurs de changer la langue depuis l'interface
+- **Persistance** : La préférence de langue est sauvegardée localement pour être restaurée à la prochaine visite
+
+### Utilisation pour les développeurs
+Pour ajouter de nouvelles traductions :
+1. Ajoutez une nouvelle clé et sa valeur dans les fichiers de traduction (`fr.ts` et `en.ts`)
+2. Utilisez la fonction `t()` dans les composants : `t("maClé.sousCle")`
+
+Exemple de structure dans les fichiers de traduction :
+```typescript
+export default {
+  section: {
+    titre: "Mon titre",
+    description: "Ma description"
+  }
+}
+```
+
+Utilisation dans un composant :
+```typescript
+const { t } = useLanguage();
+
+return (
+  <div>
+    <h1>{t("section.titre")}</h1>
+    <p>{t("section.description")}</p>
+  </div>
+);
+```
+
 ## Corrections récentes
+- Correction de l'affichage du rôle dans le profil utilisateur (n'apparaît plus pour les utilisateurs standards)
+- Mise à jour de la page d'accueil pour utiliser le système de traduction
+- Ajout de traductions complètes pour toutes les sections de la page d'accueil
+- Amélioration de l'affichage du titre avec mise en évidence sur la page d'accueil
 - Correction des erreurs TypeScript dans `Header.tsx` (remplacement de `isLoading` par `loading`)
 - Correction des erreurs TypeScript dans `CartPage.tsx` (ajout de `updatedAt` aux objets de panier)
 - Correction des fonctions de service de panier dans `bookService.ts` pour inclure `updatedAt` dans tous les objets retournés
@@ -80,6 +125,7 @@ Ce projet est construit avec :
 - react-image-crop pour l'édition d'images
 - zod pour la validation des formulaires
 - Sonner pour les notifications toast
+- lodash pour la manipulation d'objets
 
 ## Installation et démarrage
 
@@ -184,6 +230,7 @@ La boutique de livres d'Actualiter offre une expérience d'achat complète :
 │   │   │   ├── input-otp.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── label.tsx
+│   │   │   ├── language-switcher.tsx   # Composant de sélection de langue
 │   │   │   ├── loading-spinner.tsx     # Composant de chargement et skeletons
 │   │   │   ├── menubar.tsx
 │   │   │   ├── navigation-menu.tsx
@@ -220,16 +267,21 @@ La boutique de livres d'Actualiter offre une expérience d'achat complète :
 │   │   ├── SearchBar.tsx               # Barre de recherche
 │   │   └── VerificationBadge.tsx       # Badge de statut de vérification
 │   ├── data/                           # Données
-│   │   └── mockData.ts                 # Données simulées (fallback)
+│   │   └── mockData.ts                 # Interfaces de données (sans données fictives)
 │   ├── hooks/                          # Hooks personnalisés
 │   │   ├── use-mobile.tsx              # Détection mobile
 │   │   └── use-toast.ts                # Notifications toast
 │   ├── lib/                            # Bibliothèques/utilitaires
 │   │   ├── api/                        # API endpoints
 │   │   ├── contexts/                   # Contextes React
-│   │   │   └── AuthContext.tsx         # Contexte d'authentification
+│   │   │   ├── AuthContext.tsx         # Contexte d'authentification
+│   │   │   └── LanguageContext.tsx     # Contexte de langue
 │   │   ├── hooks/                      # Hooks spécifiques à l'application
 │   │   │   └── useAuth.ts              # Hook d'authentification utilisateur
+│   │   ├── i18n/                       # Système d'internationalisation
+│   │   │   ├── en.ts                   # Traductions anglaises
+│   │   │   ├── fr.ts                   # Traductions françaises
+│   │   │   └── index.ts                # Configuration des langues
 │   │   ├── services/                   # Services d'accès aux données
 │   │   │   ├── articleService.ts       # Service de gestion des articles
 │   │   │   ├── authService.ts          # Service d'authentification
@@ -388,8 +440,18 @@ Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les re
 - Système d'avis et de notations pour les livres
 - Fonctionnalités de liste de souhaits pour les utilisateurs
 - Optimisation des performances du panier et du processus d'achat
+- Ajout de nouvelles langues (espagnol, allemand, etc.)
 
 ## Journal des modifications
+
+### v1.0.2 (Décembre 2024)
+- Ajout d'un système complet de traduction avec support français/anglais
+- Implémentation d'un sélecteur de langue dans l'interface utilisateur
+- Nettoyage des données fictives dans le code source pour plus de sécurité
+- Correction des références incohérentes au nom du site
+- Mise à jour des traductions dans toute l'application
+- Optimisation des performances générales
+- Résolution de problèmes de compatibilité des dépendances
 
 ### v1.0.1 (Août 2024)
 - Ajout de la gestion des fichiers PDF pour les livres
@@ -556,3 +618,17 @@ Si vous rencontrez des erreurs "Missing or insufficient permissions", vérifiez:
 3. Que l'authentification fonctionne correctement et que les rôles des utilisateurs sont bien définis
 
 Pour plus d'informations, consultez la [documentation officielle des règles de sécurité Firebase](https://firebase.google.com/docs/rules).
+
+## Internationalisation
+
+Actualiter est désormais entièrement traduit en français et en anglais :
+
+- **Système de traduction** - Infrastructure complète basée sur des fichiers de traduction et un contexte React
+- **Détection automatique** - Détection de la langue préférée de l'utilisateur à partir des paramètres du navigateur
+- **Persistance des préférences** - Sauvegarde de la langue choisie dans le localStorage
+- **Sélecteur de langue** - Interface simple permettant de changer la langue depuis n'importe quelle page
+- **Extensibilité** - Architecture conçue pour faciliter l'ajout de nouvelles langues
+
+Les utilisateurs peuvent changer la langue via :
+- Le sélecteur de langue dans la barre de navigation principale
+- Les paramètres de leur profil utilisateur

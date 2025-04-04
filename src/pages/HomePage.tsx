@@ -16,8 +16,9 @@ import { Article as UIArticle } from "@/components/ArticleCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle, FileCheck, Users, Star, ArrowRight, BookOpen } from "lucide-react";
+import { CheckCircle, FileCheck, Users, Star, ArrowRight, BookOpen, Loader2, SearchX } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +27,7 @@ const HomePage = () => {
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   // Convertir les articles Firestore en format d'affichage UI
   const transformArticlesForUI = (firestoreArticles: FirestoreArticle[]): UIArticle[] => {
@@ -39,7 +41,7 @@ const HomePage = () => {
         ? article.publicationDate 
         : article.publicationDate.toDate(), 
         "d MMMM yyyy", 
-        { locale: fr }
+        { locale: language === 'fr' ? fr : undefined }
       ),
       author: article.author,
       verificationStatus: article.verificationStatus
@@ -97,7 +99,7 @@ const HomePage = () => {
       
       loadArticles();
     }
-  }, [activeTab, isSearchMode, searchTerm, toast]);
+  }, [activeTab, isSearchMode, searchTerm, toast, language]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -112,6 +114,10 @@ const HomePage = () => {
     setSearchTerm("");
   };
 
+  const loadMore = () => {
+    // Implementation of loadMore function
+  };
+
   return (
     <Layout>
       {/* Hero Section - amélioré avec animation et call-to-action plus visible */}
@@ -122,17 +128,26 @@ const HomePage = () => {
             <CheckCircle className="h-12 w-12 text-white/80" />
           </div>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            La vérité au-delà des <span className="text-secondary">apparences</span>
+            {(() => {
+              const title = t("home.hero.title");
+              const highlight = t("home.hero.titleHighlight");
+              const parts = title.split(highlight);
+              return (
+                <>
+                  {parts[0]}<span className="text-secondary">{highlight}</span>{parts[1] || ''}
+                </>
+              );
+            })()}
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-10">
-            Actualiter se consacre à la vérification des actualités et vous aide à identifier ce qui est vrai, ce qui est faux, et ce qui se situe entre les deux.
+            {t("home.hero.description")}
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
-              Comment ça marche
+              {t("home.hero.howItWorks")}
             </Button>
             <Button size="lg" variant="outline" className="bg-transparent text-white hover:bg-white/10 hover:text-white text-lg px-8 py-6">
-              Rejoignez-nous
+              {t("home.hero.joinUs")}
             </Button>
           </div>
         </div>
@@ -147,7 +162,7 @@ const HomePage = () => {
                 <FileCheck className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-4xl font-bold mb-2">750+</h3>
-              <p className="text-muted-foreground">Articles vérifiés</p>
+              <p className="text-muted-foreground">{t("home.stats.verifiedArticles")}</p>
             </div>
             
             <div className="text-center">
@@ -155,7 +170,7 @@ const HomePage = () => {
                 <Users className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-4xl font-bold mb-2">25K+</h3>
-              <p className="text-muted-foreground">Utilisateurs actifs</p>
+              <p className="text-muted-foreground">{t("home.stats.activeUsers")}</p>
             </div>
             
             <div className="text-center">
@@ -163,7 +178,7 @@ const HomePage = () => {
                 <Star className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-4xl font-bold mb-2">96%</h3>
-              <p className="text-muted-foreground">Taux de satisfaction</p>
+              <p className="text-muted-foreground">{t("home.stats.satisfactionRate")}</p>
             </div>
             
             <div className="text-center">
@@ -171,7 +186,7 @@ const HomePage = () => {
                 <BookOpen className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-4xl font-bold mb-2">12</h3>
-              <p className="text-muted-foreground">Sources vérifiées</p>
+              <p className="text-muted-foreground">{t("home.stats.verifiedSources")}</p>
             </div>
           </div>
         </div>
@@ -183,8 +198,8 @@ const HomePage = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0">
               {isSearchMode 
-                ? `Résultats pour "${searchTerm}"` 
-                : "Derniers articles vérifiés"}
+                ? `${t("home.articles.searchResults")} "${searchTerm}"` 
+                : t("home.articles.latestVerified")}
             </h2>
             
             <SearchBar 
@@ -196,10 +211,10 @@ const HomePage = () => {
           {!isSearchMode && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="w-full sm:w-auto justify-start">
-                <TabsTrigger value="all">Tous</TabsTrigger>
-                <TabsTrigger value="true">Vrai</TabsTrigger>
-                <TabsTrigger value="partial">Partiel</TabsTrigger>
-                <TabsTrigger value="false">Faux</TabsTrigger>
+                <TabsTrigger value="all">{t("home.articles.all")}</TabsTrigger>
+                <TabsTrigger value="true">{t("home.articles.true")}</TabsTrigger>
+                <TabsTrigger value="partial">{t("home.articles.partial")}</TabsTrigger>
+                <TabsTrigger value="false">{t("home.articles.false")}</TabsTrigger>
               </TabsList>
             </Tabs>
           )}
@@ -212,7 +227,7 @@ const HomePage = () => {
                 onClick={clearSearch}
                 className="text-primary hover:text-primary/80"
               >
-                Effacer la recherche et voir tous les articles
+                {t("home.articles.clearSearch")}
               </Button>
             </div>
           )}
@@ -220,41 +235,60 @@ const HomePage = () => {
 
         {isLoading && !articles.length ? (
           <div className="py-20">
-            <LoadingSpinner size="lg" text="Chargement des articles..." fullScreen={false} />
+            <LoadingSpinner size="lg" text={t("common.loading")} fullScreen={false} />
           </div>
         ) : (
           <ArticleList articles={articles} isLoading={isLoading} />
         )}
 
-        {!isLoading && articles.length > 6 && !isSearchMode && (
-          <div className="mt-10 text-center">
-            <Button variant="outline" size="lg" className="group">
-              Charger plus d'articles
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+        {/* Load More Button */}
+        {articles.length > 0 && !isLoading && (
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={loadMore}
+              variant="outline"
+              className="px-8 py-2" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <span className="animate-spin mr-2">
+                    <Loader2 className="h-4 w-4" />
+                  </span>
+                  {t("common.loading")}
+                </div>
+              ) : (
+                t("home.articles.loadMore")
+              )}
             </Button>
           </div>
         )}
         
+        {/* No Results Message */}
         {!isLoading && isSearchMode && articles.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium mb-2">Aucun résultat trouvé</h3>
+          <div className="text-center py-20">
+            <SearchX className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold mb-2">{t("home.articles.noResults")}</h3>
             <p className="text-muted-foreground">
-              Aucun article ne correspond à votre recherche. Essayez d'autres termes ou
-              <Button variant="link" onClick={clearSearch} className="px-1">
-                consultez tous les articles
-              </Button>.
+              {t("home.articles.noResultsDescription")} <Button 
+                variant="link" 
+                onClick={clearSearch} 
+                className="p-0 h-auto text-primary"
+              >
+                {t("home.articles.viewAllArticles")}
+              </Button>
             </p>
           </div>
         )}
       </section>
 
-      {/* Section Procédé de vérification - amélioré avec des icônes et des animations */}
+      {/* Verification Process Section */}
       <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Notre procédé de vérification</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("home.verification.title")}</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Une approche rigoureuse et transparente pour garantir l'exactitude des informations
+              {t("home.verification.description")}
             </p>
           </div>
           
@@ -263,24 +297,24 @@ const HomePage = () => {
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <span className="text-primary font-bold text-2xl">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Collecte d'informations</h3>
-              <p className="text-gray-600">Notre équipe de chercheurs rassemble méticuleusement des données provenant de sources primaires, d'experts reconnus et de publications scientifiques crédibles.</p>
+              <h3 className="text-xl font-semibold mb-3">{t("home.verification.step1Title")}</h3>
+              <p className="text-gray-600">{t("home.verification.step1Description")}</p>
             </div>
             
             <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <span className="text-primary font-bold text-2xl">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Analyse approfondie</h3>
-              <p className="text-gray-600">Nous analysons rigoureusement les preuves recueillies, en vérifiant leur cohérence, leur crédibilité et leur validité selon des critères scientifiques stricts.</p>
+              <h3 className="text-xl font-semibold mb-3">{t("home.verification.step2Title")}</h3>
+              <p className="text-gray-600">{t("home.verification.step2Description")}</p>
             </div>
             
             <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <span className="text-primary font-bold text-2xl">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Vérification et publication</h3>
-              <p className="text-gray-600">Notre comité éditorial examine les conclusions et attribue un statut de vérification basé sur les preuves. Le processus complet est documenté pour une transparence totale.</p>
+              <h3 className="text-xl font-semibold mb-3">{t("home.verification.step3Title")}</h3>
+              <p className="text-gray-600">{t("home.verification.step3Description")}</p>
             </div>
           </div>
         </div>
@@ -290,9 +324,9 @@ const HomePage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Ils nous font confiance</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("home.testimonials.title")}</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Découvrez ce que nos utilisateurs disent de notre plateforme
+              {t("home.testimonials.description")}
             </p>
           </div>
           
@@ -305,10 +339,10 @@ const HomePage = () => {
                 </Avatar>
                 <div>
                   <h4 className="font-semibold">Sarah Martin</h4>
-                  <p className="text-sm text-muted-foreground">Journaliste</p>
+                  <p className="text-sm text-muted-foreground">{t("home.testimonials.journalist")}</p>
                 </div>
               </div>
-              <p className="italic text-gray-700">"Actualiter est devenu un outil indispensable dans mon travail quotidien. La fiabilité des vérifications me permet de rédiger des articles avec confiance."</p>
+              <p className="italic text-gray-700">{t("home.testimonials.quote1")}</p>
             </div>
             
             <div className="bg-gray-50 p-6 rounded-lg">
@@ -319,10 +353,10 @@ const HomePage = () => {
                 </Avatar>
                 <div>
                   <h4 className="font-semibold">Thomas Laurent</h4>
-                  <p className="text-sm text-muted-foreground">Enseignant</p>
+                  <p className="text-sm text-muted-foreground">{t("home.testimonials.teacher")}</p>
                 </div>
               </div>
-              <p className="italic text-gray-700">"J'utilise Actualiter avec mes élèves pour leur apprendre l'importance de la vérification des sources. C'est un excellent outil pédagogique pour développer l'esprit critique."</p>
+              <p className="italic text-gray-700">{t("home.testimonials.quote2")}</p>
             </div>
             
             <div className="bg-gray-50 p-6 rounded-lg">
@@ -333,10 +367,10 @@ const HomePage = () => {
                 </Avatar>
                 <div>
                   <h4 className="font-semibold">Léa Blanchard</h4>
-                  <p className="text-sm text-muted-foreground">Étudiante</p>
+                  <p className="text-sm text-muted-foreground">{t("home.testimonials.student")}</p>
                 </div>
               </div>
-              <p className="italic text-gray-700">"Dans l'ère de la désinformation, Actualiter est une bouffée d'air frais. L'interface est intuitive et les explications qui accompagnent chaque vérification sont très claires."</p>
+              <p className="italic text-gray-700">{t("home.testimonials.quote3")}</p>
             </div>
           </div>
         </div>
@@ -346,23 +380,23 @@ const HomePage = () => {
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Restez informé</h2>
+            <h2 className="text-3xl font-bold mb-4">{t("home.newsletter.title")}</h2>
             <p className="text-lg mb-8 text-white/90">
-              Abonnez-vous à notre newsletter pour recevoir les dernières vérifications et analyses directement dans votre boîte mail
+              {t("home.newsletter.description")}
             </p>
             
             <form className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
               <Input
                 type="email"
-                placeholder="Votre adresse email"
+                placeholder={t("home.newsletter.placeholder")}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus-visible:ring-white"
               />
               <Button type="submit" variant="secondary" className="shrink-0">
-                S'abonner
+                {t("home.newsletter.subscribe")}
               </Button>
             </form>
             <p className="text-sm mt-4 text-white/70">
-              Nous respectons votre vie privée. Vous pouvez vous désabonner à tout moment.
+              {t("home.newsletter.privacy")}
             </p>
           </div>
         </div>

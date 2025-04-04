@@ -9,10 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Navigate } from "react-router-dom";
 
 const ProfilePage = () => {
-  const { currentUser, isLoading } = useAuth();
+  const { currentUser, loading } = useAuth();
   
   // Afficher un écran de chargement pendant le chargement des données
-  if (isLoading) {
+  if (loading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-10">

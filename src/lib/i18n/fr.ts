@@ -20,12 +20,68 @@ export default {
     maintenanceMode: "Mode maintenance",
   },
   footer: {
+    description: "Dédié à la vérification des actualités et à vous aider à distinguer les faits de la fiction.",
     navigation: "Navigation",
     legal: "Mentions légales",
     termsOfService: "Conditions d'utilisation",
     privacyPolicy: "Politique de confidentialité",
     cookiePolicy: "Politique des cookies",
     allRightsReserved: "Tous droits réservés",
+  },
+  home: {
+    hero: {
+      title: "La vérité au-delà des apparences",
+      titleHighlight: "apparences",
+      description: "Actualiter se consacre à la vérification des actualités et vous aide à identifier ce qui est vrai, ce qui est faux, et ce qui se situe entre les deux.",
+      howItWorks: "Comment ça marche",
+      joinUs: "Rejoignez-nous"
+    },
+    stats: {
+      verifiedArticles: "Articles vérifiés",
+      activeUsers: "Utilisateurs actifs",
+      satisfactionRate: "Taux de satisfaction",
+      verifiedSources: "Sources vérifiées"
+    },
+    articles: {
+      latestVerified: "Derniers articles vérifiés",
+      searchResults: "Résultats pour",
+      all: "Tous",
+      true: "Vrai",
+      partial: "Partiel",
+      false: "Faux",
+      clearSearch: "Effacer la recherche et voir tous les articles",
+      loadMore: "Charger plus d'articles",
+      noResults: "Aucun résultat trouvé",
+      noResultsDescription: "Aucun article ne correspond à votre recherche. Essayez d'autres termes ou",
+      viewAllArticles: "consultez tous les articles"
+    },
+    verification: {
+      title: "Notre procédé de vérification",
+      description: "Une approche rigoureuse et transparente pour garantir l'exactitude des informations",
+      step1Title: "Collecte d'informations",
+      step1Description: "Notre équipe de chercheurs rassemble méticuleusement des données provenant de sources primaires, d'experts reconnus et de publications scientifiques crédibles.",
+      step2Title: "Analyse approfondie",
+      step2Description: "Nous analysons rigoureusement les preuves recueillies, en vérifiant leur cohérence, leur crédibilité et leur validité selon des critères scientifiques stricts.",
+      step3Title: "Vérification et publication",
+      step3Description: "Notre comité éditorial examine les conclusions et attribue un statut de vérification basé sur les preuves. Le processus complet est documenté pour une transparence totale."
+    },
+    testimonials: {
+      title: "Ils nous font confiance",
+      description: "Découvrez ce que nos utilisateurs disent de notre plateforme",
+      journalist: "Journaliste",
+      teacher: "Enseignant",
+      student: "Étudiante",
+      quote1: "Actualiter est devenu un outil indispensable dans mon travail quotidien. La fiabilité des vérifications me permet de rédiger des articles avec confiance.",
+      quote2: "J'utilise Actualiter avec mes élèves pour leur apprendre l'importance de la vérification des sources. C'est un excellent outil pédagogique pour développer l'esprit critique.",
+      quote3: "Dans l'ère de la désinformation, Actualiter est une bouffée d'air frais. L'interface est intuitive et les explications qui accompagnent chaque vérification sont très claires."
+    },
+    newsletter: {
+      title: "Restez informé",
+      description: "Abonnez-vous à notre newsletter pour recevoir les dernières vérifications et analyses directement dans votre boîte mail",
+      placeholder: "Votre adresse email",
+      subscribe: "S'abonner",
+      privacy: "Nous respectons votre vie privée. Vous pouvez vous désabonner à tout moment."
+    }
   },
   auth: {
     signIn: "Se connecter",
