@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useCart } from '@/lib/contexts/CartContext';
 import { getAllBooks, getFeaturedBooks, getBooksByCategory, searchBooks, Book, getAllCategories, BookCategory, addToCart, CartItem } from '@/lib/services/bookService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Separator } from '@/components/ui/separator';
@@ -53,6 +54,7 @@ export default function BookshopPage() {
   const [currentTab, setCurrentTab] = useState('tous');
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const { refetchCart } = useCart();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -151,6 +153,8 @@ export default function BookshopPage() {
       };
       
       await addToCart(currentUser.uid, cartItem);
+      // Mettre à jour le panier global
+      await refetchCart();
       
       toast({
         title: "Ajouté au panier",

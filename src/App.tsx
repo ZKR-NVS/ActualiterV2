@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
+import { CartProvider } from "@/lib/contexts/CartContext";
 import { getGlobalSettings, updateMaintenanceMode, synchronizeMaintenanceMode } from "@/lib/services/settingsService";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
@@ -32,12 +33,11 @@ interface MaintenanceContextType {
   setMaintenanceMode: (value: boolean) => void;
 }
 
-export const MaintenanceContext = createContext<MaintenanceContextType>({
+const MaintenanceContext = createContext<MaintenanceContextType>({
   isMaintenanceMode: false,
-  setMaintenanceMode: () => {},
+  setMaintenanceMode: () => {}
 });
 
-// Hook pour utiliser le contexte de maintenance
 export const useMaintenanceMode = () => useContext(MaintenanceContext);
 
 // Composant wrapper pour vérifier le mode maintenance
@@ -124,60 +124,71 @@ const initializeTheme = () => {
   }
 };
 
-const queryClient = new QueryClient();
+export default function App() {
+  const [queryClient] = useState(() => new QueryClient());
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <AppContent />
+            </CartProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </TooltipProvider>
+      <Toaster />
+      <Sonner />
+    </QueryClientProvider>
+  );
+}
 
-// Composant pour le contenu de l'application qui utilisera useAuth
 const AppContent = () => {
-  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
-  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const { currentUser, isAdmin } = useAuth();
-
-  // Récupérer le mode maintenance depuis Firestore
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  
+  // Récupération des paramètres globaux au chargement
   useEffect(() => {
+    // Ne bloquer le chargement que pour les administrateurs
+    if (isAdmin) {
+      setIsSettingsLoading(true);
+    }
+    
     const fetchSettings = async () => {
       try {
-        // Pour les utilisateurs non-admin, ne pas afficher l'écran de chargement
-        if (isAdmin) {
-          setIsSettingsLoading(true);
-        }
-        
-        // Optimisation: Pour les utilisateurs non-admin, pas besoin de synchroniser
-        if (isAdmin) {
-          await synchronizeMaintenanceMode();
-        }
-        
-        // Récupérer les paramètres (cette fonction gère déjà les erreurs de permission)
         const settings = await getGlobalSettings();
         setIsMaintenanceMode(settings.maintenanceMode);
+        
+        // Ne synchroniser que pour les administrateurs
+        if (currentUser && isAdmin) {
+          await synchronizeMaintenanceMode();
+        }
       } catch (error) {
-        console.error("Erreur lors de la récupération des paramètres:", error);
+        console.error("Erreur lors du chargement des paramètres:", error);
       } finally {
         setIsSettingsLoading(false);
       }
     };
-
+    
     fetchSettings();
-  }, [isAdmin]);
-
-  // Fonction pour mettre à jour le mode maintenance
+  }, [currentUser, isAdmin]);
+  
+  // Fonction qui permet de mettre à jour l'état local et dans Firestore
   const handleSetMaintenanceMode = async (value: boolean) => {
+    setIsMaintenanceMode(value);
     try {
-      // Mettre à jour l'état local immédiatement pour une réponse rapide
-      setIsMaintenanceMode(value);
-      
-      // Mettre à jour dans Firestore
-      await updateMaintenanceMode(value, currentUser?.uid);
+      await updateMaintenanceMode(value);
     } catch (error) {
       console.error("Erreur lors de la mise à jour du mode maintenance:", error);
-      // En cas d'erreur, revenir à l'état précédent
-      setIsMaintenanceMode(!value);
     }
   };
   
-  if (isAdmin && isSettingsLoading) {
-    return <LoadingSpinner size="lg" text="Chargement des paramètres..." fullScreen />;
+  if (isSettingsLoading && isAdmin) {
+    return <LoadingSpinner size="lg" text="Chargement des paramètres..." />;
   }
-
+  
   return (
     <MaintenanceContext.Provider value={{ isMaintenanceMode, setMaintenanceMode: handleSetMaintenanceMode }}>
       <BrowserRouter>
@@ -242,6 +253,7 @@ const AppContent = () => {
               } 
             />
             
+            {/* Fallback pour les routes inconnues */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MaintenanceWrapper>
@@ -249,26 +261,3 @@ const AppContent = () => {
     </MaintenanceContext.Provider>
   );
 };
-
-const App = () => {
-  // Initialiser le thème au démarrage de l'application
-  useEffect(() => {
-    initializeTheme();
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <LanguageProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </LanguageProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
-
-export default App;

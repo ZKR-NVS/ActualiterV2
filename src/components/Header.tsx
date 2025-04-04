@@ -8,6 +8,7 @@ import { Badge } from "./ui/badge";
 import { ThemeSwitcher } from "./ui/theme-switcher";
 import { LanguageSwitcher } from "./ui/language-switcher";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useCart } from "@/lib/contexts/CartContext";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { NotificationDropdown } from "./NotificationDropdown";
@@ -16,6 +17,7 @@ export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isMaintenanceMode, setMaintenanceMode } = useMaintenanceMode();
   const { currentUser, isAdmin, loading, logout } = useAuth();
+  const { cartItemsCount } = useCart();
   const { t } = useLanguage();
   const location = useLocation();
 
@@ -113,7 +115,11 @@ export const Header: React.FC = () => {
                 <Link to="/cart">
                   <Button variant="ghost" size="icon" className="relative">
                     <ShoppingCart className="h-5 w-5" />
-                    {/* On pourrait ajouter ici un badge avec le nombre d'articles dans le panier */}
+                    {cartItemsCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-primary text-primary-foreground rounded-full">
+                        {cartItemsCount}
+                      </Badge>
+                    )}
                   </Button>
                 </Link>
               )}
@@ -151,8 +157,13 @@ export const Header: React.FC = () => {
             <ThemeSwitcher />
             {currentUser && (
               <Link to="/cart">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="relative">
                   <ShoppingCart className="h-5 w-5" />
+                  {cartItemsCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-primary text-primary-foreground rounded-full">
+                      {cartItemsCount}
+                    </Badge>
+                  )}
                 </Button>
               </Link>
             )}

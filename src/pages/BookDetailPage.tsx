@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useCart } from '@/lib/contexts/CartContext';
 import { getBookById, Book, addToCart, CartItem } from '@/lib/services/bookService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
@@ -58,6 +59,7 @@ export default function BookDetailPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const { refetchCart } = useCart();
   
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,6 +116,8 @@ export default function BookDetailPage() {
       };
       
       await addToCart(currentUser.uid, cartItem);
+      // Mettre à jour le panier global
+      await refetchCart();
       
       toast({
         title: "Ajouté au panier",

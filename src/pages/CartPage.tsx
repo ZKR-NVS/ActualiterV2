@@ -7,19 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { getUserCart, updateCartItemQuantity, removeFromCart, clearCart, Cart, CartItem } from '@/lib/services/bookService';
+import { useCart } from '@/lib/contexts/CartContext';
+import { updateCartItemQuantity, removeFromCart, clearCart, Cart } from '@/lib/services/bookService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, CreditCard, AlertTriangle } from 'lucide-react';
 import CheckoutForm from '@/components/bookshop/CheckoutForm';
-import { serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Fonction pour sécuriser les données du panier
-const safeCartItems = (cart: Cart | null): (Cart & { id: string }) | null => {
+const safeCartItems = (cart: Cart & { id: string; } | null): (Cart & { id: string; }) | null => {
   if (!cart) return null;
   
   // Créer une copie du panier
-  const safeCopy = { ...cart, id: cart.userId }; // Ajouter l'ID manquant
+  const safeCopy = { ...cart };
   
   // Traiter les éléments du panier
   if (Array.isArray(safeCopy.items)) {
@@ -50,20 +50,18 @@ const safeCartItems = (cart: Cart | null): (Cart & { id: string }) | null => {
     }
   }
   
-  return safeCopy;
+  return safeCopy as Cart & { id: string; };
 };
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const { cart, loading: cartLoading, refetchCart } = useCart();
   const { t } = useLanguage();
   
-  const [cart, setCart] = useState<(Cart & { id: string }) | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [cardIssue, setCardIssue] = useState(false);
   
   useEffect(() => {
     if (!currentUser) {
@@ -71,34 +69,15 @@ export default function CartPage() {
       return;
     }
     
-    const fetchCart = async () => {
-      try {
-        setLoading(true);
-        const fetchedCart = await getUserCart(currentUser.uid);
-        // Sécuriser les données du panier
-        const safeCart = safeCartItems(fetchedCart);
-        setCart(safeCart);
-        
-        // Initialiser l'état des quantités
-        const initialQuantities: Record<string, number> = {};
-        safeCart?.items.forEach(item => {
-          initialQuantities[item.bookId] = item.quantity;
-        });
-        setQuantities(initialQuantities);
-      } catch (error) {
-        console.error("Erreur lors du chargement du panier:", error);
-        toast({
-          title: t("errors.error"),
-          description: t("errors.cartLoadError"),
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCart();
-  }, [currentUser, navigate, toast, t]);
+    // Initialiser l'état des quantités depuis le panier global
+    if (cart) {
+      const initialQuantities: Record<string, number> = {};
+      cart.items.forEach(item => {
+        initialQuantities[item.bookId] = item.quantity;
+      });
+      setQuantities(initialQuantities);
+    }
+  }, [currentUser, navigate, cart]);
   
   const handleUpdateQuantity = async (bookId: string, quantity: number) => {
     if (!currentUser || !cart) return;
@@ -109,10 +88,7 @@ export default function CartPage() {
     
     try {
       await updateCartItemQuantity(currentUser.uid, bookId, quantity);
-      
-      // Mettre à jour l'état du panier
-      const updatedCart = await getUserCart(currentUser.uid);
-      setCart(safeCartItems(updatedCart));
+      await refetchCart(); // Mettre à jour l'état global du panier
       
       toast({
         title: t("cart.quantityUpdated"),
@@ -139,10 +115,7 @@ export default function CartPage() {
     
     try {
       await removeFromCart(currentUser.uid, bookId);
-      
-      // Mettre à jour l'état du panier
-      const updatedCart = await getUserCart(currentUser.uid);
-      setCart(safeCartItems(updatedCart));
+      await refetchCart(); // Mettre à jour l'état global du panier
       
       toast({
         title: t("cart.itemRemoved"),
@@ -163,10 +136,7 @@ export default function CartPage() {
     
     try {
       await clearCart(currentUser.uid);
-      
-      // Mettre à jour l'état du panier
-      const updatedCart = await getUserCart(currentUser.uid);
-      setCart(safeCartItems(updatedCart));
+      await refetchCart(); // Mettre à jour l'état global du panier
       
       toast({
         title: t("cart.cartCleared"),
@@ -194,7 +164,7 @@ export default function CartPage() {
     }
   };
   
-  if (loading) {
+  if (cartLoading) {
     return (
       <Layout>
         <div className="container mx-auto py-8 min-h-screen flex justify-center items-center">
@@ -214,11 +184,6 @@ export default function CartPage() {
         <h1 className="text-3xl font-bold mb-6 flex items-center">
           <ShoppingCart className="mr-2 h-6 w-6" />
           {t("cart.yourCart")}
-          {cart && cart.items.length > 0 && (
-            <span className="ml-2 inline-flex items-center justify-center w-6 h-6 text-sm font-medium rounded-full bg-primary text-primary-foreground">
-              {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
-            </span>
-          )}
         </h1>
         
         {isCheckingOut ? (
