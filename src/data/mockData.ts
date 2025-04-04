@@ -1,4 +1,3 @@
-
 import { Article } from "@/components/ArticleCard";
 
 export const mockArticles: Article[] = [
@@ -70,14 +69,14 @@ export const mockUsers: User[] = [
   {
     id: "u1",
     name: "Admin User",
-    email: "admin@truthbeacon.com",
+    email: "admin@actualiter.com",
     role: "admin",
     avatar: "https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff"
   },
   {
     id: "u2",
     name: "Editor User",
-    email: "editor@truthbeacon.com",
+    email: "editor@actualiter.com",
     role: "editor",
     avatar: "https://ui-avatars.com/api/?name=Editor+User&background=2C7A7B&color=fff"
   },

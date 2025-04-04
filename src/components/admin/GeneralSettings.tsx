@@ -12,9 +12,9 @@ export const GeneralSettingsForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [settings, setSettings] = useState<GeneralSettings>({
-    siteName: "TruthBeacon",
+    siteName: "Actualiter",
     siteDescription: "Vérification des faits pour l'ère numérique",
-    contactEmail: "contact@truthbeacon.com",
+    contactEmail: "contact@actualiter.com",
     enableRegistration: true,
     maintenanceMode: false,
     maintenanceMessage: "Le site est en maintenance. Merci de revenir plus tard.",

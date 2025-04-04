@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Link to="/" className="text-2xl font-bold text-primary flex items-center">
-              TruthBeacon
+              Actualiter
               {isMaintenanceMode && (
                 <Badge variant="outline" className="ml-2 bg-partial text-partial-foreground border-partial">
                   <AlertTriangle className="h-3 w-3 mr-1" />

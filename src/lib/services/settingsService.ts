@@ -65,9 +65,9 @@ export interface SiteSettings {
 // Valeurs par défaut pour les paramètres
 const defaultSettings: SiteSettings = {
   general: {
-    siteName: "TruthBeacon",
+    siteName: "Actualiter",
     siteDescription: "Plateforme de vérification d'articles",
-    contactEmail: "contact@truthbeacon.com",
+    contactEmail: "contact@actualiter.com",
     enableRegistration: true,
     maintenanceMode: false,
     maintenanceMessage: "Le site est en maintenance. Merci de revenir plus tard.",
@@ -92,10 +92,10 @@ const defaultSettings: SiteSettings = {
     smtpUser: "",
     smtpPassword: "",
     enableEmailNotifications: false,
-    senderName: "TruthBeacon",
-    senderEmail: "noreply@truthbeacon.com",
+    senderName: "Actualiter",
+    senderEmail: "noreply@actualiter.com",
     emailTemplates: {
-      welcomeEmail: "Bienvenue sur TruthBeacon!",
+      welcomeEmail: "Bienvenue sur Actualiter!",
       passwordReset: "Réinitialisation de votre mot de passe",
       articlePublished: "Un nouvel article a été publié"
     }

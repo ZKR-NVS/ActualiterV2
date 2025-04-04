@@ -17,10 +17,10 @@ export const EmailSettingsForm = () => {
     smtpUser: "",
     smtpPassword: "",
     enableEmailNotifications: false,
-    senderName: "TruthBeacon",
-    senderEmail: "noreply@truthbeacon.com",
+    senderName: "Actualiter",
+    senderEmail: "noreply@actualiter.com",
     emailTemplates: {
-      welcomeEmail: "Bienvenue sur TruthBeacon!",
+      welcomeEmail: "Bienvenue sur Actualiter!",
       passwordReset: "Réinitialisation de votre mot de passe",
       articlePublished: "Un nouvel article a été publié"
     }

@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">TruthBeacon</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Actualiter</h3>
             <p className="text-muted-foreground">
               Dedicated to verifying news and helping you separate fact from fiction.
             </p>
@@ -46,7 +46,7 @@ export const Footer: React.FC = () => {
         </div>
         
         <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-          <p>&copy; {currentYear} TruthBeacon. All rights reserved.</p>
+          <p>&copy; {currentYear} Actualiter. All rights reserved.</p>
         </div>
       </div>
     </footer>
