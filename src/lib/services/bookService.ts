@@ -34,6 +34,8 @@ export interface Book {
   language?: string;
   featured?: boolean;
   discountPercentage?: number;
+  rating?: number;
+  reviewCount?: number;
   createdAt?: any;
   updatedAt?: any;
 }

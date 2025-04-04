@@ -1,4 +1,4 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.4
+# Actualiter - Plateforme de vérification d'actualités - v1.0.5
 *Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
@@ -21,6 +21,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Support multilingue complet et optimisé (français et anglais)
 - **NOUVEAU** : Traduction complète de toutes les pages principales, y compris la page d'accueil
 - **NOUVEAU** : Format de date localisé selon la langue sélectionnée
+- **AMÉLIORÉ** : Formulaire d'ajout de livres avec support pour les URLs externes
 
 ## Fonctionnalités
 ### Terminées
@@ -53,6 +54,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Composants intégralement traduits (Page d'accueil, Footer, Préférences, etc.)
 - **AMÉLIORÉ** : Sélecteur de langue dans l'interface utilisateur avec persistance des préférences
 - **NOUVEAU** : Format de date localisé selon la langue sélectionnée
+- **AMÉLIORÉ** : Formulaire d'ajout de livres simplifié avec support pour les URLs externes
 
 ### En cours
 - Système de contrôle d'accès aux PDF basé sur les achats
@@ -122,6 +124,9 @@ return (
 - Optimisation de l'intégration des traductions dans la page d'accueil (HomePage)
 - Adaptation du format des dates selon la langue sélectionnée
 - Mise en évidence du terme "apparences" dans le titre principal de la page d'accueil
+- **NOUVEAU** : Correction des problèmes de permissions Firebase pour les paniers d'achat
+- **NOUVEAU** : Amélioration du formulaire d'ajout de livres avec champs pour les URLs externes
+- **NOUVEAU** : Correction des erreurs TypeScript dans le formulaire de livres
 
 ## Technologies utilisées
 
@@ -458,6 +463,13 @@ Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les re
 - Ajout de nouvelles langues (espagnol, allemand, etc.)
 
 ## Journal des modifications
+
+### v1.0.5 (4 avril 2024)
+- Correction des problèmes de permissions Firebase pour les paniers d'achat
+- Amélioration du formulaire d'ajout de livres avec champs pour les URLs externes
+- Modification des règles de sécurité Firebase pour corriger les accès aux paniers
+- Correction des erreurs TypeScript dans le formulaire de livres
+- Ajout des propriétés rating et reviewCount à l'interface Book
 
 ### v1.0.4 (4 avril 2024)
 - Optimisation du système de traduction et de l'internationalisation

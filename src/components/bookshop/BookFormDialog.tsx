@@ -121,7 +121,7 @@ export default function BookFormDialog({
           title: data.title,
           author: data.author,
           description: data.description || '',
-          publicationDate: data.publicationDate ? new Date(data.publicationDate) : new Date(),
+          publicationDate: data.publicationDate ? data.publicationDate : new Date().getFullYear().toString(),
           isbn: data.isbn || '',
           language: data.language || 'fr',
           pages: data.pages ? Number(data.pages) : 0,
@@ -443,18 +443,18 @@ export default function BookFormDialog({
                     
                     {coverImagePreview && (
                       <>
-                        <Button
-                          type="button"
-                          variant="ghost"
+                      <Button
+                        type="button"
+                        variant="ghost"
                           onClick={() => {
                             setCoverImagePreview(null);
                             form.setValue('coverImageUrl', '');
                           }}
                           className="text-destructive hover:text-destructive mb-2"
-                        >
+                      >
                           <X className="mr-2 h-4 w-4" />
-                          Supprimer l'image
-                        </Button>
+                        Supprimer l'image
+                      </Button>
                         <p className="text-xs text-muted-foreground mt-2">
                           L'image sera automatiquement recadrée au format 3:4 pour s'adapter parfaitement au cadre d'affichage.
                         </p>
