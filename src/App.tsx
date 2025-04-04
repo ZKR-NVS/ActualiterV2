@@ -146,23 +146,45 @@ export default function App() {
 
 const AppContent = () => {
   const { currentUser, isAdmin } = useAuth();
+  const [isPreloading, setIsPreloading] = useState(true); // État de pré-chargement
   const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   
-  // Récupération des paramètres globaux au chargement
+  // Récupération des paramètres globaux au pré-chargement
   useEffect(() => {
-    // Ne bloquer le chargement que pour les administrateurs
+    const preloadSettings = async () => {
+      try {
+        // Récupérer l'état du mode maintenance en premier
+        const settings = await getGlobalSettings();
+        setIsMaintenanceMode(settings.maintenanceMode);
+      } catch (error) {
+        console.error("Erreur lors du pré-chargement des paramètres:", error);
+      } finally {
+        // Terminer le pré-chargement
+        setIsPreloading(false);
+      }
+    };
+    
+    preloadSettings();
+  }, []);
+  
+  // Récupération détaillée et synchronisation pour les administrateurs
+  useEffect(() => {
+    // Ne s'exécute que lorsque le pré-chargement est terminé
+    if (isPreloading) return;
+    
+    // Ne bloquer le chargement complet que pour les administrateurs
     if (isAdmin) {
       setIsSettingsLoading(true);
     }
     
     const fetchSettings = async () => {
       try {
-        const settings = await getGlobalSettings();
-        setIsMaintenanceMode(settings.maintenanceMode);
-        
         // Ne synchroniser que pour les administrateurs
         if (currentUser && isAdmin) {
+          // Récupérer à nouveau les paramètres et synchroniser
+          const settings = await getGlobalSettings();
+          setIsMaintenanceMode(settings.maintenanceMode);
           await synchronizeMaintenanceMode();
         }
       } catch (error) {
@@ -173,7 +195,7 @@ const AppContent = () => {
     };
     
     fetchSettings();
-  }, [currentUser, isAdmin]);
+  }, [currentUser, isAdmin, isPreloading]);
   
   // Fonction qui permet de mettre à jour l'état local et dans Firestore
   const handleSetMaintenanceMode = async (value: boolean) => {
@@ -185,6 +207,12 @@ const AppContent = () => {
     }
   };
   
+  // Afficher un écran de chargement pendant le pré-chargement
+  if (isPreloading) {
+    return <LoadingSpinner size="lg" text="Initialisation..." />;
+  }
+  
+  // Afficher un écran de chargement pendant le chargement des paramètres pour les admins
   if (isSettingsLoading && isAdmin) {
     return <LoadingSpinner size="lg" text="Chargement des paramètres..." />;
   }

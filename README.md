@@ -1,4 +1,4 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.7
+# Actualiter - Plateforme de vérification d'actualités - v1.0.8
 *Dernière mise à jour : 4 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
@@ -29,6 +29,7 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **CORRIGÉ** : Correction des problèmes de permission Firebase liés aux paniers
 - **CORRIGÉ** : Correction des erreurs Firebase "Cannot use serverTimestamp() in arrays"
 - **AMÉLIORÉ** : Amélioration de la gestion des Timestamps Firebase dans les interfaces React
+- **NOUVEAU** : Contexte global pour le panier avec affichage du nombre d'articles dans l'en-tête
 
 ## Fonctionnalités
 ### Terminées
@@ -64,82 +65,29 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Formulaire d'ajout de livres simplifié avec support pour les URLs externes
 - **NOUVEAU** : Gestion gracieuse des erreurs d'autorisation pour les utilisateurs standards
 - **AMÉLIORÉ** : Optimisation du temps de chargement initial de l'application
+- **NOUVEAU** : Compteur d'articles du panier visible depuis toutes les pages
+- **AMÉLIORÉ** : Gestion d'état globale du panier pour une meilleure cohérence des données
 
-### En cours
-- Système de contrôle d'accès aux PDF basé sur les achats
-- Tableau de bord d'analyse pour les administrateurs
-- Tests unitaires et d'intégration
-- Optimisation des performances
-- **NOUVEAU** : Intégration de solutions de paiement réelles (Stripe, PayPal)
-- **NOUVEAU** : Système de gestion des stocks avancé
+## Journal des modifications
 
-## Système de traduction
-Actualiter utilise un système de traduction complet qui permet de basculer facilement entre le français et l'anglais. Voici les points clés de ce système :
+### v1.0.8
+- Mise en place d'un contexte global pour la gestion du panier (CartContext)
+- Ajout d'un compteur d'articles dans l'en-tête pour visualiser rapidement le contenu du panier
+- Correction des erreurs TypeScript dans le composant CartPage.tsx
+- Optimisation de la sécurisation des Timestamps Firebase dans les interfaces utilisateur
+- Amélioration de la réactivité du panier avec mise à jour instantanée lors de l'ajout/suppression d'articles
 
-### Fonctionnement
-- **Fichiers de traduction** : Les traductions sont stockées dans des fichiers dédiés (`src/lib/i18n/fr.ts` et `src/lib/i18n/en.ts`)
-- **Contexte de langue** : Un contexte React (`LanguageContext`) permet de gérer la langue active et de fournir la fonction de traduction
-- **Sélecteur de langue** : Un composant dédié permet aux utilisateurs de changer la langue depuis l'interface
-- **Persistance** : La préférence de langue est sauvegardée localement pour être restaurée à la prochaine visite
+### v1.0.7
+- Correction de l'erreur de sérialisation des Timestamps Firebase dans les pages de détail de livre et du panier
+- Implémentation de fonctions de sécurité pour convertir les objets Timestamp en chaînes ISO avant leur utilisation dans les composants React
+- Optimisation de la gestion d'état du panier pour une meilleure réactivité de l'interface
 
-### Utilisation pour les développeurs
-Pour ajouter de nouvelles traductions :
-1. Ajoutez une nouvelle clé et sa valeur dans les fichiers de traduction (`fr.ts` et `en.ts`)
-2. Utilisez la fonction `t()` dans les composants : `t("maClé.sousCle")`
-
-Exemple de structure dans les fichiers de traduction :
-```typescript
-export default {
-  section: {
-    titre: "Mon titre",
-    description: "Ma description"
-  }
-}
-```
-
-Utilisation dans un composant :
-```typescript
-const { t } = useLanguage();
-
-return (
-  <div>
-    <h1>{t("section.titre")}</h1>
-    <p>{t("section.description")}</p>
-  </div>
-);
-```
-
-## Corrections récentes
-- Implémentation d'une version sans Firebase Storage pour la boutique de livres (utilisation d'URLs externes ou d'images par défaut)
-- Amélioration de la gestion des erreurs lors du téléchargement d'images vers Firebase Storage, avec une solution de contournement pour les problèmes CORS
-- Amélioration de l'interface utilisateur pour la création et l'édition de livres
-- Correction de la mise en page sur les petits écrans
-- Ajout de la fonctionnalité de recherche dans la liste des livres
-- Implémentation du système de recadrage d'images pour assurer un ratio 3:4 cohérent dans toute l'application
-- Amélioration de l'affichage du titre avec mise en évidence sur la page d'accueil
-- Correction des erreurs TypeScript dans `Header.tsx` (remplacement de `isLoading` par `loading`)
-- Correction des erreurs TypeScript dans `CartPage.tsx` (ajout de `updatedAt` aux objets de panier)
-- Correction des fonctions de service de panier dans `bookService.ts` pour inclure `updatedAt` dans tous les objets retournés
-- Amélioration de la cohérence du rendu des composants dans l'interface utilisateur
-- Ajout de la gestion des fichiers PDF pour les livres
-- Implémentation de l'interface d'administration des commandes
-- Amélioration de l'interface utilisateur pour la création et l'édition de livres
-- Correction de la mise en page sur les petits écrans
-- Ajout de la fonctionnalité de recherche dans la liste des livres
-- Implémentation du système de recadrage d'images pour assurer un ratio 3:4 cohérent dans toute l'application
-- Amélioration de la gestion des erreurs lors du téléchargement d'images vers Firebase Storage, avec une solution de contournement pour les problèmes CORS
-- Amélioration du système de traduction avec mise à jour des fichiers de langue (fr.ts et en.ts)
-- Mise à jour du composant de sélection de langue (LanguageSwitcher) pour une meilleure expérience utilisateur
-- Optimisation de l'intégration des traductions dans la page d'accueil (HomePage)
-- Adaptation du format des dates selon la langue sélectionnée
-- Mise en évidence du terme "apparences" dans le titre principal de la page d'accueil
-- **NOUVEAU** : Correction des problèmes de permissions Firebase pour les paniers d'achat
-- **NOUVEAU** : Amélioration du formulaire d'ajout de livres avec champs pour les URLs externes
-- **NOUVEAU** : Correction des erreurs TypeScript dans le formulaire de livres
-- **NOUVEAU** : Correction du problème de sérialisation des Timestamps Firebase sur la page de détails des livres
-- **NOUVEAU** : Correction des erreurs d'autorisation lors de l'accès aux paramètres par des utilisateurs standards
-- **NOUVEAU** : Optimisation du chargement initial pour éviter les délais inutiles
-- **NOUVEAU** : Résolution du problème d'utilisation de serverTimestamp() dans les tableaux du panier
+### v1.0.6
+- Correction de l'erreur de sérialisation des Timestamps Firebase
+- Correction de l'erreur "serverTimestamp() is not currently supported inside arrays" dans les paniers
+- Amélioration de la gestion des erreurs d'autorisation pour les utilisateurs non-admin
+- Optimisation du chargement des paramètres (plus de blocage pour les utilisateurs standard)
+- Mise à jour de la documentation
 
 ## Technologies utilisées
 
@@ -474,43 +422,6 @@ Le fichier `vercel.json` inclus dans ce dépôt configure automatiquement les re
 - Fonctionnalités de liste de souhaits pour les utilisateurs
 - Optimisation des performances du panier et du processus d'achat
 - Ajout de nouvelles langues (espagnol, allemand, etc.)
-
-## Journal des modifications
-
-### v1.0.7
-- Correction de l'erreur de sérialisation des Timestamps Firebase dans les pages de détail de livre et du panier
-- Implémentation de fonctions de sécurité pour convertir les objets Timestamp en chaînes ISO avant leur utilisation dans les composants React
-- Optimisation de la gestion d'état du panier pour une meilleure réactivité de l'interface
-
-### v1.0.6
-- Correction de l'erreur de sérialisation des Timestamps Firebase
-- Correction de l'erreur "serverTimestamp() is not currently supported inside arrays" dans les paniers
-- Amélioration de la gestion des erreurs d'autorisation pour les utilisateurs non-admin
-- Optimisation du chargement des paramètres (plus de blocage pour les utilisateurs standard)
-- Mise à jour de la documentation
-
-### v1.0.5
-- Ajout du composant de sélection de langue
-- Système de traduction complet (français, anglais)
-- Correction des problèmes d'affichage sur mobile
-- Amélioration de la performance globale
-
-### v1.0.0
-- Version initiale du projet
-- Mise en place de l'authentification Firebase
-- Création de la boutique de livres
-- Système de panier
-- Interface administrateur basique
-
-### v0.9 (Août 2024)
-- Correction des erreurs TypeScript dans les composants de paramètres
-- Ajout des paramètres de sécurité (longueur de mot de passe, tentatives de connexion, etc.)
-- Amélioration de la cohérence des types pour les statuts de vérification
-- Mise à jour des valeurs par défaut pour correspondre au nom Actualiter
-- Correction de bugs mineurs et optimisations
-
-### v0.8 et antérieures
-- Voir l'historique précédent des versions
 
 ## License
 
