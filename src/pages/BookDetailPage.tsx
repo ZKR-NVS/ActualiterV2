@@ -9,7 +9,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useCart } from '@/lib/contexts/CartContext';
-import { getBookById, Book, addToCart, CartItem } from '@/lib/services/bookService';
+import { 
+  getBookById, 
+  Book, 
+  addToCart, 
+  CartItem, 
+  getUserOrders,
+  Order
+} from '@/lib/services/bookService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   ArrowLeft, 
@@ -21,7 +28,8 @@ import {
   Building, 
   Languages,
   FileText,
-  Download
+  Download,
+  Lock
 } from 'lucide-react';
 
 // Fonction pour sécuriser l'affichage de données Firebase
@@ -64,6 +72,38 @@ export default function BookDetailPage() {
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(false);
+  
+  // Vérifier si l'utilisateur a acheté ce livre
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (!currentUser || !id) return;
+      
+      try {
+        setCheckingPurchase(true);
+        // Récupérer les commandes de l'utilisateur
+        const orders = await getUserOrders(currentUser.uid);
+        
+        // Vérifier si l'une des commandes contient ce livre
+        const hasBookInOrders = orders.some(order => 
+          // Vérifier uniquement les commandes livrées ou expédiées
+          (order.status === 'delivered' || order.status === 'shipped') && 
+          order.books.some(item => item.bookId === id)
+        );
+        
+        setHasPurchased(hasBookInOrders);
+      } catch (error) {
+        console.error("Erreur lors de la vérification des achats:", error);
+        // Par défaut, considérer que l'utilisateur n'a pas acheté le livre
+        setHasPurchased(false);
+      } finally {
+        setCheckingPurchase(false);
+      }
+    };
+    
+    checkPurchaseStatus();
+  }, [currentUser, id]);
   
   useEffect(() => {
     const fetchBook = async () => {
@@ -297,15 +337,53 @@ export default function BookDetailPage() {
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-2">Format numérique</h3>
                 <Button
-                  variant="outline"
+                  variant={hasPurchased ? "default" : "outline"}
                   className="w-full"
-                  onClick={() => window.open(book.pdfUrl, '_blank')}
+                  onClick={() => {
+                    if (!currentUser) {
+                      toast({
+                        title: "Connexion requise",
+                        description: "Veuillez vous connecter pour accéder au PDF.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    if (hasPurchased) {
+                      window.open(book.pdfUrl, '_blank');
+                    } else {
+                      toast({
+                        title: "Accès limité",
+                        description: "Vous devez acheter ce livre pour accéder au PDF. Ajoutez-le au panier et finalisez votre achat.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  disabled={checkingPurchase}
                 >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Télécharger le PDF
+                  {checkingPurchase ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Vérification...
+                    </>
+                  ) : hasPurchased ? (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Télécharger le PDF
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      PDF disponible après achat
+                    </>
+                  )}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Un fichier PDF est disponible pour ce livre. Les utilisateurs qui ont acheté ce livre peuvent le télécharger.
+                  {hasPurchased ? (
+                    <span className="text-green-600 font-medium">✓ Vous avez acheté ce livre et pouvez télécharger le PDF.</span>
+                  ) : (
+                    <span>Un fichier PDF est disponible pour ce livre. <strong>Seulement les utilisateurs qui ont acheté ce livre peuvent le télécharger.</strong></span>
+                  )}
                 </p>
               </div>
             )}
@@ -339,7 +417,7 @@ export default function BookDetailPage() {
                       <span>{book.isbn}</span>
                     </li>
                   )}
-                  {book.pages && (
+                  {book.pages && book.pages > 0 && (
                     <li className="flex justify-between">
                       <span className="text-muted-foreground">Nombre de pages :</span>
                       <span>{book.pages}</span>
