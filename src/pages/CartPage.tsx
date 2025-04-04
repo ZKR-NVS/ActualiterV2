@@ -462,44 +462,31 @@ export default function CartPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-3">
-                  {currentUser ? (
                   <Button 
-                      className="w-full py-6" 
+                    className="w-full py-6" 
                     size="lg"
                     onClick={handleProceedToCheckout}
-                      disabled={!activeCart || activeCart.items.length === 0}
+                    disabled={!activeCart || activeCart.items.length === 0}
                   >
-                    <CreditCard className="mr-2 h-5 w-5" />
-                      {t("cart.proceedToCheckout")}
-                    </Button>
-                  ) : (
-                    <>
-                      <Button 
-                        className="w-full py-6" 
-                        size="lg"
-                        onClick={handleProceedToCheckout}
-                        disabled={!activeCart || activeCart.items.length === 0}
-                      >
-                        <User className="mr-2 h-5 w-5" />
-                        {t("cart.checkoutWithAccount")}
+                    {currentUser ? <CreditCard className="mr-2 h-5 w-5" /> : <User className="mr-2 h-5 w-5" />}
+                    {currentUser ? t("cart.proceedToCheckout") : t("cart.checkoutWithAccount")}
                   </Button>
                   
+                  {/* Toujours afficher l'option d'achat sans compte */}
                   <Button 
-                        className="w-full py-6" 
-                        size="lg"
-                        variant="secondary"
-                        onClick={handleGuestCheckout}
-                        disabled={!activeCart || activeCart.items.length === 0}
+                    className="w-full py-6" 
+                    size="lg"
+                    variant="secondary"
+                    onClick={handleGuestCheckout}
+                    disabled={!activeCart || activeCart.items.length === 0}
                   >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        {t("cart.guestCheckout")}
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    {t("cart.guestCheckout")}
                   </Button>
                   
-                      <p className="text-sm text-muted-foreground text-center mt-2">
-                        {t("cart.guestCheckoutHint")}
-                    </p>
-                    </>
-                  )}
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    {t("cart.guestCheckoutHint")}
+                  </p>
                 </CardFooter>
               </Card>
             </div>
