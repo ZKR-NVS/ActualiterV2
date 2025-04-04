@@ -181,13 +181,20 @@ export default function BookFormDialog({
       return;
     }
 
-    // Vérifier si c'est un lien Postimages (solution recommandée)
-    const isPostimages = coverImageUrl.includes('postimg.cc') || coverImageUrl.includes('postimages.org');
+    // Vérifier si c'est un lien ImgBB (solution recommandée)
+    const isImgBB = coverImageUrl.includes('i.ibb.co') || coverImageUrl.includes('imgbb.com');
+    
+    // Convertir le lien Google Drive en lien direct si nécessaire
+    const convertedUrl = convertGoogleDriveLink(coverImageUrl);
+    
+    console.log("URL convertie:", convertedUrl); // Log pour le débogage
     
     // Afficher immédiatement un message de chargement
     toast({
       title: "Chargement...",
-      description: "Tentative de chargement de l'image...",
+      description: isImgBB 
+        ? "Chargement de l'image depuis ImgBB..." 
+        : "Tentative de chargement de l'image...",
     });
     
     // Créer une nouvelle image pour tester le chargement
@@ -196,36 +203,83 @@ export default function BookFormDialog({
     // Configurer les gestionnaires d'événements avant de définir la source
     img.onload = () => {
       // L'image a été chargée avec succès
-      setCoverImagePreview(coverImageUrl);
+      setCoverImagePreview(convertedUrl);
       setUseExternalImage(true);
+      form.setValue("coverImageUrl", convertedUrl); // Mettre à jour la valeur du formulaire avec l'URL convertie
+      
       toast({
         title: "Image chargée",
-        description: isPostimages 
-          ? "Image Postimages chargée avec succès !" 
+        description: isImgBB 
+          ? "Image ImgBB chargée avec succès !" 
           : "Prévisualisation mise à jour avec succès",
         variant: "default"
       });
     };
     
     img.onerror = () => {
+      // Si c'est déjà un lien ImgBB, il ne devrait pas y avoir d'erreur CORS
+      if (isImgBB) {
+        toast({
+          title: "Erreur ImgBB",
+          description: "Impossible de charger l'image ImgBB. Vérifiez que le lien est correct et réessayez.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Tentative alternative avec un proxy CORS si c'est Google Drive
+      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
+      console.log("Tentative avec proxy CORS:", corsProxyUrl);
+      
       toast({
-        title: "Erreur",
-        description: "Impossible de charger l'image. Nous recommandons d'utiliser Postimages.org pour héberger vos images.",
-        variant: "destructive"
+        title: "Premier essai échoué",
+        description: "Tentative d'utilisation d'un proxy CORS. Nous vous recommandons d'utiliser ImgBB à la place de Google Drive.",
       });
       
-      // Afficher un message explicatif avec un lien vers Postimages
-      setTimeout(() => {
+      // Deuxième tentative avec proxy
+      const imgWithProxy = new Image();
+      
+      imgWithProxy.onload = () => {
+        setCoverImagePreview(corsProxyUrl);
+        setUseExternalImage(true);
+        form.setValue("coverImageUrl", convertedUrl); // Garder l'URL originale dans le formulaire
+        
         toast({
-          title: "Solution recommandée",
-          description: "Utilisez Postimages.org pour un hébergement d'images facile et sans problèmes CORS.",
+          title: "Image chargée via proxy",
+          description: "L'image a été chargée via un proxy CORS. Pour une solution plus fiable, utilisez ImgBB.",
           variant: "default"
         });
-      }, 1000);
+      };
+      
+      imgWithProxy.onerror = () => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger l'image. Pour éviter ce problème, nous vous recommandons d'utiliser ImgBB (voir README).",
+          variant: "destructive"
+        });
+        
+        // Afficher un message explicatif avec un lien vers ImgBB
+        setTimeout(() => {
+          toast({
+            title: "Solution recommandée",
+            description: "Utilisez ImgBB.com pour héberger vos images sans problèmes CORS.",
+            variant: "default"
+          });
+        }, 1000);
+      };
+      
+      // Appliquer un délai avant de charger l'image avec proxy
+      setTimeout(() => {
+        imgWithProxy.crossOrigin = "anonymous";
+        imgWithProxy.src = corsProxyUrl;
+      }, 300);
     };
     
-    // Charger l'image
-    img.src = coverImageUrl;
+    // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
+    setTimeout(() => {
+      img.crossOrigin = "anonymous"; // Tenter d'éviter les problèmes CORS
+      img.src = convertedUrl;
+    }, 200);
   };
   
   const onSubmit = useCallback(
