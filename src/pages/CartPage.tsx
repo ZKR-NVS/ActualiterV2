@@ -255,11 +255,17 @@ export default function CartPage() {
     const activeCart = currentUser ? cart : localCart;
     
     if (activeCart && activeCart.items.length > 0) {
-      if (currentUser) {
+      if (currentUser && cart) {
         setIsCheckingOut(true);
         setIsGuestCheckout(false);
+      } else if (currentUser && !cart) {
+        toast({
+          title: t("errors.error"),
+          description: t("errors.cartNotLoaded"),
+          variant: "destructive"
+        });
       } else {
-        // Activer directement le checkout invité au lieu de rediriger vers login
+        // Rediriger vers la page de connexion ou activer le checkout invité
         setIsGuestCheckout(true);
         setIsCheckingOut(false);
       }

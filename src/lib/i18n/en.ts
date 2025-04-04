@@ -262,7 +262,8 @@ export default {
     clearCartError: "An error occurred while clearing the cart",
     accessDenied: "Access denied. Please log in to access this page.",
     orderCheckError: "Error checking your order.",
-    orderError: "An error occurred while processing your order. Please try again."
+    orderError: "An error occurred while processing your order. Please try again.",
+    cartNotLoaded: "Unable to load your cart. Please refresh the page."
   },
   loading: {
     loadingCart: "Loading cart...",

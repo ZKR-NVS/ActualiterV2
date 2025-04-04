@@ -262,7 +262,8 @@ export default {
     clearCartError: "Une erreur s'est produite lors du vidage du panier",
     accessDenied: "Accès refusé. Veuillez vous connecter pour accéder à cette page.",
     orderCheckError: "Erreur lors de la vérification de votre commande.",
-    orderError: "Une erreur s'est produite lors du traitement de votre commande. Veuillez réessayer."
+    orderError: "Une erreur s'est produite lors du traitement de votre commande. Veuillez réessayer.",
+    cartNotLoaded: "Impossible de charger votre panier. Veuillez rafraîchir la page."
   },
   loading: {
     loadingCart: "Chargement du panier...",
