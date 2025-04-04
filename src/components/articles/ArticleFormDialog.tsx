@@ -131,19 +131,11 @@ export const ArticleFormDialog = ({
       return;
     }
     
-    // Vérifier si c'est un lien ImgBB (solution recommandée)
-    const isImgBB = url.includes('i.ibb.co') || url.includes('imgbb.com');
-    
-    // Convertir le lien Google Drive en lien direct si nécessaire
-    const convertedUrl = convertGoogleDriveLink(url);
-    
-    console.log("URL convertie:", convertedUrl); // Log pour le débogage
+    // Vérifier si c'est un lien Postimages (solution recommandée)
+    const isPostimages = url.includes('postimg.cc') || url.includes('postimages.org');
     
     // Afficher immédiatement un message de chargement
-    toast.info(isImgBB 
-      ? "Chargement de l'image depuis ImgBB..." 
-      : "Tentative de chargement de l'image..."
-    );
+    toast.info("Tentative de chargement de l'image...");
     
     // Vérifier si l'image peut être chargée avant de mettre à jour l'état
     const img = new Image();
@@ -151,61 +143,27 @@ export const ArticleFormDialog = ({
     // Configurer les gestionnaires d'événements avant de définir la source
     img.onload = () => {
       // L'image a été chargée avec succès
-      setExternalImageUrl(convertedUrl);
-      setImagePreview(convertedUrl);
+      setExternalImageUrl(url);
+      setImagePreview(url);
       setUseExternalImage(true);
-      form.setValue("externalImageUrl", convertedUrl);
-      toast.success(isImgBB 
-        ? "Image ImgBB chargée avec succès !" 
+      form.setValue("externalImageUrl", url);
+      toast.success(isPostimages 
+        ? "Image Postimages chargée avec succès !" 
         : "Image chargée avec succès"
       );
     };
     
     img.onerror = () => {
-      // Si c'est déjà un lien ImgBB, il ne devrait pas y avoir d'erreur CORS
-      if (isImgBB) {
-        toast.error("Impossible de charger l'image ImgBB. Vérifiez que le lien est correct et réessayez.");
-        return;
-      }
+      toast.error("Impossible de charger l'image. Nous recommandons d'utiliser Postimages.org pour héberger vos images.");
       
-      // Tentative alternative avec un proxy CORS si c'est Google Drive
-      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
-      console.log("Tentative avec proxy CORS:", corsProxyUrl);
-      
-      toast.info("Premier essai échoué. Tentative avec un proxy CORS. Nous recommandons d'utiliser ImgBB à la place de Google Drive.");
-      
-      // Deuxième tentative avec proxy
-      const imgWithProxy = new Image();
-      
-      imgWithProxy.onload = () => {
-        setExternalImageUrl(corsProxyUrl);
-        setImagePreview(corsProxyUrl);
-        setUseExternalImage(true);
-        form.setValue("externalImageUrl", convertedUrl); // Garder l'URL originale dans le formulaire
-        toast.success("Image chargée via proxy CORS. Pour une solution plus fiable, utilisez ImgBB.");
-      };
-      
-      imgWithProxy.onerror = () => {
-        toast.error("Impossible de charger l'image. Pour éviter ce problème, nous vous recommandons d'utiliser ImgBB (voir README).");
-        
-        // Afficher un message explicatif avec un lien vers ImgBB
-        setTimeout(() => {
-          toast.info("Utilisez ImgBB.com pour héberger vos images sans problèmes CORS.");
-        }, 1000);
-      };
-      
-      // Appliquer un délai avant de charger l'image avec proxy
+      // Afficher un message explicatif avec un lien vers Postimages
       setTimeout(() => {
-        imgWithProxy.crossOrigin = "anonymous";
-        imgWithProxy.src = corsProxyUrl;
-      }, 300);
+        toast.info("Utilisez Postimages.org pour un hébergement d'images facile et sans problèmes CORS.");
+      }, 1000);
     };
     
-    // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
-    setTimeout(() => {
-      img.crossOrigin = "anonymous"; // Tenter d'éviter les problèmes CORS
-      img.src = convertedUrl;
-    }, 200);
+    // Charger l'image directement
+    img.src = url;
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

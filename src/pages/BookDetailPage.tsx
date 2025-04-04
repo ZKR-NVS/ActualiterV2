@@ -369,7 +369,7 @@ export default function BookDetailPage() {
                   ) : hasPurchased ? (
                     <>
                       <Download className="mr-2 h-4 w-4" />
-                      Télécharger le PDF
+                  Télécharger le PDF
                     </>
                   ) : (
                     <>
