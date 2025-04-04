@@ -31,10 +31,8 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Amélioration de la gestion des Timestamps Firebase dans les interfaces React
 - **NOUVEAU** : Contexte global pour le panier avec affichage du nombre d'articles dans l'en-tête
 - **NOUVEAU** : Synchronisation bidirectionnelle en temps réel du mode maintenance
-- **NOUVEAU** : Intégration avec Google Drive pour l'hébergement d'images sans Firebase Storage
+- **NOUVEAU** : Support pour l'hébergement d'images via Postimages
 - **AMÉLIORÉ** : Formulaires d'ajout/modification de livres et d'articles optimisés
-- **AMÉLIORÉ** : Gestion robuste du chargement d'images avec support de secours CORS
-- **NOUVEAU** : Support pour l'hébergement d'images via ImgBB comme alternative à Google Drive
 - **CORRIGÉ** : Affichage conditionnel du nombre de pages dans la page de détail des livres
 - **AMÉLIORÉ** : Contrôle d'accès aux fichiers PDF uniquement après achat des livres
 
@@ -80,11 +78,12 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 ## Journal des modifications
 
 ### v1.0.12
-- Ajout d'ImgBB comme alternative recommandée pour l'hébergement d'images
+- Ajout de Postimages comme solution recommandée pour l'hébergement d'images
 - Correction de l'affichage du nombre de pages (n'affiche plus "0 pages" quand non spécifié)
 - Amélioration du système d'accès aux PDF avec contrôle des achats
 - Optimisation de la vérification des commandes pour l'accès aux PDF
-- Instructions détaillées pour résoudre les problèmes CORS persistants
+- Instructions détaillées pour l'hébergement d'images
+
 ### v1.0.11
 - Amélioration robuste du chargement des images externes dans les formulaires
 - Ajout d'un système de secours avec proxy CORS pour le chargement des images
@@ -117,55 +116,27 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Optimisation de la sécurisation des Timestamps Firebase dans les interfaces utilisateur
 - Amélioration de la réactivité du panier avec mise à jour instantanée lors de l'ajout/suppression d'articles
 
-## Utilisation de Google Drive pour les images
+## Hébergement d'images avec Postimages
 
 Pour ajouter des images à vos articles ou livres sans Firebase Storage :
 
-1. **Uploader l'image sur Google Drive**
-   - Accédez à votre Google Drive
-   - Uploadez l'image souhaitée
-   - Faites un clic droit sur le fichier → "Partager" → "Tout le monde avec le lien"
-   - Assurez-vous que le paramètre est bien sur "Tout le monde avec le lien peut voir"
-   - Copiez le lien partagé
-
-2. **Utiliser le lien dans l'application**
-   - Collez simplement le lien Google Drive dans le champ URL d'image du formulaire
-   - L'application convertira automatiquement le lien standard (https://drive.google.com/file/d/VOTRE_ID/view) en lien d'accès direct
-   - Cliquez sur "Prévisualiser" pour vérifier que l'image s'affiche correctement
-   - Si une erreur se produit, l'application tentera automatiquement d'utiliser un proxy CORS
-
-3. **En cas de problème de chargement**
-   - Vérifiez que les permissions sont correctement définies (fichier accessible par lien)
-   - Assurez-vous que le format d'image est standard (JPG, PNG)
-   - Si le problème persiste, essayez d'héberger l'image sur ImgBB (voir ci-dessous)
-
-4. **En cas de problème de chargement persistant avec Google Drive**
-   - **Important** : Google Drive peut poser des problèmes CORS, même avec notre système de secours
-   - Nous recommandons fortement d'utiliser ImgBB comme alternative plus fiable
-
-## Solution recommandée : Utilisation d'ImgBB pour l'hébergement d'images
-
-Pour éviter les problèmes CORS avec Google Drive, nous recommandons l'utilisation d'ImgBB :
-
-1. **Uploader l'image sur ImgBB**
-   - Accédez à [ImgBB](https://imgbb.com/)
-   - Cliquez sur "Start uploading" (pas besoin de créer un compte)
+1. **Uploader l'image sur Postimages**
+   - Accédez à [Postimages.org](https://postimages.org/)
+   - Cliquez sur "Choose Images" (pas besoin de créer un compte)
    - Uploadez votre image
-   - Une fois l'image uploadée, copiez le "Direct link"
+   - Une fois l'image uploadée, copiez le lien "Direct link"
 
 2. **Utiliser le lien direct dans l'application**
-   - Collez le lien direct ImgBB dans le champ URL d'image du formulaire
+   - Collez le lien direct Postimages dans le champ URL d'image du formulaire
    - Cliquez sur "Prévisualiser" pour vérifier que l'image s'affiche correctement
-   - Les liens ImgBB sont optimisés pour le web et ne posent généralement pas de problèmes CORS
+   - Les liens Postimages sont optimisés pour le web et ne posent pas de problèmes CORS
 
-3. **Avantages d'ImgBB par rapport à Google Drive**
+3. **Avantages de Postimages**
    - Pas de problèmes CORS
    - Liens d'accès direct sans conversion nécessaire
-   - Service gratuit sans limite raisonnable d'utilisation
-   - Optimisation automatique des images pour le web
-   - Conservation de vos images pendant des années sans suppression
-
-Cette solution est fortement recommandée pour tous les utilisateurs qui rencontrent des problèmes de chargement d'images avec Google Drive.
+   - Service gratuit sans limite d'utilisation
+   - Pas besoin de compte utilisateur
+   - Interface simple et rapide
 
 Cette solution permet d'utiliser l'application sans avoir besoin de payer pour Firebase Storage.
 

@@ -130,44 +130,17 @@ export default function BookFormDialog({
         
         // Tentative de pré-chargement de l'image
         const img = new Image();
-        img.crossOrigin = "anonymous";
         img.onload = () => {
           console.log("Image préchargée avec succès:", book.coverImage);
         };
         img.onerror = () => {
-          console.log("Erreur lors du préchargement de l'image, tentative avec proxy CORS");
-          const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${book.coverImage}`;
-          const imgWithProxy = new Image();
-          imgWithProxy.onload = () => {
-            setCoverImagePreview(corsProxyUrl);
-          };
-          imgWithProxy.onerror = () => {
-            console.log("Échec du chargement même avec proxy CORS");
-            setCoverImagePreview('/placeholder.svg');
-          };
-          imgWithProxy.src = corsProxyUrl;
+          console.log("Erreur lors du préchargement de l'image");
+          setCoverImagePreview('/placeholder.svg');
         };
         img.src = book.coverImage;
       }
     }
   }, [book, form]);
-  
-  // Fonction pour convertir un lien Google Drive en lien direct
-  const convertGoogleDriveLink = (url: string): string => {
-    if (!url) return url;
-    
-    // Vérifier si c'est un lien Google Drive
-    const driveRegex = /https:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view/;
-    const match = url.match(driveRegex);
-    
-    if (match && match[1]) {
-      // Extraire l'ID et créer un lien direct
-      const fileId = match[1];
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
-    }
-    
-    return url; // Retourner l'URL originale si ce n'est pas un lien Google Drive
-  };
   
   // Prévisualiser l'image à partir d'une URL
   const handlePreviewImage = () => {
@@ -181,105 +154,55 @@ export default function BookFormDialog({
       return;
     }
 
-    // Vérifier si c'est un lien ImgBB (solution recommandée)
-    const isImgBB = coverImageUrl.includes('i.ibb.co') || coverImageUrl.includes('imgbb.com');
+    // Vérifier si c'est un lien Postimages (solution recommandée)
+    const isPostimages = coverImageUrl.includes('postimg.cc') || coverImageUrl.includes('postimages.org');
     
-    // Convertir le lien Google Drive en lien direct si nécessaire
-    const convertedUrl = convertGoogleDriveLink(coverImageUrl);
+    console.log("URL à traiter:", coverImageUrl);
     
-    console.log("URL convertie:", convertedUrl); // Log pour le débogage
-    
-    // Afficher immédiatement un message de chargement
+    // Afficher un message de chargement
     toast({
       title: "Chargement...",
-      description: isImgBB 
-        ? "Chargement de l'image depuis ImgBB..." 
-        : "Tentative de chargement de l'image...",
+      description: "Chargement de l'image...",
     });
     
     // Créer une nouvelle image pour tester le chargement
     const img = new Image();
     
-    // Configurer les gestionnaires d'événements avant de définir la source
+    // Configurer les gestionnaires d'événements
     img.onload = () => {
       // L'image a été chargée avec succès
-      setCoverImagePreview(convertedUrl);
+      setCoverImagePreview(coverImageUrl);
       setUseExternalImage(true);
-      form.setValue("coverImageUrl", convertedUrl); // Mettre à jour la valeur du formulaire avec l'URL convertie
+      form.setValue("coverImageUrl", coverImageUrl);
       
       toast({
         title: "Image chargée",
-        description: isImgBB 
-          ? "Image ImgBB chargée avec succès !" 
-          : "Prévisualisation mise à jour avec succès",
+        description: "Prévisualisation mise à jour avec succès",
         variant: "default"
       });
     };
     
     img.onerror = () => {
-      // Si c'est déjà un lien ImgBB, il ne devrait pas y avoir d'erreur CORS
-      if (isImgBB) {
-        toast({
-          title: "Erreur ImgBB",
-          description: "Impossible de charger l'image ImgBB. Vérifiez que le lien est correct et réessayez.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Tentative alternative avec un proxy CORS si c'est Google Drive
-      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
-      console.log("Tentative avec proxy CORS:", corsProxyUrl);
-      
       toast({
-        title: "Premier essai échoué",
-        description: "Tentative d'utilisation d'un proxy CORS. Nous vous recommandons d'utiliser ImgBB à la place de Google Drive.",
+        title: "Erreur",
+        description: "Impossible de charger l'image. Vérifiez que l'URL est correcte.",
+        variant: "destructive"
       });
       
-      // Deuxième tentative avec proxy
-      const imgWithProxy = new Image();
-      
-      imgWithProxy.onload = () => {
-        setCoverImagePreview(corsProxyUrl);
-        setUseExternalImage(true);
-        form.setValue("coverImageUrl", convertedUrl); // Garder l'URL originale dans le formulaire
-        
-        toast({
-          title: "Image chargée via proxy",
-          description: "L'image a été chargée via un proxy CORS. Pour une solution plus fiable, utilisez ImgBB.",
-          variant: "default"
-        });
-      };
-      
-      imgWithProxy.onerror = () => {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger l'image. Pour éviter ce problème, nous vous recommandons d'utiliser ImgBB (voir README).",
-          variant: "destructive"
-        });
-        
-        // Afficher un message explicatif avec un lien vers ImgBB
+      // Recommander Postimages si ce n'est pas déjà un lien Postimages
+      if (!isPostimages) {
         setTimeout(() => {
           toast({
             title: "Solution recommandée",
-            description: "Utilisez ImgBB.com pour héberger vos images sans problèmes CORS.",
+            description: "Utilisez Postimages.org pour héberger vos images.",
             variant: "default"
           });
         }, 1000);
-      };
-      
-      // Appliquer un délai avant de charger l'image avec proxy
-      setTimeout(() => {
-        imgWithProxy.crossOrigin = "anonymous";
-        imgWithProxy.src = corsProxyUrl;
-      }, 300);
+      }
     };
     
-    // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
-    setTimeout(() => {
-      img.crossOrigin = "anonymous"; // Tenter d'éviter les problèmes CORS
-      img.src = convertedUrl;
-    }, 200);
+    // Charger l'image
+    img.src = coverImageUrl;
   };
   
   const onSubmit = useCallback(
@@ -290,8 +213,8 @@ export default function BookFormDialog({
 
       try {
         // Convertir le lien Google Drive si nécessaire
-        const processedCoverImageUrl = convertGoogleDriveLink(data.coverImageUrl || '');
-        const processedPdfUrl = convertGoogleDriveLink(data.pdfUrl || '');
+        const processedCoverImageUrl = data.coverImageUrl || '';
+        const processedPdfUrl = data.pdfUrl || '';
         
         // Données de base du livre
         const bookData: Partial<Book> = {

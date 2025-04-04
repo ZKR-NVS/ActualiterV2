@@ -27,23 +27,6 @@ const articleFormSchema = z.object({
   externalImageUrl: z.string().optional()
 });
 
-// Fonction pour convertir un lien Google Drive en lien direct
-const convertGoogleDriveLink = (url: string): string => {
-  if (!url) return url;
-  
-  // Vérifier si c'est un lien Google Drive
-  const driveRegex = /https:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view/;
-  const match = url.match(driveRegex);
-  
-  if (match && match[1]) {
-    // Extraire l'ID et créer un lien direct
-    const fileId = match[1];
-    return `https://drive.google.com/uc?export=view&id=${fileId}`;
-  }
-  
-  return url; // Retourner l'URL originale si ce n'est pas un lien Google Drive
-};
-
 type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface ArticleFormDialogProps {
@@ -131,81 +114,40 @@ export const ArticleFormDialog = ({
       return;
     }
     
-    // Vérifier si c'est un lien ImgBB (solution recommandée)
-    const isImgBB = url.includes('i.ibb.co') || url.includes('imgbb.com');
+    // Vérifier si c'est un lien Postimages (solution recommandée)
+    const isPostimages = url.includes('postimg.cc') || url.includes('postimages.org');
     
-    // Convertir le lien Google Drive en lien direct si nécessaire
-    const convertedUrl = convertGoogleDriveLink(url);
+    console.log("URL à traiter:", url);
     
-    console.log("URL convertie:", convertedUrl); // Log pour le débogage
+    // Afficher un message de chargement
+    toast.info("Chargement de l'image...");
     
-    // Afficher immédiatement un message de chargement
-    toast.info(isImgBB 
-      ? "Chargement de l'image depuis ImgBB..." 
-      : "Tentative de chargement de l'image..."
-    );
-    
-    // Vérifier si l'image peut être chargée avant de mettre à jour l'état
+    // Vérifier si l'image peut être chargée
     const img = new Image();
     
-    // Configurer les gestionnaires d'événements avant de définir la source
+    // Configurer les gestionnaires d'événements
     img.onload = () => {
       // L'image a été chargée avec succès
-      setExternalImageUrl(convertedUrl);
-      setImagePreview(convertedUrl);
+      setExternalImageUrl(url);
+      setImagePreview(url);
       setUseExternalImage(true);
-      form.setValue("externalImageUrl", convertedUrl);
-      toast.success(isImgBB 
-        ? "Image ImgBB chargée avec succès !" 
-        : "Image chargée avec succès"
-      );
+      form.setValue("externalImageUrl", url);
+      toast.success("Image chargée avec succès!");
     };
     
     img.onerror = () => {
-      // Si c'est déjà un lien ImgBB, il ne devrait pas y avoir d'erreur CORS
-      if (isImgBB) {
-        toast.error("Impossible de charger l'image ImgBB. Vérifiez que le lien est correct et réessayez.");
-        return;
-      }
+      toast.error("Impossible de charger l'image. Vérifiez que l'URL est correcte.");
       
-      // Tentative alternative avec un proxy CORS si c'est Google Drive
-      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${convertedUrl}`;
-      console.log("Tentative avec proxy CORS:", corsProxyUrl);
-      
-      toast.info("Premier essai échoué. Tentative avec un proxy CORS. Nous recommandons d'utiliser ImgBB à la place de Google Drive.");
-      
-      // Deuxième tentative avec proxy
-      const imgWithProxy = new Image();
-      
-      imgWithProxy.onload = () => {
-        setExternalImageUrl(corsProxyUrl);
-        setImagePreview(corsProxyUrl);
-        setUseExternalImage(true);
-        form.setValue("externalImageUrl", convertedUrl); // Garder l'URL originale dans le formulaire
-        toast.success("Image chargée via proxy CORS. Pour une solution plus fiable, utilisez ImgBB.");
-      };
-      
-      imgWithProxy.onerror = () => {
-        toast.error("Impossible de charger l'image. Pour éviter ce problème, nous vous recommandons d'utiliser ImgBB (voir README).");
-        
-        // Afficher un message explicatif avec un lien vers ImgBB
+      // Recommander Postimages si ce n'est pas déjà un lien Postimages
+      if (!isPostimages) {
         setTimeout(() => {
-          toast.info("Utilisez ImgBB.com pour héberger vos images sans problèmes CORS.");
+          toast.info("Nous recommandons d'utiliser Postimages.org pour héberger vos images.");
         }, 1000);
-      };
-      
-      // Appliquer un délai avant de charger l'image avec proxy
-      setTimeout(() => {
-        imgWithProxy.crossOrigin = "anonymous";
-        imgWithProxy.src = corsProxyUrl;
-      }, 300);
+      }
     };
     
-    // Appliquer un timeout pour éviter les problèmes de CORS avec certaines images
-    setTimeout(() => {
-      img.crossOrigin = "anonymous"; // Tenter d'éviter les problèmes CORS
-      img.src = convertedUrl;
-    }, 200);
+    // Charger l'image
+    img.src = url;
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,42 +251,40 @@ export const ArticleFormDialog = ({
     }
   };
 
-  const handleFormSubmit = async (values: ArticleFormValues) => {
-    setIsSubmitting(true);
-    
+  const onSubmitForm = async (values: ArticleFormValues) => {
     try {
-      let imageUrlToSubmit = "";
-      
-      // Si on utilise une URL externe
-      if (useExternalImage && externalImageUrl) {
-        imageUrlToSubmit = externalImageUrl;
-      } 
-      // Si on a une image à uploader (pas utile maintenant, mais gardé pour compatibilité)
-      else if (imageBlob && !useExternalImage) {
-        // Cette partie reste en place pour quand Firebase Storage sera disponible
-        try {
-          imageUrlToSubmit = await uploadImage(imageBlob);
-        } catch (error) {
-          console.error("Erreur lors de l'upload de l'image:", error);
-          toast.error("Erreur lors de l'upload de l'image. Utilisez plutôt une URL externe.");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      
-      // Article complet
+      setIsSubmitting(true);
+      console.log("Valeurs soumises:", values);
+
+      // Préparer les données de l'article
       const articleData = {
-        ...values,
-        image: imageUrlToSubmit || imagePreview || values.image
+        ...(isEditMode && articleToEdit ? { id: articleToEdit.id } : {}),
+        title: values.title,
+        content: values.content,
+        excerpt: values.content.substring(0, 150) + "...",
+        author: values.author,
+        date: isEditMode && articleToEdit ? articleToEdit.date : new Date().toISOString().split('T')[0],
+        verificationStatus: values.verificationStatus,
+        image: useExternalImage 
+          ? externalImageUrl 
+          : imageUrl || (isEditMode && articleToEdit ? articleToEdit.image : ""),
+        tags: isEditMode && articleToEdit && articleToEdit.tags ? articleToEdit.tags : []
       };
-      
-      await onSubmit(articleData);
-      form.reset();
-      handleOpenChange(false);
-      toast.success(isEditMode ? "Article mis à jour avec succès!" : "Article créé avec succès!");
+
+      console.log("Article data à soumettre:", articleData);
+
+      // S'assurer que la fonction onSubmit est disponible et est une fonction
+      if (typeof onSubmit === 'function') {
+        await onSubmit(articleData);
+        toast.success(`Article ${isEditMode ? "modifié" : "créé"} avec succès`);
+        handleOpenChange(false);
+      } else {
+        console.error("onSubmit n'est pas une fonction:", onSubmit);
+        toast.error("Erreur: La fonction de soumission n'est pas disponible");
+      }
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
-      toast.error("Une erreur est survenue. Veuillez réessayer.");
+      toast.error(`Erreur lors de la soumission: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -365,7 +305,7 @@ export const ArticleFormDialog = ({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-6 md:col-span-2">
             <FormField
