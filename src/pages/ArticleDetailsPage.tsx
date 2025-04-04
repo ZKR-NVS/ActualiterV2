@@ -11,6 +11,7 @@ import { fr } from "date-fns/locale";
 import { CommentSection } from "@/components/articles/CommentSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export const ArticleDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -84,17 +85,12 @@ export const ArticleDetailsPage = () => {
         </Button>
         
         {isLoading ? (
-          // Skeleton loader
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-3/4" />
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-6 w-24" />
-              <Skeleton className="h-6 w-32" />
-            </div>
-            <Skeleton className="h-64 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+          // Afficher le spinner de chargement
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <LoadingSpinner 
+              size="lg" 
+              text="Chargement de l'article..."
+            />
           </div>
         ) : article ? (
           <article className="space-y-6">

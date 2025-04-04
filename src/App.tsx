@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-route
 import { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/lib/contexts/AuthContext";
 import { getGlobalSettings, updateMaintenanceMode } from "@/lib/services/settingsService";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -14,6 +15,15 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import NotFound from "./pages/NotFound";
+import { ArticleDetailsPage } from "./pages/ArticleDetailsPage";
+
+// Pages de la boutique de livres
+import BookshopPage from "./pages/BookshopPage";
+import BookDetailPage from "./pages/BookDetailPage";
+import CartPage from "./pages/CartPage";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
+import OrderManagementPage from "./pages/admin/OrderManagementPage";
+import BookManagementPage from "./pages/admin/BookManagementPage";
 
 // Créer un contexte pour le mode maintenance
 interface MaintenanceContextType {
@@ -44,16 +54,36 @@ const MaintenanceWrapper = ({ children }: { children: ReactNode }) => {
 };
 
 // Composant pour les routes protégées nécessitant une authentification
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { currentUser, isLoading } = useAuth();
+interface ProtectedRouteProps {
+  children: ReactNode;
+  adminOnly?: boolean;
+}
+
+const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+  const { currentUser, isAdmin } = useAuth();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simple simulation du chargement
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Chargement...</div>;
+    return <LoadingSpinner size="md" text="Chargement..." className="h-screen" />;
   }
 
   if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Vérifier si la route nécessite des droits d'admin
+  if (adminOnly && !isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -61,11 +91,21 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
 // Composant pour les routes accessibles uniquement aux administrateurs
 const AdminRoute = ({ children }: { children: ReactNode }) => {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin } = useAuth();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simple simulation du chargement
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Chargement...</div>;
+    return <LoadingSpinner size="md" text="Chargement de l'interface admin..." className="h-screen" />;
   }
 
   if (!isAdmin) {
@@ -124,7 +164,7 @@ const AppContent = () => {
   };
   
   if (isSettingsLoading) {
-    return <div className="flex items-center justify-center h-screen">Chargement des paramètres...</div>;
+    return <LoadingSpinner size="lg" text="Chargement des paramètres..." fullScreen />;
   }
 
   return (
@@ -134,6 +174,28 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/article/:id" element={<ArticleDetailsPage />} />
+            
+            {/* Routes de la boutique de livres */}
+            <Route path="/bookshop" element={<BookshopPage />} />
+            <Route path="/book/:id" element={<BookDetailPage />} />
+            <Route 
+              path="/cart" 
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/order-confirmation" 
+              element={
+                <ProtectedRoute>
+                  <OrderConfirmationPage />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route 
               path="/profile" 
               element={
@@ -150,6 +212,25 @@ const AppContent = () => {
                 </AdminRoute>
               } 
             />
+            
+            {/* Routes d'administration de la boutique */}
+            <Route 
+              path="/admin/books" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <BookManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/orders" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <OrderManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MaintenanceWrapper>

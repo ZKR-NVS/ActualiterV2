@@ -11,7 +11,7 @@ export const ContentSettingsForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [settings, setSettings] = useState<ContentSettings>({
-    defaultVerificationStatus: "partial",
+    defaultVerificationStatus: "pending",
     requireImageForArticles: true,
     maxArticleLength: 10000,
     minArticleLength: 100,
@@ -111,6 +111,10 @@ export const ContentSettingsForm = () => {
                 <SelectItem value="partial" className="flex items-center">
                   <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>
                   Partiellement Vrai
+                </SelectItem>
+                <SelectItem value="pending" className="flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
+                  En attente
                 </SelectItem>
               </SelectContent>
             </Select>

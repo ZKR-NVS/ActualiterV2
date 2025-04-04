@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ const LoginPage = () => {
                 <CardHeader>
                   <CardTitle>Bienvenue</CardTitle>
                   <CardDescription>
-                    Connectez-vous à votre compte TruthBeacon
+                    Connectez-vous à votre compte Actualiter
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -137,6 +138,7 @@ const LoginPage = () => {
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required 
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -153,12 +155,18 @@ const LoginPage = () => {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required 
+                      disabled={isLoading}
                     />
                   </div>
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Connexion en cours..." : "Se connecter"}
+                    {isLoading ? (
+                      <span className="flex items-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connexion en cours...
+                      </span>
+                    ) : "Se connecter"}
                   </Button>
                 </CardFooter>
               </form>
@@ -169,7 +177,7 @@ const LoginPage = () => {
                 <CardHeader>
                   <CardTitle>Créer un compte</CardTitle>
                   <CardDescription>
-                    Rejoignez TruthBeacon pour accéder à plus de fonctionnalités
+                    Rejoignez Actualiter pour accéder à plus de fonctionnalités
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -181,6 +189,7 @@ const LoginPage = () => {
                       value={registerName}
                       onChange={(e) => setRegisterName(e.target.value)}
                       required 
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -192,6 +201,7 @@ const LoginPage = () => {
                       value={registerEmail}
                       onChange={(e) => setRegisterEmail(e.target.value)}
                       required 
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -203,6 +213,7 @@ const LoginPage = () => {
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       required 
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -214,12 +225,18 @@ const LoginPage = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required 
+                      disabled={isLoading}
                     />
                   </div>
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Création du compte..." : "Créer un compte"}
+                    {isLoading ? (
+                      <span className="flex items-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Création du compte...
+                      </span>
+                    ) : "Créer un compte"}
                   </Button>
                 </CardFooter>
               </form>
@@ -227,6 +244,16 @@ const LoginPage = () => {
           </Tabs>
         </Card>
       </div>
+
+      {/* Overlay de chargement pendant le processus d'authentification */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <LoadingSpinner 
+            size="lg" 
+            text={activeTab === "login" ? "Connexion en cours..." : "Création du compte..."} 
+          />
+        </div>
+      )}
     </Layout>
   );
 };

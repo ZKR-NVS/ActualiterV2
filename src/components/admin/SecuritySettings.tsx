@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SecuritySettings, getSettings, updateSecuritySettings } from "@/lib/services/settingsService";
+import { SiteSettings, SecuritySettings, getSettings, updateSecuritySettings } from "@/lib/services/settingsService";
 import { toast } from "sonner";
 
 export const SecuritySettingsForm = () => {
@@ -26,7 +26,9 @@ export const SecuritySettingsForm = () => {
       try {
         setIsLoading(true);
         const siteSettings = await getSettings();
-        setSettings(siteSettings.security);
+        if (siteSettings.security) {
+          setSettings(siteSettings.security);
+        }
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres de sécurité:", error);
         toast.error("Impossible de charger les paramètres de sécurité");
@@ -67,7 +69,9 @@ export const SecuritySettingsForm = () => {
       try {
         setIsLoading(true);
         const siteSettings = await getSettings();
-        setSettings(siteSettings.security);
+        if (siteSettings.security) {
+          setSettings(siteSettings.security);
+        }
         setIsDirty(false);
       } catch (error) {
         console.error("Erreur lors de la récupération des paramètres de sécurité:", error);

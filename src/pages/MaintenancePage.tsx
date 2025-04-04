@@ -181,7 +181,7 @@ const MaintenancePage = () => {
           Site en maintenance
         </h1>
         <div className="loader" role="progressbar" aria-label="Chargement"></div>
-        <p>Nous améliorons actuellement votre expérience sur TruthBeacon.</p>
+        <p>Nous améliorons actuellement votre expérience sur Actualiter.</p>
         <p>Notre équipe travaille sur des mises à jour importantes pour vous offrir une meilleure qualité d'information.</p>
         <div className="progress-container">
           <div className="progress-bar"></div>
@@ -190,15 +190,15 @@ const MaintenancePage = () => {
           <strong>Nous travaillons pour vous !</strong> <span id="maintenanceMessage">{messages[currentMessageIndex]}</span>
         </p>
         <div className="social-links">
-          <a href="https://twitter.com/truthbeacon" className="social-link" rel="noopener noreferrer" target="_blank">
+          <a href="https://twitter.com/actualiter" className="social-link" rel="noopener noreferrer" target="_blank">
             <i className="fab fa-twitter"></i>
             Twitter
           </a>
-          <a href="https://facebook.com/truthbeacon" className="social-link" rel="noopener noreferrer" target="_blank">
+          <a href="https://facebook.com/actualiter" className="social-link" rel="noopener noreferrer" target="_blank">
             <i className="fab fa-facebook"></i>
             Facebook
           </a>
-          <a href="https://instagram.com/truthbeacon" className="social-link" rel="noopener noreferrer" target="_blank">
+          <a href="https://instagram.com/actualiter" className="social-link" rel="noopener noreferrer" target="_blank">
             <i className="fab fa-instagram"></i>
             Instagram
           </a>

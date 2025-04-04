@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X, User, LogOut, AlertTriangle } from "lucide-react";
+import { Menu, X, User, LogOut, AlertTriangle, BookOpen, ShoppingCart } from "lucide-react";
 import { useMaintenanceMode } from "@/App";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
@@ -13,7 +13,7 @@ import { NotificationDropdown } from "./NotificationDropdown";
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isMaintenanceMode, setMaintenanceMode } = useMaintenanceMode();
-  const { currentUser, isAdmin, isLoading, logout } = useAuth();
+  const { currentUser, isAdmin, loading, logout } = useAuth();
   const location = useLocation();
 
   const toggleMenu = () => {
@@ -66,6 +66,10 @@ export const Header: React.FC = () => {
             <Link to="/" className={`text-foreground hover:text-primary ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}>
               Accueil
             </Link>
+            <Link to="/bookshop" className={`text-foreground hover:text-primary flex items-center ${location.pathname.startsWith('/bookshop') || location.pathname.startsWith('/book/') ? 'text-primary font-medium' : ''}`}>
+              <BookOpen className="h-4 w-4 mr-1" />
+              Boutique
+            </Link>
             {currentUser && (
               <Link to="/profile" className={`text-foreground hover:text-primary ${location.pathname === '/profile' ? 'text-primary font-medium' : ''}`}>
                 Profil
@@ -74,6 +78,16 @@ export const Header: React.FC = () => {
             {currentUser && isAdmin && (
               <Link to="/admin" className={`text-foreground hover:text-primary ${location.pathname === '/admin' ? 'text-primary font-medium' : ''}`}>
                 Admin
+              </Link>
+            )}
+            {currentUser && isAdmin && (
+              <Link to="/admin/books" className={`text-foreground hover:text-primary ${location.pathname === '/admin/books' ? 'text-primary font-medium' : ''}`}>
+                Gestion Boutique
+              </Link>
+            )}
+            {currentUser && isAdmin && (
+              <Link to="/admin/orders" className={`text-foreground hover:text-primary ${location.pathname === '/admin/orders' ? 'text-primary font-medium' : ''}`}>
+                Commandes
               </Link>
             )}
             
@@ -91,11 +105,20 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-2">
               <ThemeSwitcher />
               
-              {!isLoading && currentUser && (
+              {currentUser && (
+                <Link to="/cart">
+                  <Button variant="ghost" size="icon" className="relative">
+                    <ShoppingCart className="h-5 w-5" />
+                    {/* On pourrait ajouter ici un badge avec le nombre d'articles dans le panier */}
+                  </Button>
+                </Link>
+              )}
+              
+              {!loading && currentUser && (
                 <NotificationDropdown />
               )}
               
-              {!isLoading && (currentUser ? (
+              {!loading && (currentUser ? (
                 <>
                   <Link to="/profile">
                     <Avatar className="h-8 w-8">
@@ -121,7 +144,14 @@ export const Header: React.FC = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <ThemeSwitcher />
-            {!isLoading && currentUser && (
+            {currentUser && (
+              <Link to="/cart">
+                <Button variant="ghost" size="icon">
+                  <ShoppingCart className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+            {!loading && currentUser && (
               <NotificationDropdown />
             )}
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
@@ -140,6 +170,13 @@ export const Header: React.FC = () => {
               >
                 Accueil
               </Link>
+              <Link
+                to="/bookshop"
+                className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted flex items-center ${location.pathname.startsWith('/bookshop') || location.pathname.startsWith('/book/') ? 'text-primary font-medium bg-muted' : ''}`}
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Boutique de livres
+              </Link>
               {currentUser && (
                 <Link
                   to="/profile"
@@ -156,6 +193,22 @@ export const Header: React.FC = () => {
                   Admin
                 </Link>
               )}
+              {currentUser && isAdmin && (
+                <Link
+                  to="/admin/books"
+                  className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/admin/books' ? 'text-primary font-medium bg-muted' : ''}`}
+                >
+                  Gestion de la boutique
+                </Link>
+              )}
+              {currentUser && isAdmin && (
+                <Link
+                  to="/admin/orders"
+                  className={`text-foreground hover:text-primary px-4 py-2 rounded-md hover:bg-muted ${location.pathname === '/admin/orders' ? 'text-primary font-medium bg-muted' : ''}`}
+                >
+                  Gestion des commandes
+                </Link>
+              )}
               
               {currentUser && isAdmin && (
                 <div className="flex items-center justify-between px-4 py-2">
@@ -168,7 +221,7 @@ export const Header: React.FC = () => {
                 </div>
               )}
               
-              {!isLoading && (currentUser ? (
+              {!loading && (currentUser ? (
                 <Button
                   variant="outline"
                   className="justify-start mx-4"

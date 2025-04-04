@@ -34,7 +34,7 @@ export interface EmailSettings {
 
 // Interface pour les paramètres de contenu
 export interface ContentSettings {
-  defaultVerificationStatus: "pending" | "verified" | "rejected";
+  defaultVerificationStatus: "pending" | "verified" | "rejected" | "true" | "false" | "partial";
   requireImageForArticles: boolean;
   maxArticleLength: number;
   minArticleLength: number;
@@ -43,11 +43,23 @@ export interface ContentSettings {
   featuredArticlesCount: number;
 }
 
+// Interface pour les paramètres de sécurité
+export interface SecuritySettings {
+  passwordMinLength: number;
+  requirePasswordComplexity: boolean;
+  sessionTimeout: number;
+  maxLoginAttempts: number;
+  enableTwoFactorAuth: boolean;
+  allowedFileTypes: string[];
+  maxFileSize: number;
+}
+
 // Interface pour tous les paramètres
 export interface SiteSettings {
   general: GeneralSettings;
   content: ContentSettings;
   email: EmailSettings;
+  security: SecuritySettings;
 }
 
 // Valeurs par défaut pour les paramètres
@@ -87,6 +99,15 @@ const defaultSettings: SiteSettings = {
       passwordReset: "Réinitialisation de votre mot de passe",
       articlePublished: "Un nouvel article a été publié"
     }
+  },
+  security: {
+    passwordMinLength: 8,
+    requirePasswordComplexity: true,
+    sessionTimeout: 60,
+    maxLoginAttempts: 5,
+    enableTwoFactorAuth: false,
+    allowedFileTypes: ["jpg", "jpeg", "png", "gif"],
+    maxFileSize: 5
   }
 };
 
@@ -152,6 +173,22 @@ export const updateEmailSettings = async (settings: EmailSettings): Promise<void
     });
   } catch (error) {
     console.error("Erreur lors de la mise à jour des paramètres email:", error);
+    throw error;
+  }
+};
+
+// Mettre à jour les paramètres de sécurité
+export const updateSecuritySettings = async (settings: SecuritySettings): Promise<void> => {
+  try {
+    const settingsDoc = await getDoc(doc(db, "settings", "site"));
+    const currentSettings = settingsDoc.exists() ? settingsDoc.data() as SiteSettings : defaultSettings;
+    
+    await setDoc(doc(db, "settings", "site"), {
+      ...currentSettings,
+      security: settings
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour des paramètres de sécurité:", error);
     throw error;
   }
 };
