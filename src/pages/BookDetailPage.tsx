@@ -32,6 +32,9 @@ import {
   Download,
   Lock
 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 
 // Fonction pour sécuriser l'affichage de données Firebase
 const safeData = (book: Book | null): Book | null => {
@@ -180,9 +183,22 @@ export default function BookDetailPage() {
       // Sauvegarder le panier dans localStorage
       localStorage.setItem('guestCart', JSON.stringify(guestCart));
       
+      // S'assurer que le titre du livre existe et n'est pas undefined
+      const bookTitle = safeBook?.title || t("shop.unknownBook");
+      
       toast({
         title: t("shop.addedToCart"),
-        description: `${safeBook.title} (${quantity} ${quantity > 1 ? t("bookDetails.copies") : t("bookDetails.copy")}) ${t("shop.hasBeenAddedToCart")}`
+        description: `${bookTitle} (${quantity} ${quantity > 1 ? t("bookDetails.copies") : t("bookDetails.copy")}) ${t("shop.hasBeenAddedToCart")}`,
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/cart')}
+            className="mt-2"
+          >
+            {t("shop.viewCart")}
+          </Button>
+        )
       });
       
       return;
@@ -208,9 +224,22 @@ export default function BookDetailPage() {
       // Mettre à jour le panier global
       await refetchCart();
       
+      // S'assurer que le titre du livre existe et n'est pas undefined
+      const bookTitle = safeBook?.title || t("shop.unknownBook");
+      
       toast({
         title: t("shop.addedToCart"),
-        description: `${safeBook.title} (${quantity} ${quantity > 1 ? t("bookDetails.copies") : t("bookDetails.copy")}) ${t("shop.hasBeenAddedToCart")}`
+        description: `${bookTitle} (${quantity} ${quantity > 1 ? t("bookDetails.copies") : t("bookDetails.copy")}) ${t("shop.hasBeenAddedToCart")}`,
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/cart')}
+            className="mt-2"
+          >
+            {t("shop.viewCart")}
+          </Button>
+        )
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout au panier:", error);

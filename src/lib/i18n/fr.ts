@@ -183,7 +183,9 @@ export default {
     hasBeenAddedToCart: "a été ajouté à votre panier.",
     errorAddingToCart: "Impossible d'ajouter le livre au panier. Veuillez réessayer.",
     loginToAddToCart: "Veuillez vous connecter pour ajouter des articles au panier.",
-    allCategories: "Toutes les catégories"
+    allCategories: "Toutes les catégories",
+    unknownBook: "Livre inconnu",
+    viewCart: "Voir le panier"
   },
   cart: {
     yourCart: "Votre panier",

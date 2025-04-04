@@ -1,5 +1,5 @@
-# Actualiter - Plateforme de vérification d'actualités - v1.0.15
-*Dernière mise à jour : 20 avril 2024*
+# Actualiter - Plateforme de vérification d'actualités - v1.0.16
+*Dernière mise à jour : 25 avril 2024*
 
 Actualiter est une application web moderne conçue pour aider les utilisateurs à vérifier la véracité des informations et actualités. Avec une interface intuitive et un système de vérification visuel, Actualiter permet de distinguer facilement les informations vérifiées des contenus douteux. La plateforme intègre maintenant une boutique de livres complètement fonctionnelle permettant aux utilisateurs d'acheter des ouvrages en rapport avec l'information et le fact-checking.
 
@@ -41,6 +41,14 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **AMÉLIORÉ** : Interface de description des livres plus ergonomique et esthétique
 - **CORRIGÉ** : Problème de formatage des textes conditionnels multilingues
 - **AMÉLIORÉ** : Traduction complète de la boutique et des pages de détail de produits
+- **NOUVEAU** : Achat sans compte (guest checkout) avec panier local pour les utilisateurs non connectés
+- **NOUVEAU** : Détection des clients existants dans le formulaire de commande invité
+- **NOUVEAU** : Message personnalisé de confirmation de commande avec numéro unique
+- **CORRIGÉ** : Correction des erreurs TypeScript dans les composants d'alerte
+- **CORRIGÉ** : Problème d'affichage des titres de livres dans les notifications d'ajout au panier
+- **AMÉLIORÉ** : Gestion des cas où les titres des livres sont manquants ou corrompus
+- **CORRIGÉ** : Problème empêchant les utilisateurs non connectés d'accéder au panier
+- **AMÉLIORÉ** : Notifications d'ajout au panier avec bouton direct vers le panier
 
 ## Fonctionnalités
 ### Terminées
@@ -80,8 +88,24 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - **NOUVEAU** : Détection en temps réel des modifications Firebase pour le mode maintenance
 - **AMÉLIORÉ** : Interface d'administration du mode maintenance avec options de synchronisation avancées
 - **NOUVEAU** : Support pour l'hébergement d'images via Postimages avec intégration directe
+- **NOUVEAU** : Achat sans compte avec panier local pour visiteurs non connectés
+- **NOUVEAU** : Message personnalisé de confirmation avec numéro de commande unique
 
 ## Journal des modifications
+
+### v1.0.16
+- Ajout du système d'achat sans compte (guest checkout) complet avec option de création de compte ultérieure
+- Implémentation du panier local pour les utilisateurs non connectés avec stockage dans localStorage
+- Ajout de la détection des utilisateurs existants dans le formulaire de commande invité
+- Ajout d'un message de confirmation de commande personnalisé avec numéro unique
+- Ajout de la fonction d'incitation à la création de compte après un achat invité
+- Correction des erreurs TypeScript dans le composant d'alerte avec ajout de la variante "warning"
+- Amélioration de l'accessibilité du panier pour tous les visiteurs (connectés ou non)
+- Optimisation des appels Firebase pour réduire les coûts d'utilisation
+- **CORRIGÉ** : Problème d'affichage des titres de livres dans les notifications d'ajout au panier
+- **AMÉLIORÉ** : Gestion des cas où les titres des livres sont manquants ou corrompus
+- **CORRIGÉ** : Problème empêchant les utilisateurs non connectés d'accéder au panier
+- **AMÉLIORÉ** : Notifications d'ajout au panier avec bouton direct vers le panier
 
 ### v1.0.15
 - Correction du formatage des textes conditionnels dans les traductions (fonction vs objet)
@@ -93,58 +117,30 @@ Actualiter est une application web moderne conçue pour aider les utilisateurs �
 - Correction des clés de traduction incorrectes dans les composants de la boutique
 - Traduction complète de la page de connexion et d'inscription
 
-### v1.0.14
-- Ajout de champs obligatoires pour la création de livres (éditeur, date de publication, nombre de pages, langue)
-- Amélioration de l'affichage des descriptions de livres avec une barre de défilement personnalisée
-- Ajout d'un cadre stylistique pour améliorer la lisibilité des descriptions longues
-- Correction des problèmes de mise en page causés par des descriptions trop longues
+## Achat sans compte (Guest Checkout)
 
-### v1.0.13
-- Correction du problème de modification des articles dans l'interface d'administration
-- Résolution de l'erreur "t is not a function" lors de la mise à jour d'articles
-- Simplification des formulaires d'ajout d'images avec Postimages comme unique solution recommandée
-- Amélioration des messages d'erreur lors du chargement d'images
-- Mise à jour de la documentation pour refléter les dernières modifications
-- Ajout d'une barre de défilement stylisée pour les descriptions longues dans la fiche produit
-- Correction de la déformation des pages par les descriptions trop longues
+La nouvelle fonctionnalité d'achat sans compte permet aux visiteurs d'acheter des livres sans avoir à créer un compte, tout en offrant des incitations à s'inscrire ultérieurement :
 
-### v1.0.12
-- Ajout de Postimages comme solution recommandée pour l'hébergement d'images
-- Correction de l'affichage du nombre de pages (n'affiche plus "0 pages" quand non spécifié)
-- Amélioration du système d'accès aux PDF avec contrôle des achats
-- Optimisation de la vérification des commandes pour l'accès aux PDF
-- Instructions détaillées pour l'hébergement d'images
+### Fonctionnement
+- **Bouton "Acheter sans compte"** : Clairement visible dans le panier pour faciliter la conversion
+- **Formulaire simplifié** : Ne demande que les informations essentielles (email, adresse de livraison, paiement)
+- **Option d'inscription à la newsletter** : Case à cocher facultative pour recevoir des offres sur les livres
+- **Détection des clients existants** : Si l'email existe déjà dans la base, propose de se connecter pour accéder à l'historique des commandes
+- **Lien "Mot de passe oublié"** facilement accessible
 
-### v1.0.11
-- Amélioration robuste du chargement des images externes dans les formulaires
-- Ajout d'un système de secours avec proxy CORS pour le chargement des images
-- Amélioration des messages d'erreur pour guider l'utilisateur lors de problèmes de chargement d'images
-- Messages de feedback plus clairs lors de la prévisualisation d'images
-- Correction du problème de prévisualisation d'image dans les formulaires de livre et d'article
+### Fidélisation après achat
+- **Page de confirmation optimisée** : Incite à créer un compte avec des avantages clairement présentés
+- **Bonus exclusifs** : Propose des contenus exclusifs pour encourager l'inscription
+- **Email de confirmation** : Inclut un lien direct pour créer un compte facilement
+- **Pré-remplissage des données** : Utilise l'email et les informations de livraison déjà saisies pour simplifier l'inscription
+- **Message personnalisé** : "Votre commande #[numéro unique] est confirmée ! [Connectez-vous] pour suivre la livraison et accumuler des points fidélité."
 
-### v1.0.10
-- Intégration avec Postimages pour l'hébergement d'images et PDFs sans Firebase Storage
-- Amélioration des formulaires d'ajout/modification de livres et d'articles
-- Correction du problème de réinitialisation des champs lors de la modification d'un livre
-- Correction du problème de prévisualisation d'image à partir d'URL dans le formulaire d'articles
-- Amélioration de l'affichage des badges de remise sur les livres (suppression du "0%" quand pas de remise)
-- Optimisation de l'interface du panier pour une meilleure expérience utilisateur
+### Téléchargement des livres numériques
+- **Accès immédiat** : Les livres numériques sont directement accessibles après l'achat, même sans compte
+- **Lien de téléchargement par email** : Envoi automatique des liens de téléchargement sécurisés
+- **Accès permanent** : Incitation à créer un compte pour conserver un accès permanent aux achats
 
-### v1.0.9
-- Implémentation d'une synchronisation bidirectionnelle automatique pour le mode maintenance
-- Ajout d'écouteurs en temps réel (onSnapshot) pour les documents de configuration Firebase
-- Détection et application instantanée des modifications du mode maintenance effectuées directement dans Firebase
-- Amélioration de l'interface administrateur pour le mode maintenance avec options de synchronisation sélective
-- Correction du problème d'incohérence entre les documents de configuration "global" et "site"
-- Prévention du flash de la page d'accueil lors de l'activation du mode maintenance
-- Journalisation améliorée pour faciliter le débogage des problèmes de synchronisation
-
-### v1.0.8
-- Mise en place d'un contexte global pour la gestion du panier (CartContext)
-- Ajout d'un compteur d'articles dans l'en-tête pour visualiser rapidement le contenu du panier
-- Correction des erreurs TypeScript dans le composant CartPage.tsx
-- Optimisation de la sécurisation des Timestamps Firebase dans les interfaces utilisateur
-- Amélioration de la réactivité du panier avec mise à jour instantanée lors de l'ajout/suppression d'articles
+Cette fonctionnalité améliore significativement le taux de conversion en éliminant la friction lors de l'achat tout en favorisant la création de comptes après la transaction.
 
 ## Hébergement d'images avec Postimages
 

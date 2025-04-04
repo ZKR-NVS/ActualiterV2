@@ -183,7 +183,9 @@ export default {
     hasBeenAddedToCart: "has been added to your cart.",
     errorAddingToCart: "Unable to add book to cart. Please try again.",
     loginToAddToCart: "Please log in to add items to your cart.",
-    allCategories: "All categories"
+    allCategories: "All categories",
+    unknownBook: "Unknown book",
+    viewCart: "View cart"
   },
   cart: {
     yourCart: "Your Cart",

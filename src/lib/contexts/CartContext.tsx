@@ -20,69 +20,65 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<(Cart & { id: string }) | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
   
+  // État pour le panier invité (localStorage)
+  const [localCart, setLocalCart] = useState<{ items: any[], totalAmount: number } | null>(null);
+
   const fetchCart = async () => {
-    if (!currentUser) {
-      setCart(null);
-      return;
-    }
-    
     try {
       setLoading(true);
-      const fetchedCart = await getUserCart(currentUser.uid);
-      
-      // Sécuriser les timestamps du panier
-      const safeCart = secureFetchedCart(fetchedCart);
-      setCart(safeCart);
+      if (!currentUser) {
+        // Si aucun utilisateur n'est connecté, charger le panier depuis localStorage
+        const savedCart = localStorage.getItem('guestCart');
+        const guestCart = savedCart ? JSON.parse(savedCart) : { items: [], totalAmount: 0 };
+        setLocalCart(guestCart);
+        setCart(null);
+      } else {
+        // Si un utilisateur est connecté, charger son panier depuis Firestore
+        const userCart = await getUserCart(currentUser.uid);
+        setCart(userCart);
+        setLocalCart(null);
+      }
     } catch (error) {
       console.error("Erreur lors du chargement du panier:", error);
+      setCart(null);
     } finally {
       setLoading(false);
     }
   };
   
-  // Fonction pour sécuriser les timestamps du panier
-  const secureFetchedCart = (cart: (Cart & { id: string }) | null): (Cart & { id: string }) | null => {
-    if (!cart) return null;
-    
-    // Créer une copie sécurisée
-    const safeCopy = { ...cart };
-    
-    // Sécuriser les timestamps des articles
-    if (Array.isArray(safeCopy.items)) {
-      safeCopy.items = safeCopy.items.map(item => {
-        const safeItem = { ...item };
-        
-        if (safeItem.updatedAt && typeof safeItem.updatedAt === 'object' && 'seconds' in safeItem.updatedAt) {
-          try {
-            // @ts-ignore - nous savons que c'est un Timestamp
-            safeItem.updatedAt = new Date(safeItem.updatedAt.seconds * 1000).toISOString();
-          } catch (e) {
-            safeItem.updatedAt = null;
-          }
+  // Mettre à jour le panier local lorsqu'il change dans localStorage
+  useEffect(() => {
+    if (!currentUser) {
+      const handleStorageChange = () => {
+        const savedCart = localStorage.getItem('guestCart');
+        if (savedCart) {
+          setLocalCart(JSON.parse(savedCart));
         }
-        
-        return safeItem;
-      });
-    }
-    
-    // Sécuriser le timestamp du panier
-    if (safeCopy.updatedAt && typeof safeCopy.updatedAt === 'object' && 'seconds' in safeCopy.updatedAt) {
-      try {
-        // @ts-ignore - nous savons que c'est un Timestamp
-        safeCopy.updatedAt = new Date(safeCopy.updatedAt.seconds * 1000).toISOString();
-      } catch (e) {
-        safeCopy.updatedAt = null;
+      };
+      
+      window.addEventListener('storage', handleStorageChange);
+      
+      // Charger le panier initial depuis localStorage
+      const savedCart = localStorage.getItem('guestCart');
+      if (savedCart) {
+        setLocalCart(JSON.parse(savedCart));
+      } else {
+        setLocalCart({ items: [], totalAmount: 0 });
       }
+      
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
     }
-    
-    return safeCopy;
-  };
+  }, [currentUser]);
   
-  // Calculer le nombre total d'articles dans le panier
-  const cartItemsCount = cart?.items.reduce((total, item) => total + item.quantity, 0) || 0;
+  // Calculer le nombre total d'articles dans le panier (connecté ou invité)
+  const cartItemsCount = currentUser 
+    ? (cart?.items.reduce((total, item) => total + item.quantity, 0) || 0)
+    : (localCart?.items.reduce((total: number, item: any) => total + item.quantity, 0) || 0);
   
   useEffect(() => {
     fetchCart();

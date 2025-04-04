@@ -111,18 +111,16 @@ export const Header: React.FC = () => {
               <LanguageSwitcher />
               <ThemeSwitcher />
               
-              {currentUser && (
-                <Link to="/cart">
-                  <Button variant="ghost" size="icon" className="relative">
-                    <ShoppingCart className="h-5 w-5" />
-                    {cartItemsCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground rounded-full">
-                        {cartItemsCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
-              )}
+              <Link to="/cart">
+                <Button variant="ghost" size="icon" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartItemsCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground rounded-full">
+                      {cartItemsCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
               
               {!loading && currentUser && (
                 <NotificationDropdown />
@@ -155,18 +153,16 @@ export const Header: React.FC = () => {
           <div className="md:hidden flex items-center gap-2">
             <LanguageSwitcher />
             <ThemeSwitcher />
-            {currentUser && (
-              <Link to="/cart">
-                <Button variant="ghost" size="icon" className="relative">
-                  <ShoppingCart className="h-5 w-5" />
-                  {cartItemsCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground rounded-full">
-                      {cartItemsCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-            )}
+            <Link to="/cart">
+              <Button variant="ghost" size="icon" className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                {cartItemsCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground rounded-full">
+                    {cartItemsCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
             {!loading && currentUser && (
               <NotificationDropdown />
             )}

@@ -14,6 +14,7 @@ import { Search } from 'lucide-react';
 import BookCard from '@/components/bookshop/BookCard';
 import BookFilter from '@/components/bookshop/BookFilter';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 // Fonction pour sécuriser l'affichage de données Firebase
 const safeBookData = (books: Book[]): Book[] => {
@@ -57,6 +58,7 @@ export default function BookshopPage() {
   const { currentUser } = useAuth();
   const { refetchCart } = useCart();
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -170,9 +172,22 @@ export default function BookshopPage() {
       // Sauvegarder le panier dans localStorage
       localStorage.setItem('guestCart', JSON.stringify(guestCart));
       
+      // S'assurer que le titre du livre existe et n'est pas undefined
+      const bookTitle = book?.title || t("shop.unknownBook");
+      
       toast({
         title: t("shop.addedToCart"),
-        description: `${book.title} ${t("shop.hasBeenAddedToCart")}`
+        description: `${bookTitle} ${t("shop.hasBeenAddedToCart")}`,
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/cart')}
+            className="mt-2"
+          >
+            {t("shop.viewCart")}
+          </Button>
+        )
       });
       
       return;
@@ -192,9 +207,22 @@ export default function BookshopPage() {
       // Mettre à jour le panier global
       await refetchCart();
       
+      // S'assurer que le titre du livre existe et n'est pas undefined
+      const bookTitle = book?.title || t("shop.unknownBook");
+      
       toast({
         title: t("shop.addedToCart"),
-        description: `${book.title} ${t("shop.hasBeenAddedToCart")}`
+        description: `${bookTitle} ${t("shop.hasBeenAddedToCart")}`,
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/cart')}
+            className="mt-2"
+          >
+            {t("shop.viewCart")}
+          </Button>
+        )
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout au panier:", error);

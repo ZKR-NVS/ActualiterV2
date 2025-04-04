@@ -490,14 +490,14 @@ export default function CartPage() {
                         variant="secondary"
                         onClick={handleGuestCheckout}
                         disabled={!activeCart || activeCart.items.length === 0}
-                      >
+                  >
                         <ShoppingCart className="mr-2 h-5 w-5" />
                         {t("cart.guestCheckout")}
                   </Button>
                   
                       <p className="text-sm text-muted-foreground text-center mt-2">
                         {t("cart.guestCheckoutHint")}
-                      </p>
+                    </p>
                     </>
                   )}
                 </CardFooter>
