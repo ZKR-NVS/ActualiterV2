@@ -196,60 +196,59 @@ export const updateSecuritySettings = async (settings: SecuritySettings): Promis
 // Activer/désactiver le mode maintenance
 export const toggleMaintenanceMode = async (enabled: boolean, message?: string): Promise<void> => {
   try {
+    console.log(`Tentative de modification du mode maintenance: ${enabled}`);
+    const now = new Date().toISOString();
+    
+    // Mettre à jour le document site
     const settingsRef = doc(db, "settings", "site");
     await updateDoc(settingsRef, {
       "general.maintenanceMode": enabled,
+      "lastUpdated": now,
       ...(message && { "general.maintenanceMessage": message })
     });
 
     // Mettre également à jour le document global
     const globalRef = doc(db, "settings", "global");
     await updateDoc(globalRef, {
-      maintenanceMode: enabled
+      maintenanceMode: enabled,
+      lastUpdated: now
     });
 
     console.log(`Mode maintenance ${enabled ? 'activé' : 'désactivé'} dans toggleMaintenanceMode`);
-  } catch (error) {
-    console.error("Erreur lors de la modification du mode maintenance:", error);
-    throw error;
-  }
-};
-
-// Alias pour getSettings pour maintenir la compatibilité
-export const getGlobalSettings = async (): Promise<{ maintenanceMode: boolean }> => {
-  try {
-    // Essayer d'abord de lire depuis le document global
-    try {
-      const globalRef = doc(db, "settings", "global");
-      const globalDoc = await getDoc(globalRef);
-      
-      if (globalDoc.exists()) {
-        return { 
-          maintenanceMode: globalDoc.data().maintenanceMode || false
-        };
+  } catch (error: any) {
+    // Si le document n'existe pas, tenter de le créer
+    if (error.code === 'not-found') {
+      try {
+        console.log("Document non trouvé dans toggleMaintenanceMode, tentative de création...");
+        const now = new Date().toISOString();
+        
+        if (error.path?.includes('global')) {
+          // Créer le document global
+          const globalRef = doc(db, "settings", "global");
+          await setDoc(globalRef, {
+            maintenanceMode: enabled,
+            lastUpdated: now
+          });
+          console.log("Document global créé avec succès");
+        } else {
+          // Créer le document site
+          const siteRef = doc(db, "settings", "site");
+          await setDoc(siteRef, defaultSettings);
+          await updateDoc(siteRef, {
+            "general.maintenanceMode": enabled,
+            "lastUpdated": now,
+            ...(message && { "general.maintenanceMessage": message })
+          });
+          console.log("Document site créé avec succès");
+        }
+      } catch (createError) {
+        console.error("Échec de la création du document:", createError);
+        throw createError;
       }
-    } catch (error) {
-      console.warn("Échec de lecture du document global, tentative de lecture du document site...");
-    }
-
-    // Si le document global n'existe pas ou n'est pas accessible, essayer le document site
-    try {
-      const settings = await getSettings();
-      return { 
-        maintenanceMode: settings.general.maintenanceMode 
-      };
-    } catch (error: any) {
-      // En cas d'erreur d'autorisation, retourner une valeur par défaut
-      if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
-        console.warn("Permissions insuffisantes pour accéder aux paramètres. Utilisation des valeurs par défaut.");
-        return { maintenanceMode: false };
-      }
+    } else {
+      console.error("Erreur lors de la modification du mode maintenance:", error);
       throw error;
     }
-  } catch (error) {
-    console.error("Erreur lors de la récupération des paramètres globaux:", error);
-    // En cas d'erreur, retourner false pour le mode maintenance
-    return { maintenanceMode: false };
   }
 };
 
@@ -257,18 +256,61 @@ export const getGlobalSettings = async (): Promise<{ maintenanceMode: boolean }>
 export const updateMaintenanceMode = async (enabled: boolean, userId?: string): Promise<void> => {
   try {
     console.log(`Tentative de mise à jour du mode maintenance: ${enabled}`);
+    const now = new Date().toISOString();
     
-    // Mettre à jour le document site
+    // Mise à jour atomique des deux documents
     const siteRef = doc(db, "settings", "site");
-    await updateDoc(siteRef, {
-      "general.maintenanceMode": enabled
-    });
-    
-    // Mettre à jour le document global
     const globalRef = doc(db, "settings", "global");
-    await updateDoc(globalRef, {
-      maintenanceMode: enabled
-    });
+    
+    // Vérifier que les documents existent
+    const [siteDoc, globalDoc] = await Promise.all([
+      getDoc(siteRef),
+      getDoc(globalRef)
+    ]);
+    
+    // Préparer les promesses de mise à jour
+    const updatePromises = [];
+    
+    // Mise à jour du document site s'il existe
+    if (siteDoc.exists()) {
+      updatePromises.push(
+        updateDoc(siteRef, {
+          "general.maintenanceMode": enabled,
+          "lastUpdated": now
+        })
+      );
+    } else {
+      // Créer le document site s'il n'existe pas
+      const newSettings = { ...defaultSettings };
+      newSettings.general.maintenanceMode = enabled;
+      updatePromises.push(
+        setDoc(siteRef, {
+          ...newSettings,
+          lastUpdated: now
+        })
+      );
+    }
+    
+    // Mise à jour du document global s'il existe
+    if (globalDoc.exists()) {
+      updatePromises.push(
+        updateDoc(globalRef, {
+          maintenanceMode: enabled,
+          lastUpdated: now
+        })
+      );
+    } else {
+      // Créer le document global s'il n'existe pas
+      updatePromises.push(
+        setDoc(globalRef, {
+          maintenanceMode: enabled,
+          lastUpdated: now
+        })
+      );
+    }
+    
+    // Exécuter toutes les mises à jour
+    await Promise.all(updatePromises);
     
     console.log(`Mode maintenance ${enabled ? 'activé' : 'désactivé'} par l'utilisateur ${userId || 'inconnu'}`);
   } catch (error: any) {
@@ -278,32 +320,13 @@ export const updateMaintenanceMode = async (enabled: boolean, userId?: string): 
       return; // Sortir silencieusement sans propager l'erreur
     }
 
-    // Si le document n'existe pas, tenter de le créer
-    if (error.code === 'not-found') {
-      try {
-        console.log("Document non trouvé, tentative de création...");
-        
-        // Créer le document global s'il n'existe pas
-        const globalRef = doc(db, "settings", "global");
-        await setDoc(globalRef, {
-          maintenanceMode: enabled,
-          lastUpdated: new Date().toISOString()
-        });
-        
-        console.log("Document global créé avec succès");
-      } catch (createError) {
-        console.error("Échec de la création du document:", createError);
-        throw createError;
-      }
-    } else {
-      console.error("Erreur lors de la mise à jour du mode maintenance:", error);
-      throw error;
-    }
+    console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+    throw error;
   }
 };
 
 // Fonction pour synchroniser le mode maintenance entre les documents
-export const synchronizeMaintenanceMode = async (): Promise<void> => {
+export const synchronizeMaintenanceMode = async (forceSource?: 'global' | 'site'): Promise<void> => {
   try {
     console.log("Début de la synchronisation du mode maintenance entre les documents");
     
@@ -343,24 +366,72 @@ export const synchronizeMaintenanceMode = async (): Promise<void> => {
     }
     
     // Extraire les états de maintenance des deux documents
-    const globalMaintenanceMode = globalDoc.data().maintenanceMode;
-    const siteMaintenanceMode = siteDoc.data()?.general?.maintenanceMode;
+    const globalData = globalDoc.data();
+    const siteData = siteDoc.data();
+    const globalMaintenanceMode = globalData.maintenanceMode;
+    const siteMaintenanceMode = siteData?.general?.maintenanceMode;
+    
+    // Extraire les timestamps de dernière mise à jour si disponibles
+    const globalLastUpdated = globalData.lastUpdated ? new Date(globalData.lastUpdated) : new Date(0);
+    const siteLastUpdated = siteData?.lastUpdated ? new Date(siteData.lastUpdated) : new Date(0);
     
     console.log(`État actuel - Global: ${globalMaintenanceMode}, Site: ${siteMaintenanceMode}`);
+    console.log(`Dernière mise à jour - Global: ${globalLastUpdated.toISOString()}, Site: ${siteLastUpdated.toISOString()}`);
     
     // Si les états sont différents, synchroniser
     if (globalMaintenanceMode !== siteMaintenanceMode) {
       console.log("Les états de maintenance sont différents, synchronisation en cours...");
       
-      // Prioriser l'état du document site (considéré comme la source de vérité)
-      await updateDoc(globalRef, {
-        maintenanceMode: siteMaintenanceMode,
-        lastUpdated: new Date().toISOString()
-      });
+      // Déterminer quelle source utiliser (par défaut: le plus récent)
+      let sourceIsGlobal = false;
       
-      console.log(`Documents synchronisés sur l'état: ${siteMaintenanceMode}`);
+      if (forceSource === 'global') {
+        sourceIsGlobal = true;
+      } else if (forceSource === 'site') {
+        sourceIsGlobal = false;
+      } else {
+        // Utiliser le document le plus récemment mis à jour
+        sourceIsGlobal = globalLastUpdated > siteLastUpdated;
+      }
+      
+      const now = new Date().toISOString();
+      
+      if (sourceIsGlobal) {
+        // Synchroniser du global vers le site
+        console.log(`Utilisation de la source GLOBAL (${globalMaintenanceMode}) pour la synchronisation`);
+        await updateDoc(siteRef, {
+          "general.maintenanceMode": globalMaintenanceMode,
+          "lastUpdated": now
+        });
+        
+        // Mettre à jour le timestamp dans global aussi
+        await updateDoc(globalRef, {
+          "lastUpdated": now
+        });
+      } else {
+        // Synchroniser du site vers le global
+        console.log(`Utilisation de la source SITE (${siteMaintenanceMode}) pour la synchronisation`);
+        await updateDoc(globalRef, {
+          "maintenanceMode": siteMaintenanceMode,
+          "lastUpdated": now
+        });
+        
+        // Mettre à jour le timestamp dans site aussi
+        await updateDoc(siteRef, {
+          "lastUpdated": now
+        });
+      }
+      
+      console.log(`Synchronisation terminée. État utilisé: ${sourceIsGlobal ? globalMaintenanceMode : siteMaintenanceMode}`);
     } else {
       console.log("Les documents sont déjà synchronisés, aucune action nécessaire");
+      
+      // Mettre à jour les timestamps pour indiquer la vérification
+      const now = new Date().toISOString();
+      await Promise.all([
+        updateDoc(globalRef, { lastUpdated: now }),
+        updateDoc(siteRef, { lastUpdated: now })
+      ]);
     }
   } catch (error: any) {
     // Si c'est une erreur d'autorisation et que l'utilisateur n'est pas admin, on ignore silencieusement
@@ -370,5 +441,43 @@ export const synchronizeMaintenanceMode = async (): Promise<void> => {
     }
     console.error("Erreur lors de la synchronisation du mode maintenance:", error);
     throw error;
+  }
+};
+
+// Alias pour getSettings pour maintenir la compatibilité
+export const getGlobalSettings = async (): Promise<{ maintenanceMode: boolean }> => {
+  try {
+    // Essayer d'abord de lire depuis le document global
+    try {
+      const globalRef = doc(db, "settings", "global");
+      const globalDoc = await getDoc(globalRef);
+      
+      if (globalDoc.exists()) {
+        return { 
+          maintenanceMode: globalDoc.data().maintenanceMode || false
+        };
+      }
+    } catch (error) {
+      console.warn("Échec de lecture du document global, tentative de lecture du document site...");
+    }
+
+    // Si le document global n'existe pas ou n'est pas accessible, essayer le document site
+    try {
+      const settings = await getSettings();
+      return { 
+        maintenanceMode: settings.general.maintenanceMode 
+      };
+    } catch (error: any) {
+      // En cas d'erreur d'autorisation, retourner une valeur par défaut
+      if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+        console.warn("Permissions insuffisantes pour accéder aux paramètres. Utilisation des valeurs par défaut.");
+        return { maintenanceMode: false };
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération des paramètres globaux:", error);
+    // En cas d'erreur, retourner false pour le mode maintenance
+    return { maintenanceMode: false };
   }
 }; 
