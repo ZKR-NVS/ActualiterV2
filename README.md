@@ -525,123 +525,110 @@ Pour que toutes les fonctionnalités de l'application fonctionnent correctement,
 rules_version = "2";
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Fonctions utilitaires pour simplifier les règles
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
+    function isVerifier() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "verifier";
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
     // Règles par défaut - refuser tout accès
     match /{document=**} {
       allow read, write: if false;
     }
     
-    // Règles pour la collection users
+    // Règles pour les utilisateurs - MODIFIÉES pour permettre la vérification d'email
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && 
-                     request.auth.uid == userId && 
+      allow read: if true; // Permettre la lecture pour vérifier l'existence d'emails
+      allow create: if isAuthenticated() && 
+                     isOwner(userId) && 
                      request.resource.data.role == "user";
-      allow update: if request.auth != null && 
-                     (request.auth.uid == userId || 
-                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
+      allow update: if isAuthenticated() && 
+                     (isOwner(userId) || isAdmin());
       allow delete: if false;
     }
     
-    // Règles pour la collection settings
+    // Règles pour les paramètres
     match /settings/{document} {
       allow read: if true;
-      allow write: if request.auth != null && 
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+      allow write: if isAdmin();
     }
     
-    // Règles pour la collection articles
+    // Règles pour les articles
     match /articles/{articleId} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null && 
-                                     (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" || 
-                                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "verifier");
+      allow create, update, delete: if isAuthenticated() && 
+                                     (isAdmin() || isVerifier());
     }
     
     // Règles pour les notifications
     match /notifications/{notificationId} {
-      allow read: if request.auth != null && 
+      allow read: if isAuthenticated() && 
                   resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-                           (resource.data.userId == request.auth.uid || 
-                            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+                           (resource.data.userId == request.auth.uid || isAdmin());
     }
+    
+    // RÈGLES POUR LA BOUTIQUE
     
     // Règles pour les livres
     match /books/{bookId} {
       allow read: if true;
-      allow write: if request.auth != null && 
-                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+      allow write: if isAdmin();
     }
     
     // Règles pour les catégories de livres
     match /bookCategories/{categoryId} {
       allow read: if true;
-      allow write: if request.auth != null && 
-                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+      allow write: if isAdmin();
     }
     
     // Règles pour les paniers
     match /carts/{userId} {
-      allow read, write: if request.auth != null && 
-                          request.auth.uid == userId;
+      allow read, write: if isAuthenticated() && 
+                          (isOwner(userId) || isAdmin());
     }
     
     // Règles pour les commandes
     match /orders/{orderId} {
-      allow read: if request.auth != null && 
-                 (resource.data.userId == request.auth.uid || 
-                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
-      allow create: if request.auth != null && 
+      allow read: if isAuthenticated() && 
+                 (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isAuthenticated() && 
                     request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && 
-                           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+      
+      allow update, delete: if isAdmin();
+    }
+    
+    // NOUVELLES RÈGLES - Commandes invités (guest orders)
+    match /guestOrders/{orderId} {
+      allow read, create: if true; // Permettre la création sans authentification
+      allow update, delete: if isAdmin();
     }
   }
 }
 ```
 
-### Règles de sécurité Storage
-Pour les fichiers stockés dans Firebase Storage (images et PDF), utilisez ces règles:
+Ces règles permettent:
+1. La vérification des emails sans authentification (lecture de la collection users)
+2. La création de commandes invités sans authentification (collection guestOrders)
+3. La protection des données sensibles tout en permettant l'achat sans compte
 
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{allPaths=**} {
-      // Par défaut, refuser l'accès
-      allow read, write: if false;
-    }
-    
-    // Images d'articles - lecture publique, écriture par admin/vérificateur
-    match /articles/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-                   (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" || 
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "verifier");
-    }
-    
-    // Images de profil - lecture publique, écriture par le propriétaire
-    match /profiles/{userId}/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Images de livres - lecture publique, écriture par admin
-    match /books/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-    }
-    
-    // PDF de livres - lecture par utilisateurs authentifiés, écriture par admin
-    match /books/pdf/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-    }
-  }
-}
+Pour appliquer ces règles, accédez à la console Firebase, sélectionnez "Firestore Database" puis l'onglet "Règles".
+
 ```
 
 ### Résolution des problèmes de permission

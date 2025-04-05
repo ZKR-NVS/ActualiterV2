@@ -703,9 +703,9 @@ export const createGuestOrder = async (guestData: GuestCheckoutData) => {
       paymentStatus: 'pending'
     };
     
-    // Ajouter à la collection orders avec un ID généré automatiquement
-    const ordersRef = collection(db, 'orders');
-    const docRef = await addDoc(ordersRef, {
+    // Ajouter à la collection guestOrders avec un ID généré automatiquement
+    const guestOrdersRef = collection(db, 'guestOrders');
+    const docRef = await addDoc(guestOrdersRef, {
       ...orderData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
